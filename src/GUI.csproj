@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Graphics\src\Graphics.csproj" />
     <ProjectReference Include="..\..\Structs\src\Structs.csproj" />
+    <ProjectReference Include="..\..\Windowing\src\Windowing.csproj" />
   </ItemGroup>
 
 </Project>
