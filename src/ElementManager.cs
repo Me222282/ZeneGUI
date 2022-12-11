@@ -10,7 +10,6 @@ namespace Zene.GUI
         //private readonly BasicShader _shader;
 
         internal override TextRenderer textRender { get; }
-
         public override IBasicShader Shader { get; }
 
         public ElementManager(Window w)

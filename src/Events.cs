@@ -1,7 +1,5 @@
 using System;
 using Zene.Graphics;
-using Zene.Structs;
-using Zene.Windowing;
 
 namespace Zene.GUI
 {
@@ -9,13 +7,11 @@ namespace Zene.GUI
     
     public class FrameEventArgs : EventArgs
     {
-        public FrameEventArgs(IFramebuffer framebuffer, IMatrixShader shader)
+        public FrameEventArgs(IFramebuffer framebuffer)
         {
             Framebuffer = framebuffer;
-            Shader = shader;
         }
 
         public IFramebuffer Framebuffer { get; }
-        public IMatrixShader Shader { get; }
     }
 }

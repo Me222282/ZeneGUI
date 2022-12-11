@@ -25,34 +25,39 @@ namespace Zene.GUI
         public TextRenderer TextRenderer => textRender;
 
         public TextureRenderer Framebuffer { get; }
-        public abstract IBasicShader Shader { get; }
+        public virtual IBasicShader Shader => Parent.Shader;
         
         private readonly object _boundsRef = new object();
         private RectangleI _bounds;
         private readonly object _mousePosRef = new object();
         private Vector2 _mousePos;
-        
-        public Box Layout { get; set; }
-        private bool _useLayout = false;
-        public bool UseLayout
+
+        private ILayout _layout = null;
+        public ILayout Layout
         {
-            get => _useLayout;
+            get => _layout;
             set
             {
-                _useLayout = value;
-                
+                ILayout old = _layout;
+                _layout = value;
+
                 if (Parent == null) { return; }
 
-                if (_useLayout)
+                if (value == null && old != null)
+                {
+                    Parent.RemoveLayout(this);
+                    return;
+                }
+
+                if (old == null && value != null)
                 {
                     Parent.AddLayout(this);
                     return;
                 }
-
-                Parent.RemoveLayout(this);
             }
         }
-        
+        public bool UsingLayout => _layout != null;
+
         public Vector2 MouseLocation
         {
             get => _mousePos;
@@ -68,13 +73,19 @@ namespace Zene.GUI
             }
         }
         
+        private void BoundsSet()
+        {
+            OnSizeChange(new SizeChangeEventArgs(_bounds.Size));
+            OnElementMove(new PositionEventArgs(_bounds.Location));
+        }
         public RectangleI Bounds
         {
             get => _bounds;
             set
             {
-                OnSizeChange(new SizeChangeEventArgs(value.Size));
-                OnElementMove(new PositionEventArgs(value.Location));
+                if (Layout != null) { return; }
+
+                BoundsSet();
             }
         }
         public Vector2I Size
@@ -82,6 +93,8 @@ namespace Zene.GUI
             get => _bounds.Size;
             set
             {
+                if (Layout != null) { return; }
+
                 OnSizeChange(new SizeChangeEventArgs(value));
             }
         }
@@ -95,6 +108,7 @@ namespace Zene.GUI
         }
         
         public bool MouseHover => _mouseOver;
+        public bool MouseSelect { get; private set; } = false;
 
         internal Cursor _currentCursor;
         public Cursor CursorStyle { get; set; }
@@ -123,10 +137,7 @@ namespace Zene.GUI
         /// </summary>
         /// <param name="key">THe key to query</param>
         /// <returns></returns>
-        public bool this[Keys key]
-        {
-            get => _window[key];
-        }
+        public bool this[Keys key] => _window[key];
         /// <summary>
         /// Determines whether <paramref name="mod"/> is currently active.
         /// </summary>
@@ -136,11 +147,29 @@ namespace Zene.GUI
         /// <param name="mod">The modifier to query.</param>
         /// <exception cref="NotSupportedException"></exception>
         /// <returns></returns>
-        public bool this[Mods mod]
-        {
-            get => _window[mod];
-        }
+        public bool this[Mods mod] => _window[mod];
+        /// <summary>
+        /// Determines whether <paramref name="button"/> is currently pressed.
+        /// </summary>
+        /// <param name="button">The mouse button to query.</param>
+        /// <returns></returns>
+        public bool this[MouseButton button] => _window[button];
 
+        private void SetWindow(Window w)
+        {
+            _window = w;
+
+            // Set child elements
+            lock (_elementRef)
+            {
+                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i]._window = _window;
+                }
+            }
+        }
         public void AddElement(Element e)
         {
             if (e.Parent != null)
@@ -149,28 +178,15 @@ namespace Zene.GUI
             }
 
             e.Parent = this;
-            if (_window != null)
-            {
-                e._window = _window;
-
-                // Set child elements
-                lock (e._elementRef)
-                {
-                    Span<Element> span = CollectionsMarshal.AsSpan(e._elements);
-
-                    for (int i = 0; i < span.Length; i++)
-                    {
-                        span[i]._window = _window;
-                    }
-                }
-            }
+            if (_window != null) { e.SetWindow(_window); }
 
             lock (_elementRef)
             {
                 _elements.Add(e);
             }
 
-            if (e.UseLayout) { AddLayout(e); }
+            // Has layout
+            if (e.Layout != null) { AddLayout(e); }
 
             if (_window != null && _window.Running) { e.OnStart(); }
         }
@@ -180,14 +196,8 @@ namespace Zene.GUI
             if (Shader == null) { return; }
 
             Framebuffer.Bind();
-            Shader.Bind();
 
-            Shader.SetMatrices(
-                Matrix4.Identity,
-                Matrix4.Identity,
-                Projection);
-
-            OnUpdate(new FrameEventArgs(Framebuffer, Shader));
+            OnUpdate(new FrameEventArgs(Framebuffer));
 
             // Draw child elements
             lock (_elementRef)
@@ -340,7 +350,12 @@ namespace Zene.GUI
                         span[i].OnMouseEnter(new EventArgs());
                         span[i].OnMouseMove(new MouseEventArgs(e.Location - span[i]._bounds.Center));
 
-                        _hover.Add(span[i]);
+                        // Add to hover
+                        // Will be false if element is already in hover
+                        if (!MouseSelect)
+                        {
+                            _hover.Add(span[i]);
+                        }
                         newCursor = span[i]._currentCursor;
                         continue;
                     }
@@ -348,7 +363,12 @@ namespace Zene.GUI
                     // Mouse leaves bounds
                     span[i]._mouseOver = false;
                     span[i].OnMouseLeave(new EventArgs());
-                    _hover.Remove(span[i]);
+                    // Remove to hover
+                    // Will be false if element should stay in hover until OnMouseUp
+                    if (!MouseSelect)
+                    {
+                        _hover.Remove(span[i]);
+                    }
                 }
 
                 _currentCursor = newCursor;
@@ -357,6 +377,8 @@ namespace Zene.GUI
         private bool _mouseOver = false;
         protected virtual void OnMouseDown(MouseEventArgs e)
         {
+            MouseSelect = true;
+
             MouseDown?.Invoke(this, e);
 
             // Update child elements
@@ -369,34 +391,46 @@ namespace Zene.GUI
         }
         protected virtual void OnMouseUp(MouseEventArgs e)
         {
+            if (_window.MouseButton == MouseButton.None)
+            {
+                MouseSelect = false;
+            }
+
             MouseUp?.Invoke(this, e);
 
             // Update child elements
             Span<Element> span = CollectionsMarshal.AsSpan(_hover);
 
+            List<int> _removes = new List<int>(span.Length);
+
             for (int i = 0; i < span.Length; i++)
             {
                 span[i].OnMouseUp(e);
+
+                // Mouse not hovering over and no mouse buttons pressed
+                if (!span[i]._mouseOver && !MouseSelect)
+                {
+                    _removes.Add(i);
+                }
+            }
+
+            for (int i = 0; i < _removes.Count; i++)
+            {
+                _hover.RemoveAt(_removes[i]);
             }
         }
 
-        internal void AddLayout(Element e)
+        private void AddLayout(Element e)
         {
             lock (_elLayoutRef)
             {
                 _layouts.Add(e);
             }
 
-            Vector2 multiplier = _bounds.Size * 0.5;
-
-            Vector2 tl = (e.Layout.Left, e.Layout.Top);
-
-            e.Bounds = new RectangleI(
-                tl * multiplier,
-                e.Layout.Size * multiplier
-            );
+            e._bounds = e.Layout.GetBounds(_bounds.Size);
+            e.BoundsSet();
         }
-        internal void RemoveLayout(Element e)
+        private void RemoveLayout(Element e)
         {
             lock (_elLayoutRef)
             {
@@ -412,7 +446,7 @@ namespace Zene.GUI
         {
             lock (_boundsRef)
             {
-                //if (_bounds.Size == e.Size) { return; }
+                if (_bounds.Size == e.Size) { return; }
 
                 _bounds.Size = e.Size;
             }
@@ -430,12 +464,8 @@ namespace Zene.GUI
 
                 for (int i = 0; i < span.Length; i++)
                 {
-                    Vector2 tl = (span[i].Layout.Left, span[i].Layout.Top);
-
-                    span[i].Bounds = new RectangleI(
-                        tl * multiplier,
-                        span[i].Layout.Size * multiplier
-                    );
+                    span[i]._bounds = span[i].Layout.GetBounds(e.Size);
+                    span[i].BoundsSet();
                 }
             }
         }
