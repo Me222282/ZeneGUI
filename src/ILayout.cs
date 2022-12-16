@@ -4,6 +4,6 @@ namespace Zene.GUI
 {
     public interface ILayout
     {
-        public RectangleI GetBounds(Vector2I size);
+        public RectangleI GetBounds(Element element, Vector2I size);
     }
 }

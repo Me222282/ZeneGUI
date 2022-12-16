@@ -8,10 +8,14 @@ namespace Zene.GUI
         {
             Relative = new Box(box);
         }
+        public Layout(double x, double y, double width, double height)
+        {
+            Relative = new Box((x, y), (width, height));
+        }
 
         public Box Relative { get; set; }
 
-        public RectangleI GetBounds(Vector2I size)
+        public RectangleI GetBounds(Element element, Vector2I size)
         {
             Vector2 multiplier = size * 0.5;
             Vector2 tl = (Relative.Left, Relative.Top);
