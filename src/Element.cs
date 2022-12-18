@@ -7,8 +7,16 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public class Element
+    /// <summary>
+    /// The base class for all GUI elements.
+    /// </summary>
+    public abstract class Element
     {
+        /// <summary>
+        /// Craetes an element from its bounds.
+        /// </summary>
+        /// <param name="bounds">The bounding box of the element.</param>
+        /// <param name="framebuffer">Whether to create a framebuffer.</param>
         public Element(IBox bounds, bool framebuffer = true)
         {
             _bounds = new RectangleI(bounds);
@@ -20,6 +28,11 @@ namespace Zene.GUI
             _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
             _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
         }
+        /// <summary>
+        /// Craetes an element from a layout.
+        /// </summary>
+        /// <param name="layout">The layout of the element.</param>
+        /// <param name="framebuffer">Whether to create a framebuffer.</param>
         public Element(ILayout layout, bool framebuffer = true)
         {
             Layout = layout;
@@ -33,17 +46,42 @@ namespace Zene.GUI
         }
 
         internal Window _window;
+        /// <summary>
+        /// The parent element.
+        /// </summary>
         public Element Parent { get; private set; }
 
         internal virtual TextRenderer textRender => Parent.textRender;
+        /// <summary>
+        /// Text rendering object.
+        /// </summary>
         public TextRenderer TextRenderer => textRender;
 
+        protected ActionManager Actions
+        {
+            get
+            {
+                if (_window == null)
+                {
+                    return ActionManager.Temporary;
+                }
+
+                return _window.GraphicsContext.Actions;
+            }
+        }
+
+        /// <summary>
+        /// Determines whether this object renders to its own framebuffer.
+        /// </summary>
         public bool HasFramebuffer
         {
             get => _framebuffer != null;
             protected set => _framebuffer = null;
         }
         private TextureRenderer _framebuffer = null;
+        /// <summary>
+        /// The framebuffer this object renders to.
+        /// </summary>
         public TextureRenderer Framebuffer
         {
             get
@@ -53,6 +91,12 @@ namespace Zene.GUI
                 return Parent.Framebuffer;
             }
         }
+        /// <summary>
+        /// The shader object used to render this object to its parent.
+        /// </summary>
+        /// <remarks>
+        /// This only applies when <see cref="HasFramebuffer"/> is <see cref="true"/>.
+        /// </remarks>
         public virtual IBasicShader Shader => Parent.Shader;
 
         private readonly object _boundsRef = new object();
@@ -61,6 +105,9 @@ namespace Zene.GUI
         private Vector2 _mousePos;
 
         private ILayout _layout = null;
+        /// <summary>
+        /// The position layout of the element. <see cref="null"/> if no layout is used.
+        /// </summary>
         public ILayout Layout
         {
             get => _layout;
@@ -91,8 +138,14 @@ namespace Zene.GUI
                 }
             }
         }
+        /// <summary>
+        /// Determines whether this element uses a layout.
+        /// </summary>
         public bool UsingLayout => _layout != null;
 
+        /// <summary>
+        /// The local mouse position.
+        /// </summary>
         public Vector2 MouseLocation
         {
             get => _mousePos;
@@ -113,6 +166,12 @@ namespace Zene.GUI
             OnSizeChange(new SizeChangeEventArgs(b.Size));
             OnElementMove(new PositionEventArgs(b.Location));
         }
+        /// <summary>
+        /// The bounds of the element.
+        /// </summary>
+        /// <remarks>
+        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
+        /// </remarks>
         public RectangleI Bounds
         {
             get => _bounds;
@@ -123,6 +182,12 @@ namespace Zene.GUI
                 BoundsSet(value);
             }
         }
+        /// <summary>
+        /// The size of the element.
+        /// </summary>
+        /// <remarks>
+        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
+        /// </remarks>
         public Vector2I Size
         {
             get => _bounds.Size;
@@ -133,6 +198,12 @@ namespace Zene.GUI
                 OnSizeChange(new SizeChangeEventArgs(value));
             }
         }
+        /// <summary>
+        /// The position of the element.
+        /// </summary>
+        /// <remarks>
+        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
+        /// </remarks>
         public Vector2I Location
         {
             get => _bounds.Location;
@@ -142,10 +213,19 @@ namespace Zene.GUI
             }
         }
 
+        /// <summary>
+        /// Determines whether the mouse is hovering over this element.
+        /// </summary>
         public bool MouseHover => _mouseOver;
+        /// <summary>
+        /// Determines whether the mouse is selecting this element.
+        /// </summary>
         public bool MouseSelect { get; private set; } = false;
 
         internal Cursor _currentCursor;
+        /// <summary>
+        /// The style of the cursor when hovering over this element.
+        /// </summary>
         public Cursor CursorStyle { get; set; }
 
         public bool UserResizable { get; protected set; }
@@ -205,6 +285,10 @@ namespace Zene.GUI
                 }
             }
         }
+        /// <summary>
+        /// Adds a child element.
+        /// </summary>
+        /// <param name="e">The element to add.</param>
         public void AddChild(Element e)
         {
             if (e.Parent != null)
@@ -225,6 +309,11 @@ namespace Zene.GUI
 
             if (_window != null && _window.Running) { e.OnStart(); }
         }
+        /// <summary>
+        /// Removes a child element.
+        /// </summary>
+        /// <param name="e">The element to remove.</param>
+        /// <returns><see cref="true"/> if the element was found and removed; otherwise <see cref="false"/>.</returns>
         public bool RemoveChild(Element e)
         {
             // This element is not e.Parent - cannot be removed
@@ -501,7 +590,7 @@ namespace Zene.GUI
             // Update child elements
             Span<Element> span = CollectionsMarshal.AsSpan(_hover);
 
-            for (int i = 0; i < span.Length; i++)
+            for (int i = 0; i < _hover.Count; i++)
             {
                 span[i].OnMouseUp(e);
 
@@ -534,6 +623,9 @@ namespace Zene.GUI
         private readonly object _elLayoutRef = new object();
         private readonly List<Element> _layouts = new List<Element>();
 
+        /// <summary>
+        /// The projection matrix used to render objects to this element.
+        /// </summary>
         public Matrix4 Projection { get; private set; }
         private bool _render = true;
         protected virtual void OnSizeChange(SizeChangeEventArgs e)
@@ -556,8 +648,11 @@ namespace Zene.GUI
             }
             if (HasFramebuffer)
             {
-                //_framebuffer.ViewSize = e.Size;
-                _framebuffer.Size = e.Size;
+                Actions.Push(() =>
+                {
+                    //_framebuffer.ViewSize = e.Size;
+                    _framebuffer.Size = e.Size;
+                });
             }
             Projection = Matrix4.CreateOrthographic(e.Width, e.Height, 0d, 1d);
 

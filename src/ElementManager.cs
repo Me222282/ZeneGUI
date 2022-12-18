@@ -4,6 +4,9 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
+    /// <summary>
+    /// The root parent element.
+    /// </summary>
     public class ElementManager : Element
     {
         private readonly DrawObject<float, byte> _square;
