@@ -9,9 +9,6 @@ namespace Zene.GUI
     /// </summary>
     public class ElementManager : Element
     {
-        private readonly DrawObject<float, byte> _square;
-        //private readonly BasicShader _shader;
-
         internal override TextRenderer textRender { get; }
         public override IBasicShader Shader { get; }
 
@@ -33,14 +30,6 @@ namespace Zene.GUI
 
             //_shader = new BasicShader();
             Shader = new BasicShader();
-            _square = new DrawObject<float, byte>(stackalloc float[]
-            {
-                0.5f, 0.5f, 1f, 1f,
-                0.5f, -0.5f, 1f, 0f,
-                -0.5f, -0.5f, 0f, 0f,
-                -0.5f, 0.5f, 0f, 1f
-            }, stackalloc byte[] { 0, 1, 2, 2, 3, 0 }, 4, 0, AttributeSize.D2, BufferUsage.DrawFrequent);
-            _square.AddAttribute(2, 2, AttributeSize.D2);
 
             textRender = new TextRenderer();
         }
@@ -57,7 +46,7 @@ namespace Zene.GUI
 
         public void Render()
         {
-            Render(State.GetBoundFramebuffer(FrameTarget.Draw), Projection, _square);
+            Render(State.GetBoundFramebuffer(FrameTarget.Draw), Projection);
         }
 
         protected override void OnSizeChange(SizeChangeEventArgs e)

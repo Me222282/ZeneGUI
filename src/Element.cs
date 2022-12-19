@@ -342,7 +342,7 @@ namespace Zene.GUI
             }
         }
         
-        internal void Render(IFramebuffer framebuffer, Matrix4 projection, IDrawable draw)
+        internal void Render(IFramebuffer framebuffer, Matrix4 projection)
         {
             if (!_render) { return; }
             if (HasFramebuffer && Shader == null) { return; }
@@ -355,8 +355,8 @@ namespace Zene.GUI
             {
                 Parent.Framebuffer.ViewLocation =
                     (
-                        (_bounds.Height / 2) + _bounds.Bottom,
-                        (_bounds.Width / 2) + _bounds.Left
+                        (Parent._bounds.Width / 2) + _bounds.Left,
+                        (Parent._bounds.Height / 2) + _bounds.Bottom
                     ) + RenderOffset;
             }
             OnUpdate(new FrameEventArgs(Framebuffer));
@@ -375,7 +375,7 @@ namespace Zene.GUI
                 Shader.ColourSource = ColourSource.Texture;
                 Shader.TextureSlot = 0;
                 _framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
-                draw.Draw();
+                Shapes.Square.Draw();
             }
             
             // Draw child elements
@@ -391,7 +391,7 @@ namespace Zene.GUI
                     // Default colour
                     textRender.Colour = new Colour(255, 255, 255);
                     
-                    span[i].Render(framebuffer, projection, draw);
+                    span[i].Render(framebuffer, projection);
                 }
             }
         }
@@ -626,7 +626,7 @@ namespace Zene.GUI
         /// <summary>
         /// The projection matrix used to render objects to this element.
         /// </summary>
-        public Matrix4 Projection { get; private set; }
+        public Matrix4 Projection { get; private set; } = Matrix4.Identity;
         private bool _render = true;
         protected virtual void OnSizeChange(SizeChangeEventArgs e)
         {
