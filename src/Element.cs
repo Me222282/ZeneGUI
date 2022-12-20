@@ -386,8 +386,10 @@ namespace Zene.GUI
             
             State.DepthTesting = false;
 
-            if (HasFramebuffer)// && Parent != null)
+            if (HasFramebuffer && Parent != null)
             {
+                Parent.Framebuffer.ViewLocation = 0;
+                Parent.Framebuffer.ViewSize = Parent.Framebuffer.Size;
                 framebuffer.Bind();
                 Shader.Bind();
                 Vector2I offset = RenderOffset;

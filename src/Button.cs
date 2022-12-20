@@ -4,12 +4,14 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public class Button : Element
+    public class Button : TextElement
     {
         public Button(IBox bounds)
             : base(bounds, false)
         {
             CursorStyle = Cursor.Hand;
+            Text = "Button";
+            TextColour = ColourF.Zero;
 
             Shader = new BorderShader()
             {
@@ -22,6 +24,8 @@ namespace Zene.GUI
             : base(layout, false)
         {
             CursorStyle = Cursor.Hand;
+            Text = "Button";
+            TextColour = ColourF.Zero;
 
             Shader = new BorderShader()
             {
@@ -34,13 +38,7 @@ namespace Zene.GUI
 
         public event MouseEventHandler Click;
 
-        public string Text { get; set; }
-        public double TextSize { get; set; } = 10d;
-
-        public Font Font { get; set; }
-
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
-        public ColourF TextColour { get; set; } = ColourF.Zero;
         public ColourF BorderColour
         {
             get => Shader.BorderColour;
