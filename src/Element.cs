@@ -180,6 +180,9 @@ namespace Zene.GUI
                 if (Layout != null) { return; }
 
                 BoundsSet(value);
+
+                if (Parent == null) { return; }
+                Parent._triggerMouseMove = true;
             }
         }
         /// <summary>
@@ -196,6 +199,9 @@ namespace Zene.GUI
                 if (Layout != null) { return; }
 
                 OnSizeChange(new SizeChangeEventArgs(value));
+
+                if (Parent == null) { return; }
+                Parent._triggerMouseMove = true;
             }
         }
         /// <summary>
@@ -209,7 +215,12 @@ namespace Zene.GUI
             get => _bounds.Location;
             set
             {
+                if (Layout != null) { return; }
+
                 OnElementMove(new PositionEventArgs(value));
+
+                if (Parent == null) { return; }
+                Parent._triggerMouseMove = true;
             }
         }
         private Vector2I _boundOffset;
@@ -292,6 +303,13 @@ namespace Zene.GUI
         /// <returns></returns>
         public bool this[MouseButton button] => _window[button];
 
+        /// <summary>
+        /// Get the child element at an index.
+        /// </summary>
+        /// <param name="index">The index of the retrieved element.</param>
+        /// <returns></returns>
+        public Element this[int index] => _elements[index];
+
         private void SetWindow(Window w)
         {
             _window = w;
@@ -369,6 +387,19 @@ namespace Zene.GUI
             if (!_render) { return; }
             if (HasFramebuffer && Shader == null) { return; }
 
+            if (_triggerMouseMove && MouseHover)
+            {
+                Vector2 mp = _mousePos;
+                _mousePos = double.NaN;
+                OnMouseMove(new MouseEventArgs(mp));
+                _triggerMouseMove = false;
+                _window.CursorStyle = _currentCursor;
+            }
+            else if (_triggerMouseMove)
+            {
+                _triggerMouseMove = false;
+            }
+
             Framebuffer.Bind();
 
             Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + DrawingBoundOffset);
@@ -393,10 +424,13 @@ namespace Zene.GUI
                 framebuffer.Bind();
                 Shader.Bind();
                 Vector2I offset = RenderOffset;
-                Shader.SetMatrices(
+                /*Shader.SetMatrices(
                     Matrix4.CreateBox(new Box(drawingBounds.Location + offset, drawingBounds.Size)),
                     Matrix4.Identity,
-                    projection);
+                    projection);*/
+                Shader.Matrix1 = Matrix4.CreateBox(new Box(drawingBounds.Location + offset, drawingBounds.Size));
+                Shader.Matrix2 = Matrix4.Identity;
+                Shader.Matrix3 = projection;
                 Shader.ColourSource = ColourSource.Texture;
                 Shader.TextureSlot = 0;
                 _framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
@@ -536,6 +570,8 @@ namespace Zene.GUI
                 }
             }
         }
+
+        private bool _triggerMouseMove = false;
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
             lock (_mousePosRef)
@@ -556,49 +592,58 @@ namespace Zene.GUI
                 {
                     if (!span[i].Visable) { continue; }
 
-                    bool mouseOverNew = span[i]._bounds.Contains(e.Location);
+                    Cursor c = ManageMouseMove(span[i], e);
 
-                    // Mouse not in bounds
-                    if ((mouseOverNew == span[i]._mouseOver) && (span[i]._mouseOver == false)) { continue; }
-                    // mouseOverNew will also equal true
-                    // Mouse moves inside bounds
-                    if (mouseOverNew == span[i]._mouseOver)
-                    {
-                        span[i].OnMouseMove(new MouseEventArgs(e.Location - span[i]._bounds.Centre));
-                        newCursor = span[i]._currentCursor;
-                        continue;
-                    }
+                    if (c == null) { continue; }
 
-                    // Mouse enters bounds
-                    if (mouseOverNew)
-                    {
-                        span[i]._mouseOver = true;
-                        span[i].OnMouseEnter(new EventArgs());
-                        span[i].OnMouseMove(new MouseEventArgs(e.Location - span[i]._bounds.Centre));
-
-                        // Add to hover
-                        // Will be false if element is already in hover
-                        if (!MouseSelect)
-                        {
-                            _hover.Add(span[i]);
-                        }
-                        newCursor = span[i]._currentCursor;
-                        continue;
-                    }
-
-                    // Mouse leaves bounds
-                    span[i].OnMouseLeave(new EventArgs());
-                    // Remove to hover
-                    // Will be false if element should stay in hover until OnMouseUp
-                    if (!MouseSelect)
-                    {
-                        _hover.Remove(span[i]);
-                    }
+                    newCursor = c;
                 }
 
                 _currentCursor = newCursor;
             }
         }
+        private Cursor ManageMouseMove(Element e, MouseEventArgs m)
+        {
+            bool mouseOverNew = e._bounds.Contains(m.Location);
+
+            // Mouse not in bounds
+            if ((mouseOverNew == e._mouseOver) && (e._mouseOver == false)) { return null; }
+            // mouseOverNew will also equal true
+            // Mouse moves inside bounds
+            if (mouseOverNew == e._mouseOver)
+            {
+                e.OnMouseMove(new MouseEventArgs(m.Location - e._bounds.Centre));
+                return e._currentCursor;
+            }
+
+            // Mouse enters bounds
+            if (mouseOverNew)
+            {
+                e._mouseOver = true;
+                e.OnMouseEnter(new EventArgs());
+                e.OnMouseMove(new MouseEventArgs(e.Location - e._bounds.Centre));
+
+                // Add to hover
+                // Will be false if element is already in hover
+                if (!MouseSelect)
+                {
+                    _hover.Add(e);
+                }
+                return e._currentCursor;
+            }
+
+            // Mouse leaves bounds
+            e.OnMouseLeave(new EventArgs());
+            // Remove to hover
+            // Will be false if element should stay in hover until OnMouseUp
+            if (!MouseSelect)
+            {
+                _hover.Remove(e);
+            }
+
+            return null;
+        }
+        
         private bool _mouseOver = false;
         protected virtual void OnMouseDown(MouseEventArgs e)
         {
@@ -668,6 +713,14 @@ namespace Zene.GUI
             {
                 _layouts.Remove(e);
             }
+        }
+
+        protected void TriggerLayout()
+        {
+            if (Layout == null || Parent == null) { return; }
+
+            BoundsSet(Layout.GetBounds(this, Parent.Size));
+            Parent._triggerMouseMove = true;
         }
 
         private readonly object _elLayoutRef = new object();

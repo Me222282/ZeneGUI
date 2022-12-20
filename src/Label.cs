@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Zene.Graphics;
+﻿using Zene.Graphics;
 using Zene.Structs;
 
 namespace Zene.GUI
@@ -25,12 +20,8 @@ namespace Zene.GUI
         protected override void OnUpdate(FrameEventArgs e)
         {
             base.OnUpdate(e);
-            /*
-            e.Framebuffer.Clear(new Colour(100, 150, 200));
-            if (MouseHover)
-            {
-                e.Framebuffer.Clear(new Colour(200, 150, 100));
-            }*/
+
+            if (Font == null || Text == null) { return; }
 
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;

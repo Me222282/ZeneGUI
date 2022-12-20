@@ -15,9 +15,39 @@ namespace Zene.GUI
         {
         }
 
-        public string Text { get; set; } = "TEMP";
-        public double TextSize { get; set; } = 10d;
+        private string _text = "TEMP";
+        public string Text
+        {
+            get => _text;
+            set
+            {
+                _text = value;
+
+                TriggerLayout();
+            }
+        }
+        private double _textSize = 10d;
+        public double TextSize
+        {
+            get => _textSize;
+            set
+            {
+                _textSize = value;
+
+                TriggerLayout();
+            }
+        }
         public ColourF TextColour { get; set; } = new ColourF(1f, 1f, 1f);
-        public Font Font { get; set; }
+        private Font _font;
+        public Font Font
+        {
+            get => _font;
+            set
+            {
+                _font = value;
+
+                TriggerLayout();
+            }
+        }
     }
 }

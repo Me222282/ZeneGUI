@@ -102,6 +102,8 @@ namespace Zene.GUI
 
             Shapes.Square.Draw();
 
+            if (Font == null || Text == null) { return; }
+
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;
             TextRenderer.DrawCentred(Text, Font, 0, 0);

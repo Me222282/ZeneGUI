@@ -58,10 +58,9 @@ namespace Zene.GUI
             // Render to screen
             current.Bind();
             Shader.Bind();
-            Shader.SetMatrices(
-                Matrix4.CreateScale(2d),
-                Matrix4.Identity,
-                Matrix4.Identity);
+            Shader.Matrix1 = Matrix4.CreateScale(2d);
+            Shader.Matrix2 = Matrix4.Identity;
+            Shader.Matrix3 = Matrix4.Identity;
             Shader.ColourSource = ColourSource.Texture;
             Shader.TextureSlot = 0;
             Framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
