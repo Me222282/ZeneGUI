@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Zene.Graphics;
+﻿using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
 
@@ -12,8 +7,10 @@ namespace Zene.GUI
     public class Button : Element
     {
         public Button(IBox bounds)
-            : base(bounds, true)
+            : base(bounds, false)
         {
+            CursorStyle = Cursor.Hand;
+
             Shader = new BorderShader()
             {
                 BorderColour = new ColourF(0.6f, 0.6f, 0.6f),
@@ -22,8 +19,10 @@ namespace Zene.GUI
         }
 
         public Button(ILayout layout)
-            : base(layout, true)
+            : base(layout, false)
         {
+            CursorStyle = Cursor.Hand;
+
             Shader = new BorderShader()
             {
                 BorderColour = new ColourF(0.6f, 0.6f, 0.6f),
@@ -69,6 +68,18 @@ namespace Zene.GUI
             Click?.Invoke(this, e);
         }
 
+        private double BorderWidthDraw()
+        {
+            double v = _bw;
+
+            if (MouseSelect | MouseHover)
+            {
+                v += 2;
+            }
+
+            return v;
+        }
+
         protected override void OnUpdate(FrameEventArgs e)
         {
             base.OnUpdate(e);
@@ -78,19 +89,20 @@ namespace Zene.GUI
             if (MouseSelect)
             {
                 c -= new Vector4(0.2, 0.2, 0.2, 0d);
-                Shader.BorderWidth = _bw + 2;
             }
             else if (MouseHover)
             {
                 c -= new Vector4(0.1, 0.1, 0.1, 0d);
-                Shader.BorderWidth = _bw + 2;
-            }
-            else
-            {
-                Shader.BorderWidth = _bw;
             }
 
-            e.Framebuffer.Clear((ColourF)c);
+            Shader.BorderWidth = BorderWidthDraw();
+            DrawingBoundOffset = new Vector2I(Shader.BorderWidth);
+
+            Shader.ColourSource = ColourSource.UniformColour;
+            Shader.Colour = (ColourF)c;
+            Shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
+
+            Shapes.Square.Draw();
 
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;

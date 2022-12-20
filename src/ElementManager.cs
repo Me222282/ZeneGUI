@@ -44,9 +44,28 @@ namespace Zene.GUI
             _window.CursorStyle = _currentCursor;
         }
 
+        /// <summary>
+        /// Renders all visable elements to the current context.
+        /// </summary>
         public void Render()
         {
-            Render(State.GetBoundFramebuffer(FrameTarget.Draw), Projection);
+            IFramebuffer current = State.GetBoundFramebuffer(FrameTarget.Draw);
+
+            Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
+
+            Render(Framebuffer, Projection);
+
+            // Render to screen
+            current.Bind();
+            Shader.Bind();
+            Shader.SetMatrices(
+                Matrix4.CreateScale(2d),
+                Matrix4.Identity,
+                Matrix4.Identity);
+            Shader.ColourSource = ColourSource.Texture;
+            Shader.TextureSlot = 0;
+            Framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
+            Shapes.Square.Draw();
         }
 
         protected override void OnSizeChange(SizeChangeEventArgs e)
