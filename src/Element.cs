@@ -24,9 +24,7 @@ namespace Zene.GUI
             // Dont create framebuffer
             if (!framebuffer) { return; }
 
-            _framebuffer = new TextureRenderer(BaseFramebuffer.Properties.Width, BaseFramebuffer.Properties.Height);
-            _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
-            _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
+            SetFramebuffer();
         }
         /// <summary>
         /// Craetes an element from a layout.
@@ -40,9 +38,7 @@ namespace Zene.GUI
             // Dont create framebuffer
             if (!framebuffer) { return; }
 
-            _framebuffer = new TextureRenderer(BaseFramebuffer.Properties.Width, BaseFramebuffer.Properties.Height);
-            _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
-            _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
+            SetFramebuffer();
         }
 
         internal Window _window;
@@ -76,7 +72,28 @@ namespace Zene.GUI
         public bool HasFramebuffer
         {
             get => _framebuffer != null;
-            protected set => _framebuffer = null;
+            protected set
+            {
+                if (!value)
+                {
+                    _framebuffer = null;
+                    return;
+                }
+                if (_framebuffer != null) { return; }
+
+                SetFramebuffer();
+            }
+        }
+        private void SetFramebuffer()
+        {
+            int w = _bounds.Width <= 0 ? BaseFramebuffer.Properties.Width : _bounds.Width;
+            int h = _bounds.Height <= 0 ? BaseFramebuffer.Properties.Height : _bounds.Height;
+
+            _framebuffer = new TextureRenderer(w, h);
+            _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
+            _framebuffer.GetTexture(FrameAttachment.Colour0).MinFilter = TextureSampling.Nearest;
+            _framebuffer.GetTexture(FrameAttachment.Colour0).MagFilter = TextureSampling.Nearest;
+            _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
         }
         private TextureRenderer _framebuffer = null;
         /// <summary>
@@ -269,9 +286,12 @@ namespace Zene.GUI
         public event ScrolEventHandler Scroll;
         public event EventHandler MouseEnter;
         public event EventHandler MouseLeave;
+
         public event MouseEventHandler MouseMove;
         public event MouseEventHandler MouseDown;
         public event MouseEventHandler MouseUp;
+        public event MouseEventHandler Click;
+
         public event SizeChangeEventHandler SizeChange;
         public event PositionEventHandler ElementMove;
 
@@ -361,6 +381,7 @@ namespace Zene.GUI
 
             _elements.Remove(e);
             _layouts.Remove(e);
+            e._hoverIndex = -1;
             _hover.Remove(e);
 
             e.Parent = null;
@@ -534,6 +555,7 @@ namespace Zene.GUI
             {
                 if (!span[i].Visable)
                 {
+                    span[i]._hoverIndex = -1;
                     _hover.RemoveAt(i);
                     i--;
                     continue;
@@ -543,6 +565,7 @@ namespace Zene.GUI
             }
         }
 
+        private int _hoverIndex = -1;
         private readonly List<Element> _hover = new List<Element>();
         protected virtual void OnMouseEnter(EventArgs e)
         {
@@ -565,6 +588,7 @@ namespace Zene.GUI
                     
                     // Remove element
                     if (MouseSelect) { continue; }
+                    span[i]._hoverIndex = -1;
                     _hover.RemoveAt(i);
                     i--;
                 }
@@ -625,8 +649,9 @@ namespace Zene.GUI
 
                 // Add to hover
                 // Will be false if element is already in hover
-                if (!MouseSelect)
+                if (e._hoverIndex < 0)
                 {
+                    e._hoverIndex = _hover.Count;
                     _hover.Add(e);
                 }
                 return e._currentCursor;
@@ -638,6 +663,7 @@ namespace Zene.GUI
             // Will be false if element should stay in hover until OnMouseUp
             if (!MouseSelect)
             {
+                e._hoverIndex = -1;
                 _hover.Remove(e);
             }
 
@@ -658,6 +684,7 @@ namespace Zene.GUI
             {
                 if (!span[i].Visable)
                 {
+                    span[i]._hoverIndex = -1;
                     _hover.RemoveAt(i);
                     i--;
                     continue;
@@ -668,6 +695,11 @@ namespace Zene.GUI
         }
         protected virtual void OnMouseUp(MouseEventArgs e)
         {
+            if (MouseSelect)
+            {
+                Click?.Invoke(this, e);
+            }
+
             if (_window.MouseButton == MouseButton.None)
             {
                 MouseSelect = false;
@@ -682,6 +714,7 @@ namespace Zene.GUI
             {
                 if (!span[i].Visable)
                 {
+                    span[i]._hoverIndex = -1;
                     _hover.RemoveAt(i);
                     i--;
                     continue;
@@ -692,6 +725,7 @@ namespace Zene.GUI
                 // Mouse not hovering over and no mouse buttons pressed
                 if (!span[i]._mouseOver && !MouseSelect)
                 {
+                    span[i]._hoverIndex = -1;
                     _hover.RemoveAt(i);
                     i--;
                 }

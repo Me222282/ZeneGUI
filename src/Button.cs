@@ -36,8 +36,6 @@ namespace Zene.GUI
 
         public override BorderShader Shader { get; }
 
-        public event MouseEventHandler Click;
-
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour
         {
@@ -58,13 +56,6 @@ namespace Zene.GUI
         }
 
         public ITexture Texture { get; set; }
-
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-
-            Click?.Invoke(this, e);
-        }
 
         private double BorderWidthDraw()
         {
