@@ -1,4 +1,5 @@
-﻿using Zene.Graphics;
+﻿using System;
+using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
 
@@ -12,50 +13,40 @@ namespace Zene.GUI
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = ColourF.Zero;
+            DrawingBounds();
 
-            Shader = new BorderShader()
-            {
-                BorderColour = new ColourF(0.6f, 0.6f, 0.6f),
-                Radius = 0.1
-            };
+            Shader = BorderShader.GetInstance();
         }
-
         public Button(ILayout layout)
             : base(layout, false)
         {
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = ColourF.Zero;
+            DrawingBounds();
 
-            Shader = new BorderShader()
-            {
-                BorderColour = new ColourF(0.6f, 0.6f, 0.6f),
-                Radius = 0.1
-            };
+            Shader = BorderShader.GetInstance();
         }
 
         public override BorderShader Shader { get; }
 
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
-        public ColourF BorderColour
-        {
-            get => Shader.BorderColour;
-            set => Shader.BorderColour = value;
-        }
+        public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
 
         private double _bw = 5d;
         public double BorderWidth
         {
             get => _bw;
-            set => _bw = value;
-        }
-        public double CornerRadius
-        {
-            get => Shader.Radius;
-            set => Shader.Radius = value;
-        }
+            set
+            {
+                _bw = value;
 
-        public ITexture Texture { get; set; }
+                DrawingBounds();
+            }
+        }
+        public double CornerRadius { get; set; } = 0.1;
+
+        public ITexture Texture { get; set; } = null;
 
         private double BorderWidthDraw()
         {
@@ -67,6 +58,10 @@ namespace Zene.GUI
             }
 
             return v;
+        }
+        private void DrawingBounds()
+        {
+            DrawingBoundOffset = new Vector2I(BorderWidthDraw());
         }
 
         protected override void OnUpdate(FrameEventArgs e)
@@ -85,12 +80,25 @@ namespace Zene.GUI
             }
 
             Shader.BorderWidth = BorderWidthDraw();
-            DrawingBoundOffset = new Vector2I(Shader.BorderWidth);
 
-            Shader.ColourSource = ColourSource.UniformColour;
-            Shader.Colour = (ColourF)c;
+            Shader.BorderColour = BorderColour;
+            Shader.Radius = CornerRadius;
+
+            if (Texture != null)
+            {
+                Shader.ColourSource = ColourSource.Texture;
+                Shader.TextureSlot = 0;
+                Texture.Bind(0);
+            }
+            else
+            {
+                Shader.ColourSource = ColourSource.UniformColour;
+                Shader.Colour = (ColourF)c;
+            }
+
+            Shader.Matrix3 = Projection;
+            Shader.Size = Size;
             Shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
-
             Shapes.Square.Draw();
 
             if (Font == null || Text == null) { return; }
@@ -100,15 +108,23 @@ namespace Zene.GUI
             TextRenderer.DrawCentred(Text, Font, 0, 0);
         }
 
-        protected override void OnSizeChange(SizeChangeEventArgs e)
+        protected override void OnMouseEnter(EventArgs e)
         {
-            base.OnSizeChange(e);
+            base.OnMouseEnter(e);
 
-            Actions.Push(() =>
-            {
-                Shader.Matrix3 = Projection;
-                Shader.Size = e.Size;
-            });
+            DrawingBounds();
+        }
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+
+            DrawingBounds();
+        }
+        protected override void OnMouseUp(MouseEventArgs e)
+        {
+            base.OnMouseUp(e);
+
+            DrawingBounds();
         }
     }
 }

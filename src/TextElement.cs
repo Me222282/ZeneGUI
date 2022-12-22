@@ -38,7 +38,7 @@ namespace Zene.GUI
             }
         }
         public ColourF TextColour { get; set; } = new ColourF(1f, 1f, 1f);
-        private Font _font;
+        private Font _font = SampleFont.GetInstance();
         public Font Font
         {
             get => _font;

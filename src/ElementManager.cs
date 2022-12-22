@@ -29,7 +29,7 @@ namespace Zene.GUI
             _window.Start += (_, _) => OnStart();
 
             //_shader = new BasicShader();
-            Shader = new BasicShader();
+            Shader = BasicShader.GetInstance();
 
             textRender = new TextRenderer();
         }
