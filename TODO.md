@@ -1,3 +1,5 @@
+- Single element hover
+
 - Depth control
 
 + View matrix parsing:
