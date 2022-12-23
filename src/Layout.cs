@@ -15,13 +15,12 @@ namespace Zene.GUI
 
         public Box Relative { get; set; }
 
-        public RectangleI GetBounds(Element element, Vector2I size)
+        public Box GetBounds(Element element, Vector2 size)
         {
             Vector2 multiplier = size * 0.5;
-            Vector2 tl = (Relative.Left, Relative.Top);
 
-            return new RectangleI(
-                tl * multiplier,
+            return new Box(
+                Relative.Location * multiplier,
                 Relative.Size * multiplier
             );
         }

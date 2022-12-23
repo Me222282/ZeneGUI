@@ -25,7 +25,7 @@ namespace Zene.GUI
             _window.KeyDown += (_, e) => OnKeyDown(e);
             _window.KeyUp += (_, e) => OnKeyUp(e);
             _window.TextInput += (_, e) => OnTextInput(e);
-            _window.SizeChange += (_, e) => OnSizeChange(e);
+            _window.SizeChange += (_, e) => OnSizeChange((VectorEventArgs)e);
             _window.Start += (_, _) => OnStart();
 
             //_shader = new BasicShader();
@@ -65,13 +65,6 @@ namespace Zene.GUI
             Shader.TextureSlot = 0;
             Framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
             Shapes.Square.Draw();
-        }
-
-        protected override void OnSizeChange(SizeChangeEventArgs e)
-        {
-            base.OnSizeChange(e);
-
-            Location = (e.Size.X / -2, e.Size.Y / 2);
         }
     }
 }

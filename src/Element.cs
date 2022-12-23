@@ -19,7 +19,7 @@ namespace Zene.GUI
         /// <param name="framebuffer">Whether to create a framebuffer.</param>
         public Element(IBox bounds, bool framebuffer = true)
         {
-            _bounds = new RectangleI(bounds);
+            _bounds = new Box(bounds);
 
             // Dont create framebuffer
             if (!framebuffer) { return; }
@@ -86,8 +86,8 @@ namespace Zene.GUI
         }
         private void SetFramebuffer()
         {
-            int w = _bounds.Width <= 0 ? BaseFramebuffer.Properties.Width : _bounds.Width;
-            int h = _bounds.Height <= 0 ? BaseFramebuffer.Properties.Height : _bounds.Height;
+            int w = _bounds.Width <= 0 ? BaseFramebuffer.Properties.Width : (int)_bounds.Width;
+            int h = _bounds.Height <= 0 ? BaseFramebuffer.Properties.Height : (int)_bounds.Height;
 
             _framebuffer = new TextureRenderer(w, h);
             _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
@@ -116,9 +116,7 @@ namespace Zene.GUI
         /// </remarks>
         public virtual IBasicShader Shader => Parent.Shader;
 
-        private readonly object _boundsRef = new object();
-        private RectangleI _bounds;
-        private readonly object _mousePosRef = new object();
+        private Box _bounds;
         private Vector2 _mousePos;
 
         private ILayout _layout = null;
@@ -165,7 +163,17 @@ namespace Zene.GUI
         /// </summary>
         public Vector2 MouseLocation
         {
-            get => _mousePos;
+            get
+            {
+                if (Parent == null)
+                {
+                    Vector2 wml = _window.MouseLocation;
+
+                    return (wml.X, -wml.Y) - (_window.Size * 0.5);
+                }
+
+                return Parent.MouseLocation - _bounds.Centre;
+            }
             set
             {
                 if (Parent == null)
@@ -178,10 +186,10 @@ namespace Zene.GUI
             }
         }
 
-        private void BoundsSet(RectangleI b)
+        private void BoundsSet(Box b)
         {
-            OnSizeChange(new SizeChangeEventArgs(b.Size));
-            OnElementMove(new PositionEventArgs(b.Location));
+            OnSizeChange(new VectorEventArgs(b.Size));
+            OnElementMove(new VectorEventArgs(b.Location));
         }
         /// <summary>
         /// The bounds of the element.
@@ -189,7 +197,7 @@ namespace Zene.GUI
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public RectangleI Bounds
+        public Box Bounds
         {
             get => _bounds;
             set
@@ -208,14 +216,14 @@ namespace Zene.GUI
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public Vector2I Size
+        public Vector2 Size
         {
             get => _bounds.Size;
             set
             {
                 if (Layout != null) { return; }
 
-                OnSizeChange(new SizeChangeEventArgs(value));
+                OnSizeChange(new VectorEventArgs(value));
 
                 if (Parent == null) { return; }
                 Parent._triggerMouseMove = true;
@@ -227,34 +235,33 @@ namespace Zene.GUI
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public Vector2I Location
+        public Vector2 Location
         {
             get => _bounds.Location;
             set
             {
                 if (Layout != null) { return; }
 
-                OnElementMove(new PositionEventArgs(value));
+                OnElementMove(new VectorEventArgs(value));
 
                 if (Parent == null) { return; }
                 Parent._triggerMouseMove = true;
             }
         }
-        private Vector2I _boundOffset;
+        private Vector2 _boundOffset;
         /// <summary>
         /// The offset added the the drawing bound's size.
         /// </summary>
-        protected Vector2I DrawingBoundOffset
+        protected Vector2 DrawingBoundOffset
         {
             get => _boundOffset;
             set
             {
                 if (_boundOffset == value) { return; }
-
                 _boundOffset = value;
 
-                SetProjection();
-                OnSizeChange(new SizeChangeEventArgs(_bounds.Size));
+                //SetProjection();
+                OnSizeChange(new VectorEventArgs(_bounds.Size));
             }
         }
 
@@ -292,8 +299,8 @@ namespace Zene.GUI
         public event MouseEventHandler MouseUp;
         public event MouseEventHandler Click;
 
-        public event SizeChangeEventHandler SizeChange;
-        public event PositionEventHandler ElementMove;
+        public event VectorEventHandler SizeChange;
+        public event VectorEventHandler ElementMove;
 
         public event FrameEventHandler Update;
 
@@ -366,7 +373,7 @@ namespace Zene.GUI
 
             // Has layout
             if (e.Layout != null) { AddLayout(e); }
-
+            // Trigger OnStart if window already executing
             if (_window != null && _window.Running) { e.OnStart(); }
         }
         /// <summary>
@@ -379,10 +386,13 @@ namespace Zene.GUI
             // This element is not e.Parent - cannot be removed
             if (e.Parent != this) { return false; }
 
-            _elements.Remove(e);
+            // Element not a child of this
+            if (!_elements.Remove(e)) { return false; }
+            
             _layouts.Remove(e);
             e._hoverIndex = -1;
             _hover.Remove(e);
+            e._mouseOver = false;
 
             e.Parent = null;
             e.SetWindow(null);
@@ -390,24 +400,46 @@ namespace Zene.GUI
             return true;
         }
         
-        private Vector2I RenderOffset
+        private Vector2 RenderOffset
         {
             get
             {
                 if (Parent == null)
                 {
-                    return Vector2I.Zero;
+                    return Vector2.Zero;
                 }
                 
                 return Parent.RenderOffset + Parent._bounds.Centre;
             }
         }
         
+        private void SetViewSize()
+        {
+            Framebuffer.ViewSize = (Vector2I)(_bounds.Size + _boundOffset);
+        }
+        private void SetViewPos()
+        {
+            if (HasFramebuffer) { return; }
+
+            Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + _boundOffset);
+
+            // Create viewport offset if this element is drawing
+            // straight to the parents framebuffer
+            Parent.Framebuffer.ViewLocation = (Vector2I)
+                ((
+                    (Parent._bounds.Width * 0.5) + drawingBounds.Left,
+                    (Parent._bounds.Height * 0.5) + drawingBounds.Bottom
+                ) + RenderOffset);
+        }
+
+        private bool _inRender = false;
         internal void Render(IFramebuffer framebuffer, Matrix4 projection)
         {
             if (!_render) { return; }
             if (HasFramebuffer && Shader == null) { return; }
 
+            // Caused by a change in size or position of a child element
+            // Thus mouse hover may become inaccurate
             if (_triggerMouseMove && MouseHover)
             {
                 Vector2 mp = _mousePos;
@@ -416,45 +448,43 @@ namespace Zene.GUI
                 _triggerMouseMove = false;
                 _window.CursorStyle = _currentCursor;
             }
-            else if (_triggerMouseMove)
-            {
-                _triggerMouseMove = false;
-            }
+
+            _triggerMouseMove = false;
 
             Framebuffer.Bind();
+            _inRender = true;
 
-            Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + DrawingBoundOffset);
-
-            Framebuffer.ViewSize = (Vector2I)drawingBounds.Size;
-            if (!HasFramebuffer)
-            {
-                Parent.Framebuffer.ViewLocation =
-                    (
-                        (Parent._bounds.Width / 2) + (int)drawingBounds.Left,
-                        (Parent._bounds.Height / 2) + (int)drawingBounds.Bottom
-                    ) + RenderOffset;
-            }
+            // Set viewport
+            SetViewPos();
+            SetViewSize();
             OnUpdate(new FrameEventArgs(Framebuffer));
-            
+
+            _inRender = false;
+
             State.DepthTesting = false;
 
+            // Draw element framebuffer if one exists
             if (HasFramebuffer && Parent != null)
             {
+                // Set viewport to normal
                 Parent.Framebuffer.ViewLocation = 0;
                 Parent.Framebuffer.ViewSize = Parent.Framebuffer.Size;
+                // Create drawing context
                 framebuffer.Bind();
                 Shader.Bind();
-                Vector2I offset = RenderOffset;
+                Vector2 offset = RenderOffset;
                 /*Shader.SetMatrices(
                     Matrix4.CreateBox(new Box(drawingBounds.Location + offset, drawingBounds.Size)),
                     Matrix4.Identity,
                     projection);*/
-                Shader.Matrix1 = Matrix4.CreateBox(new Box(drawingBounds.Location + offset, drawingBounds.Size));
+                Shader.Matrix1 = Matrix4.CreateBox(new Box(_bounds.Location + offset, _bounds.Size + _boundOffset));
                 Shader.Matrix2 = Matrix4.Identity;
                 Shader.Matrix3 = projection;
                 Shader.ColourSource = ColourSource.Texture;
                 Shader.TextureSlot = 0;
+                // Framebuffer texture
                 _framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
+                // Draw element
                 Shapes.Square.Draw();
             }
             
@@ -469,6 +499,7 @@ namespace Zene.GUI
 
                     State.DepthTesting = false;
 
+                    // Set text render projection
                     textRender.Projection = span[i].Projection;
                     // Default colour
                     textRender.Colour = new Colour(255, 255, 255);
@@ -480,11 +511,12 @@ namespace Zene.GUI
 
         internal void OnStart()
         {
-            RectangleI rect = _bounds;
-            _bounds = new RectangleI();
+            // Set bounds to 0 so event methods are not ignored
+            Box rect = _bounds;
+            _bounds = new Box();
 
-            OnSizeChange(new SizeChangeEventArgs(rect.Size));
-            OnElementMove(new PositionEventArgs(rect.Location));
+            OnSizeChange(new VectorEventArgs(rect.Size));
+            OnElementMove(new VectorEventArgs(rect.Location));
             
             // Trigger first OnSizeChange for child elements
             lock (_elementRef)
@@ -553,6 +585,7 @@ namespace Zene.GUI
 
             for (int i = 0; i < _hover.Count; i++)
             {
+                // Remove element if no longer a valid item
                 if (!span[i].Visable)
                 {
                     span[i]._hoverIndex = -1;
@@ -598,12 +631,9 @@ namespace Zene.GUI
         private bool _triggerMouseMove = false;
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
-            lock (_mousePosRef)
-            {
-                if (_mousePos == e.Location) { return; }
+            if (_mousePos == e.Location) { return; }
+            _mousePos = e.Location;
 
-                _mousePos = e.Location;
-            }
             MouseMove?.Invoke(this, e);
 
             lock (_elementRef)
@@ -617,7 +647,7 @@ namespace Zene.GUI
                     if (!span[i].Visable) { continue; }
 
                     Cursor c = ManageMouseMove(span[i], e);
-
+                    // No curser set - mouse not over element
                     if (c == null) { continue; }
 
                     newCursor = c;
@@ -659,8 +689,9 @@ namespace Zene.GUI
 
             // Mouse leaves bounds
             e.OnMouseLeave(new EventArgs());
-            // Remove to hover
-            // Will be false if element should stay in hover until OnMouseUp
+            
+            // Element should stay in hover until OnMouseUp
+            // Removed if not currently being clicked
             if (!MouseSelect)
             {
                 e._hoverIndex = -1;
@@ -682,6 +713,7 @@ namespace Zene.GUI
 
             for (int i = 0; i < _hover.Count; i++)
             {
+                // Remove element if no longer a valid item
                 if (!span[i].Visable)
                 {
                     span[i]._hoverIndex = -1;
@@ -712,6 +744,7 @@ namespace Zene.GUI
 
             for (int i = 0; i < _hover.Count; i++)
             {
+                // Remove element if no longer a valid item
                 if (!span[i].Visable)
                 {
                     span[i]._hoverIndex = -1;
@@ -770,60 +803,77 @@ namespace Zene.GUI
         /// </summary>
         public Matrix4 Projection { get; private set; } = Matrix4.Identity;
         private bool _render = true;
-        protected virtual void OnSizeChange(SizeChangeEventArgs e)
+        private Vector2 _boundOffsetReference;
+        protected virtual void OnSizeChange(VectorEventArgs e)
         {
-            if (e.Width <= 0 || e.Height <= 0)
+            // Cannot render an object this no inner content
+            if (e.X <= 0 || e.Y <= 0)
             {
                 _render = false;
                 return;
             }
-            else
-            {
-                _render = true;
-            }
+            else { _render = true; }
 
-            lock (_boundsRef)
-            {
-                if (_bounds.Size == e.Size) { return; }
+            // No bounds have changed - false call
+            if (_bounds.Size == e.Value && _boundOffset == _boundOffsetReference) { return; }
+            bool sameBounds = _bounds.Size == e.Value;
+            bool sameBoundOffset = _boundOffset == _boundOffsetReference;
+            _bounds.Size = e.Value;
+            _boundOffsetReference = _boundOffset;
 
-                _bounds.Size = e.Size;
-            }
+            SetProjection();
+
+            // Resize framebuffer if one is being managed
             if (HasFramebuffer)
             {
                 Actions.Push(() =>
                 {
-                    //_framebuffer.ViewSize = e.Size;
-                    _framebuffer.Size = e.Size;
+                    _framebuffer.Size = (Vector2I)(e.Value + _boundOffset);
                 });
             }
-            SetProjection();
+            // If this call comes from inside the render function, on that thread
+            // Set framebuffer viewport and set text projection
+            if (_inRender && Actions.CurrentThread)
+            {
+                textRender.Projection = Projection;
+
+                SetViewSize();
+
+                if (!sameBoundOffset) { SetViewPos(); }
+            }
 
             SizeChange?.Invoke(this, e);
+
+            // Only change child elements if this OnSizeChange was caused
+            // by a change in _bounds, not _boundOffset
+            if (sameBounds) { return; }
 
             // Update child elements
             lock (_elLayoutRef)
             {
-                Vector2 multiplier = e.Size * 0.5;
+                Vector2 multiplier = e.Value * 0.5;
                 Span<Element> span = CollectionsMarshal.AsSpan(_layouts);
 
                 for (int i = 0; i < span.Length; i++)
                 {
                     if (!span[i].Visable) { continue; }
 
-                    span[i].BoundsSet(span[i].Layout.GetBounds(span[i], e.Size));
-                    //span[i].BoundsSet();
+                    span[i].BoundsSet(span[i].Layout.GetBounds(span[i], e.Value));
                 }
             }
         }
-        protected virtual void OnElementMove(PositionEventArgs e)
+        protected virtual void OnElementMove(VectorEventArgs e)
         {
-            lock (_boundsRef)
-            {
-                if (_bounds.Location == e.Location) { return; }
+            if (_bounds.Location == e.Value) { return; }
+            _bounds.Location = e.Value;
 
-                _bounds.Location = e.Location;
-            }
             ElementMove?.Invoke(this, e);
+
+            // Set viewport if this was called from inside the render function
+            if (_inRender && Actions.CurrentThread)
+            {
+                SetViewPos();
+            }
         }
 
         protected virtual void OnUpdate(FrameEventArgs e)

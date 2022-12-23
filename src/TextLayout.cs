@@ -5,28 +5,14 @@ namespace Zene.GUI
 {
     public class TextLayout : ILayout
     {
-        public TextLayout(Vector2I padding, Vector2I centre)
-        {
-            Padding = padding;
-            Centre = centre;
-
-            Relative = false;
-        }
-        public TextLayout(int extraWidth, int extraHeight, int x, int y)
-        {
-            Padding = (extraWidth, extraHeight);
-            Centre = (x, y);
-
-            Relative = false;
-        }
-        public TextLayout(Vector2I padding, Vector2 centre, bool relative = true)
+        public TextLayout(Vector2 padding, Vector2 centre, bool relative = true)
         {
             Padding = padding;
             Centre = centre;
 
             Relative = relative;
         }
-        public TextLayout(int extraWidth, int extraHeight, double x, double y, bool relative = true)
+        public TextLayout(double extraWidth, double extraHeight, double x, double y, bool relative = true)
         {
             Padding = (extraWidth, extraHeight);
             Centre = (x, y);
@@ -34,12 +20,12 @@ namespace Zene.GUI
             Relative = relative;
         }
 
-        public Vector2I Padding { get; set; }
+        public Vector2 Padding { get; set; }
         public Vector2 Centre { get; set; }
 
         public bool Relative { get; set; }
 
-        public RectangleI GetBounds(TextElement element, Vector2I size)
+        public Box GetBounds(TextElement element, Vector2 size)
         {
             if (element == null)
             {
@@ -53,12 +39,12 @@ namespace Zene.GUI
 
             if (!Relative)
             {
-                return new RectangleI(new Box(Centre, textSize + Padding));
+                return new Box(Centre, textSize + Padding);
             }
 
-            return new RectangleI(new Box(Centre * size * 0.5, textSize + Padding));
+            return new Box(Centre * size * 0.5, textSize + Padding);
         }
 
-        public RectangleI GetBounds(Element element, Vector2I size) => GetBounds(element as TextElement, size);
+        public Box GetBounds(Element element, Vector2 size) => GetBounds(element as TextElement, size);
     }
 }

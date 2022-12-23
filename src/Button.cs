@@ -80,6 +80,7 @@ namespace Zene.GUI
             }
 
             Shader.BorderWidth = BorderWidthDraw();
+            DrawingBoundOffset = Shader.BorderWidth;
 
             Shader.BorderColour = BorderColour;
             Shader.Radius = CornerRadius;
@@ -107,7 +108,7 @@ namespace Zene.GUI
             TextRenderer.Colour = TextColour;
             TextRenderer.DrawCentred(Text, Font, 0, 0);
         }
-
+        /*
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
@@ -126,5 +127,6 @@ namespace Zene.GUI
 
             DrawingBounds();
         }
+        */
     }
 }
