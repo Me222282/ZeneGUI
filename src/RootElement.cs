@@ -7,12 +7,12 @@ namespace Zene.GUI
     /// <summary>
     /// The root parent element.
     /// </summary>
-    public class ElementManager : Element
+    public class RootElement : Element
     {
         internal override TextRenderer textRender { get; }
         public override IBasicShader Shader { get; }
 
-        public ElementManager(Window w)
+        public RootElement(Window w)
             : base(new Box(Vector2.Zero, w.Size))
         {
             _window = w;
