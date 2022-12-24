@@ -14,8 +14,6 @@ namespace Zene.GUI
             Text = "Button";
             TextColour = ColourF.Zero;
             DrawingBounds();
-
-            Shader = BorderShader.GetInstance();
         }
         public Button(ILayout layout)
             : base(layout, false)
@@ -24,11 +22,9 @@ namespace Zene.GUI
             Text = "Button";
             TextColour = ColourF.Zero;
             DrawingBounds();
-
-            Shader = BorderShader.GetInstance();
         }
 
-        public override BorderShader Shader { get; }
+        public override BorderShader Shader { get; } = BorderShader.GetInstance();
 
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
@@ -106,27 +102,7 @@ namespace Zene.GUI
 
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;
-            TextRenderer.DrawCentred(Text, Font, 0, 0);
+            TextRenderer.DrawCentred(Text, Font, CharSpace, LineSpace);
         }
-        /*
-        protected override void OnMouseEnter(EventArgs e)
-        {
-            base.OnMouseEnter(e);
-
-            DrawingBounds();
-        }
-        protected override void OnMouseLeave(EventArgs e)
-        {
-            base.OnMouseLeave(e);
-
-            DrawingBounds();
-        }
-        protected override void OnMouseUp(MouseEventArgs e)
-        {
-            base.OnMouseUp(e);
-
-            DrawingBounds();
-        }
-        */
     }
 }

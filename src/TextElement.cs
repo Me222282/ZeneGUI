@@ -15,13 +15,35 @@ namespace Zene.GUI
         {
         }
 
-        private string _text = "TEMP";
+        protected virtual string TextReference { get; set; } = "TEMP";
         public string Text
         {
-            get => _text;
+            get => TextReference;
             set
             {
-                _text = value;
+                TextReference = value;
+
+                TriggerLayout();
+            }
+        }
+        private int _charSpace = 0;
+        public int CharSpace
+        {
+            get => _charSpace;
+            set
+            {
+                _charSpace = value;
+
+                TriggerLayout();
+            }
+        }
+        private int _lineSpace = 0;
+        public int LineSpace
+        {
+            get => _lineSpace;
+            set
+            {
+                _lineSpace = value;
 
                 TriggerLayout();
             }

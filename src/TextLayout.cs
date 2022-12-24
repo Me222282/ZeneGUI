@@ -32,7 +32,14 @@ namespace Zene.GUI
                 throw new ArgumentException($"Element must be of type {nameof(TextElement)}", nameof(element));
             }
 
-            Vector2 textSize = element.Font.GetFrameSize(element.Text, 0, 0, 4);
+            string reference = element.Text;
+
+            if (reference == null || reference.Length == 0)
+            {
+                reference = "|";
+            }
+
+            Vector2 textSize = element.Font.GetFrameSize(reference, element.CharSpace, element.LineSpace, 4);
 
             textSize /= element.Font.LineHeight;
             textSize *= element.TextSize;

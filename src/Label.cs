@@ -25,7 +25,8 @@ namespace Zene.GUI
 
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;
-            TextRenderer.DrawCentred(Text, Font, 0, 0);
+            TextRenderer.DrawCentred(Text, Font, CharSpace, LineSpace);
+            //TextRenderer.DrawLeftBound(Text, Font, 0, 0);
         }
     }
 }
