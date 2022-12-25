@@ -12,17 +12,17 @@ namespace Zene.GUI
     public class TextInput : TextElement
     {
         public TextInput(IBox bounds)
-            : base(bounds, false)
+            : base(bounds)
         {
         }
 
         public TextInput(ILayout layout)
-            : base(layout, false)
+            : base(layout)
         {
             
         }
 
-        public override BorderShader Shader { get; } = BorderShader.GetInstance();
+        private BorderShader _shader = BorderShader.GetInstance();
 
         public double BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
@@ -190,18 +190,18 @@ namespace Zene.GUI
         {
             base.OnUpdate(e);
 
-            Shader.BorderWidth = BorderWidth;
-            DrawingBoundOffset = Shader.BorderWidth;
+            _shader.BorderWidth = BorderWidth;
+            DrawingBoundOffset = _shader.BorderWidth;
 
-            Shader.BorderColour = BorderColour;
-            Shader.Radius = CornerRadius;
+            _shader.BorderColour = BorderColour;
+            _shader.Radius = CornerRadius;
 
-            Shader.ColourSource = ColourSource.UniformColour;
-            Shader.Colour = BackgroundColour;
+            _shader.ColourSource = ColourSource.UniformColour;
+            _shader.Colour = BackgroundColour;
 
-            Shader.Matrix3 = Projection;
-            Shader.Size = Size;
-            Shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
+            _shader.Matrix3 = Projection;
+            _shader.Size = Size;
+            _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
             Shapes.Square.Draw();
 
             if (Font == null || Text == null) { return; }

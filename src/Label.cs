@@ -6,13 +6,13 @@ namespace Zene.GUI
     public class Label : TextElement
     {
         public Label(IBox bounds)
-            : base(bounds, false)
+            : base(bounds)
         {
             Text = "Label";
         }
 
         public Label(ILayout layout)
-            : base(layout, false)
+            : base(layout)
         {
             Text = "Label";
         }

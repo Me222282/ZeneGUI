@@ -17,28 +17,18 @@ namespace Zene.GUI
         /// </summary>
         /// <param name="bounds">The bounding box of the element.</param>
         /// <param name="framebuffer">Whether to create a framebuffer.</param>
-        public Element(IBox bounds, bool framebuffer = true)
+        public Element(IBox bounds)
         {
             _bounds = new Box(bounds);
-
-            // Dont create framebuffer
-            if (!framebuffer) { return; }
-
-            SetFramebuffer();
         }
         /// <summary>
         /// Craetes an element from a layout.
         /// </summary>
         /// <param name="layout">The layout of the element.</param>
         /// <param name="framebuffer">Whether to create a framebuffer.</param>
-        public Element(ILayout layout, bool framebuffer = true)
+        public Element(ILayout layout)
         {
             Layout = layout;
-
-            // Dont create framebuffer
-            if (!framebuffer) { return; }
-
-            SetFramebuffer();
         }
 
         internal Window _window;
@@ -66,55 +56,11 @@ namespace Zene.GUI
             }
         }
 
+        internal virtual IFramebuffer framebuffer => Parent.framebuffer;
         /// <summary>
-        /// Determines whether this object renders to its own framebuffer.
+        /// The framebuffer objects are drawn to.
         /// </summary>
-        public bool HasFramebuffer
-        {
-            get => _framebuffer != null;
-            protected set
-            {
-                if (!value)
-                {
-                    _framebuffer = null;
-                    return;
-                }
-                if (_framebuffer != null) { return; }
-
-                SetFramebuffer();
-            }
-        }
-        private void SetFramebuffer()
-        {
-            int w = _bounds.Width <= 0 ? BaseFramebuffer.Properties.Width : (int)_bounds.Width;
-            int h = _bounds.Height <= 0 ? BaseFramebuffer.Properties.Height : (int)_bounds.Height;
-
-            _framebuffer = new TextureRenderer(w, h);
-            _framebuffer.SetColourAttachment(0, TextureFormat.Rgba);
-            _framebuffer.GetTexture(FrameAttachment.Colour0).MinFilter = TextureSampling.Nearest;
-            _framebuffer.GetTexture(FrameAttachment.Colour0).MagFilter = TextureSampling.Nearest;
-            _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
-        }
-        private TextureRenderer _framebuffer = null;
-        /// <summary>
-        /// The framebuffer this object renders to.
-        /// </summary>
-        public TextureRenderer Framebuffer
-        {
-            get
-            {
-                if (HasFramebuffer) { return _framebuffer; }
-                if (Parent == null) { return null; }
-                return Parent.Framebuffer;
-            }
-        }
-        /// <summary>
-        /// The shader object used to render this object to its parent.
-        /// </summary>
-        /// <remarks>
-        /// This only applies when <see cref="HasFramebuffer"/> is <see cref="true"/>.
-        /// </remarks>
-        public virtual IBasicShader Shader => Parent.Shader;
+        public IFramebuffer Framebuffer => framebuffer;
 
         private Box _bounds;
         private Vector2 _mousePos;
@@ -409,34 +355,43 @@ namespace Zene.GUI
                     return Vector2.Zero;
                 }
                 
-                return Parent.RenderOffset + Parent._bounds.Centre;
+                return Parent.RenderOffset + Parent._bounds.Centre + Parent._viewPan;
             }
         }
-        
+
+        private RectangleI _viewReference;
         private void SetViewSize()
         {
-            Framebuffer.ViewSize = (Vector2I)(_bounds.Size + _boundOffset);
+            framebuffer.Viewport.Size = (Vector2I)(_bounds.Size + _boundOffset);
+
+            _viewReference.Size = framebuffer.Viewport.Size;
         }
         private void SetViewPos()
         {
-            if (HasFramebuffer) { return; }
+            if (Parent == null)
+            {
+                framebuffer.Viewport.Location = Vector2I.Zero;
+                _viewReference.Location = Vector2I.Zero;
+                return;
+            }
 
             Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + _boundOffset);
 
             // Create viewport offset if this element is drawing
             // straight to the parents framebuffer
-            Parent.Framebuffer.ViewLocation = (Vector2I)
+            framebuffer.Viewport.Location = (Vector2I)
                 ((
-                    (Parent._bounds.Width * 0.5) + drawingBounds.Left,
-                    (Parent._bounds.Height * 0.5) + drawingBounds.Bottom
+                    (_window.Width * 0.5) + drawingBounds.Left,
+                    (_window.Height * 0.5) + drawingBounds.Bottom
                 ) + RenderOffset);
+
+            _viewReference.Location = framebuffer.Viewport.Location;
         }
 
         private bool _inRender = false;
-        internal void Render(IFramebuffer framebuffer, Matrix4 projection)
+        internal void Render(Matrix4 view, Matrix4 projection)
         {
             if (!_render) { return; }
-            if (HasFramebuffer && Shader == null) { return; }
 
             // Caused by a change in size or position of a child element
             // Thus mouse hover may become inaccurate
@@ -451,42 +406,20 @@ namespace Zene.GUI
 
             _triggerMouseMove = false;
 
-            Framebuffer.Bind();
+            framebuffer.Bind();
             _inRender = true;
+
+            if (Parent != null)
+            {
+                framebuffer.Scissor.View = Parent._viewReference;
+            }
 
             // Set viewport
             SetViewPos();
             SetViewSize();
-            OnUpdate(new FrameEventArgs(Framebuffer));
+            OnUpdate(new FrameEventArgs(framebuffer));
 
             _inRender = false;
-
-            State.DepthTesting = false;
-
-            // Draw element framebuffer if one exists
-            if (HasFramebuffer && Parent != null)
-            {
-                // Set viewport to normal
-                Parent.Framebuffer.ViewLocation = 0;
-                Parent.Framebuffer.ViewSize = Parent.Framebuffer.Size;
-                // Create drawing context
-                framebuffer.Bind();
-                Shader.Bind();
-                Vector2 offset = RenderOffset;
-                /*Shader.SetMatrices(
-                    Matrix4.CreateBox(new Box(drawingBounds.Location + offset, drawingBounds.Size)),
-                    Matrix4.Identity,
-                    projection);*/
-                Shader.Matrix1 = Matrix4.CreateBox(new Box(_bounds.Location + offset, _bounds.Size + _boundOffset));
-                Shader.Matrix2 = Matrix4.Identity;
-                Shader.Matrix3 = projection;
-                Shader.ColourSource = ColourSource.Texture;
-                Shader.TextureSlot = 0;
-                // Framebuffer texture
-                _framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
-                // Draw element
-                Shapes.Square.Draw();
-            }
             
             // Draw child elements
             lock (_elementRef)
@@ -504,7 +437,7 @@ namespace Zene.GUI
                     // Default colour
                     textRender.Colour = new Colour(255, 255, 255);
 
-                    span[i].Render(framebuffer, projection);
+                    span[i].Render(_viewRef * view, projection);
                 }
             }
         }
@@ -793,15 +726,58 @@ namespace Zene.GUI
         private readonly object _elLayoutRef = new object();
         private readonly List<Element> _layouts = new List<Element>();
 
-        private void SetProjection()
+        private Vector2 _viewPan = 0d;
+        /// <summary>
+        /// The view panning of the element - applies to child elements.
+        /// </summary>
+        public Vector2 ViewPan
         {
-            Projection = Matrix4.CreateOrthographic(_bounds.Width + _boundOffset.X, _bounds.Height + _boundOffset.Y, 0d, 1d);
+            get => _viewPan;
+            set
+            {
+                _viewPan = value;
+
+                SetView();
+            }
+        }
+        private double _viewScale = 1d;
+        /// <summary>
+        /// The view scale of the element - applies to child elements.
+        /// </summary>
+        public double ViewScale
+        {
+            get => _viewScale;
+            set
+            {
+                _viewScale = value;
+
+                SetView();
+            }
         }
 
+        private Matrix4 _viewRef = Matrix4.Identity;
+        private void SetView()
+        {
+            _viewRef = Matrix4.CreateBox(new Box(_viewPan, ViewScale));
+            CalculateProjMat();
+        }
+        private void SetProjection()
+        {
+            _projRef = Matrix4.CreateOrthographic(_bounds.Width + _boundOffset.X, _bounds.Height + _boundOffset.Y, 0d, 1d);
+            CalculateProjMat();
+        }
+        private void CalculateProjMat() => Projection = _viewRef * _projRef;
+        private Matrix4 _projRef = Matrix4.Identity;
         /// <summary>
         /// The projection matrix used to render objects to this element.
         /// </summary>
         public Matrix4 Projection { get; private set; } = Matrix4.Identity;
+        /// <summary>
+        /// The projection matrix used to render rixed objects to this element,
+        /// like borders that shouldn't be affected by zoom and panning.
+        /// </summary>
+        public Matrix4 FixedProjection => _projRef;
+
         private bool _render = true;
         private Vector2 _boundOffsetReference;
         protected virtual void OnSizeChange(VectorEventArgs e)
@@ -823,14 +799,6 @@ namespace Zene.GUI
 
             SetProjection();
 
-            // Resize framebuffer if one is being managed
-            if (HasFramebuffer)
-            {
-                Actions.Push(() =>
-                {
-                    _framebuffer.Size = (Vector2I)(e.Value + _boundOffset);
-                });
-            }
             // If this call comes from inside the render function, on that thread
             // Set framebuffer viewport and set text projection
             if (_inRender && Actions.CurrentThread)
@@ -838,8 +806,9 @@ namespace Zene.GUI
                 textRender.Projection = Projection;
 
                 SetViewSize();
+                SetViewPos();
 
-                if (!sameBoundOffset) { SetViewPos(); }
+                //if (!sameBoundOffset) { SetViewPos(); }
             }
 
             SizeChange?.Invoke(this, e);

@@ -10,7 +10,9 @@ namespace Zene.GUI
     public class RootElement : Element
     {
         internal override TextRenderer textRender { get; }
-        public override IBasicShader Shader { get; }
+        private readonly IBasicShader _shader;
+
+        internal override TextureRenderer framebuffer { get; }
 
         public RootElement(Window w)
             : base(new Box(Vector2.Zero, w.Size))
@@ -29,9 +31,12 @@ namespace Zene.GUI
             _window.Start += (_, _) => OnStart();
 
             //_shader = new BasicShader();
-            Shader = BasicShader.GetInstance();
+            _shader = BasicShader.GetInstance();
 
             textRender = new TextRenderer();
+            framebuffer = new TextureRenderer(w.Width, w.Height);
+            framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
+            framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
         }
 
         private new void MouseMove(object s, MouseEventArgs e)
@@ -51,20 +56,25 @@ namespace Zene.GUI
         {
             IFramebuffer current = State.GetBoundFramebuffer(FrameTarget.Draw);
 
-            Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
+            framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
+            framebuffer.Scissor.Enabled = true;
 
-            Render(Framebuffer, Projection);
+            Render(Matrix4.Identity, Projection);
 
-            // Render to screen
-            current.Bind();
-            Shader.Bind();
-            Shader.Matrix1 = Matrix4.CreateScale(2d);
-            Shader.Matrix2 = Matrix4.Identity;
-            Shader.Matrix3 = Matrix4.Identity;
-            Shader.ColourSource = ColourSource.Texture;
-            Shader.TextureSlot = 0;
-            Framebuffer.GetTexture(FrameAttachment.Colour0).Bind();
-            Shapes.Square.Draw();
+            // Copy data to main framebuffer
+            framebuffer.CopyFrameBuffer(current, BufferBit.Colour, TextureSampling.Nearest);
+        }
+
+        protected override void OnSizeChange(VectorEventArgs e)
+        {
+            base.OnSizeChange(e);
+
+            if (e.X <= 0 || e.Y <= 0) { return; }
+
+            Actions.Push(() =>
+            {
+                framebuffer.Size = (Vector2I)e.Value;
+            });
         }
     }
 }

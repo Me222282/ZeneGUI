@@ -8,12 +8,12 @@ namespace Zene.GUI
     public class Container : Element
     {
         public Container(IBox bounds)
-            : base(bounds, false)
+            : base(bounds)
         {
         }
 
         public Container(ILayout layout)
-            : base(layout, false)
+            : base(layout)
         {
         }
     }

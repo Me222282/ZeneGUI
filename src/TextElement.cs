@@ -5,13 +5,13 @@ namespace Zene.GUI
 {
     public abstract class TextElement : Element
     {
-        public TextElement(IBox bounds, bool framebuffer = true)
-            : base(bounds, framebuffer)
+        public TextElement(IBox bounds)
+            : base(bounds)
         {
         }
 
-        public TextElement(ILayout layout, bool framebuffer = true)
-            : base(layout, framebuffer)
+        public TextElement(ILayout layout)
+            : base(layout)
         {
         }
 

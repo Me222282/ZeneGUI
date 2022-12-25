@@ -8,7 +8,7 @@ namespace Zene.GUI
     public class Button : TextElement
     {
         public Button(IBox bounds)
-            : base(bounds, false)
+            : base(bounds)
         {
             CursorStyle = Cursor.Hand;
             Text = "Button";
@@ -16,7 +16,7 @@ namespace Zene.GUI
             DrawingBounds();
         }
         public Button(ILayout layout)
-            : base(layout, false)
+            : base(layout)
         {
             CursorStyle = Cursor.Hand;
             Text = "Button";
@@ -24,7 +24,7 @@ namespace Zene.GUI
             DrawingBounds();
         }
 
-        public override BorderShader Shader { get; } = BorderShader.GetInstance();
+        private BorderShader _shader = BorderShader.GetInstance();
 
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
@@ -75,27 +75,27 @@ namespace Zene.GUI
                 c -= new Vector4(0.1, 0.1, 0.1, 0d);
             }
 
-            Shader.BorderWidth = BorderWidthDraw();
-            DrawingBoundOffset = Shader.BorderWidth;
+            _shader.BorderWidth = BorderWidthDraw();
+            DrawingBoundOffset = _shader.BorderWidth;
 
-            Shader.BorderColour = BorderColour;
-            Shader.Radius = CornerRadius;
+            _shader.BorderColour = BorderColour;
+            _shader.Radius = CornerRadius;
 
             if (Texture != null)
             {
-                Shader.ColourSource = ColourSource.Texture;
-                Shader.TextureSlot = 0;
+                _shader.ColourSource = ColourSource.Texture;
+                _shader.TextureSlot = 0;
                 Texture.Bind(0);
             }
             else
             {
-                Shader.ColourSource = ColourSource.UniformColour;
-                Shader.Colour = (ColourF)c;
+                _shader.ColourSource = ColourSource.UniformColour;
+                _shader.Colour = (ColourF)c;
             }
 
-            Shader.Matrix3 = Projection;
-            Shader.Size = Size;
-            Shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
+            _shader.Matrix3 = Projection;
+            _shader.Size = Size;
+            _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
             Shapes.Square.Draw();
 
             if (Font == null || Text == null) { return; }
