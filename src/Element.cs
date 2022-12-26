@@ -36,6 +36,18 @@ namespace Zene.GUI
         /// The parent element.
         /// </summary>
         public Element Parent { get; private set; }
+        /// <summary>
+        /// The root element of this GUI instance.
+        /// </summary>
+        public Element RootElement
+        {
+            get
+            {
+                if (Parent == null) { return this; }
+
+                return Parent.RootElement;
+            }
+        }
 
         internal virtual TextRenderer textRender => Parent.textRender;
         /// <summary>
@@ -64,6 +76,7 @@ namespace Zene.GUI
 
         private Box _bounds;
         private Vector2 _mousePos;
+        private int _elementIndex = -1;
 
         private ILayout _layout = null;
         /// <summary>
@@ -134,8 +147,8 @@ namespace Zene.GUI
 
         private void BoundsSet(Box b)
         {
-            OnSizeChange(new VectorEventArgs(b.Size));
-            OnElementMove(new VectorEventArgs(b.Location));
+            SizeChangeListener(new VectorEventArgs(b.Size));
+            ElementMoveListener(new VectorEventArgs(b.Location));
         }
         /// <summary>
         /// The bounds of the element.
@@ -148,7 +161,7 @@ namespace Zene.GUI
             get => _bounds;
             set
             {
-                if (Layout != null) { return; }
+                if (Layout != null || _bounds == value) { return; }
 
                 BoundsSet(value);
 
@@ -167,9 +180,9 @@ namespace Zene.GUI
             get => _bounds.Size;
             set
             {
-                if (Layout != null) { return; }
+                if (Layout != null || _bounds.Size == value) { return; }
 
-                OnSizeChange(new VectorEventArgs(value));
+                SizeChangeListener(new VectorEventArgs(value));
 
                 if (Parent == null) { return; }
                 Parent._triggerMouseMove = true;
@@ -186,9 +199,9 @@ namespace Zene.GUI
             get => _bounds.Location;
             set
             {
-                if (Layout != null) { return; }
+                if (Layout != null || _bounds.Location == value) { return; }
 
-                OnElementMove(new VectorEventArgs(value));
+                ElementMoveListener(new VectorEventArgs(value));
 
                 if (Parent == null) { return; }
                 Parent._triggerMouseMove = true;
@@ -207,14 +220,14 @@ namespace Zene.GUI
                 _boundOffset = value;
 
                 //SetProjection();
-                OnSizeChange(new VectorEventArgs(_bounds.Size));
+                SizeChangeListener(new VectorEventArgs(_bounds.Size));
             }
         }
 
         /// <summary>
         /// Determines whether the mouse is hovering over this element.
         /// </summary>
-        public bool MouseHover => _mouseOver;
+        public bool MouseHover => _mouseOver && _hover == null;
         /// <summary>
         /// Determines whether the mouse is selecting this element.
         /// </summary>
@@ -314,6 +327,8 @@ namespace Zene.GUI
 
             lock (_elementRef)
             {
+                e._elementIndex = _elements.Count;
+
                 _elements.Add(e);
             }
 
@@ -336,16 +351,34 @@ namespace Zene.GUI
             if (!_elements.Remove(e)) { return false; }
             
             _layouts.Remove(e);
-            e._hoverIndex = -1;
-            _hover.Remove(e);
+            e._elementIndex = -1;
+            //e._hoverIndex = -1;
+            //_hover.Remove(e);
             e._mouseOver = false;
 
             e.Parent = null;
             e.SetWindow(null);
 
+            // Set indexes for all other child elements
+            // THey may have changed due to element removal
+            SetElementIndexes();
+
             return true;
         }
         
+        private void SetElementIndexes()
+        {
+            lock (_elementRef)
+            {
+                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i]._elementIndex = i;
+                }
+            }
+        }
+
         private Vector2 RenderOffset
         {
             get
@@ -395,12 +428,11 @@ namespace Zene.GUI
 
             // Caused by a change in size or position of a child element
             // Thus mouse hover may become inaccurate
-            if (_triggerMouseMove && MouseHover)
+            if (_triggerMouseMove && _mouseOver)
             {
                 Vector2 mp = _mousePos;
                 _mousePos = double.NaN;
-                OnMouseMove(new MouseEventArgs(mp));
-                _triggerMouseMove = false;
+                MouseMoveListener(new MouseEventArgs(mp));
                 _window.CursorStyle = _currentCursor;
             }
 
@@ -448,8 +480,8 @@ namespace Zene.GUI
             Box rect = _bounds;
             _bounds = new Box();
 
-            OnSizeChange(new VectorEventArgs(rect.Size));
-            OnElementMove(new VectorEventArgs(rect.Location));
+            SizeChangeListener(new VectorEventArgs(rect.Size));
+            ElementMoveListener(new VectorEventArgs(rect.Location));
             
             // Trigger first OnSizeChange for child elements
             lock (_elementRef)
@@ -513,26 +545,24 @@ namespace Zene.GUI
         {
             Scroll?.Invoke(this, e);
 
-            // Update child elements
-            Span<Element> span = CollectionsMarshal.AsSpan(_hover);
+            // Not container for hover element
+            if (_hover == null) { return; }
 
-            for (int i = 0; i < _hover.Count; i++)
-            {
-                // Remove element if no longer a valid item
-                if (!span[i].Visable)
-                {
-                    span[i]._hoverIndex = -1;
-                    _hover.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-
-                span[i].OnScroll(e);
-            }
+            Hover.OnScroll(e);
         }
 
-        private int _hoverIndex = -1;
-        private readonly List<Element> _hover = new List<Element>();
+        //private int _hoverIndex = -1;
+        //private readonly List<Element> _hover = new List<Element>();
+        private Element _hover = null;
+        public Element Hover
+        {
+            get
+            {
+                if (_hover == null) { return this; }
+
+                return _hover.Hover;
+            }
+        }
         protected virtual void OnMouseEnter(EventArgs e)
         {
             MouseEnter?.Invoke(this, e);
@@ -542,32 +572,30 @@ namespace Zene.GUI
             _mouseOver = false;
             
             MouseLeave?.Invoke(this, e);
-            
-            // Set _mouseOver to false
-            Span<Element> span = CollectionsMarshal.AsSpan(_hover);
 
-            for (int i = 0; i < _hover.Count; i++)
-            {
-                if (span[i]._mouseOver)
-                {
-                    span[i].OnMouseLeave(e);
-                    
-                    // Remove element
-                    if (MouseSelect) { continue; }
-                    span[i]._hoverIndex = -1;
-                    _hover.RemoveAt(i);
-                    i--;
-                }
-            }
+            // Not container for hover element
+            if (_hover == null) { return; }
+
+            Hover.OnMouseLeave(e);
+            _hover = null;
         }
 
         private bool _triggerMouseMove = false;
-        protected virtual void OnMouseMove(MouseEventArgs e)
+        internal void MouseMoveListener(MouseEventArgs e)
         {
             if (_mousePos == e.Location) { return; }
             _mousePos = e.Location;
 
-            MouseMove?.Invoke(this, e);
+            if (MouseSelect && _hover != null)
+            {
+                //_hover.OnMouseMove(e);
+                //ManageMouseMove(_hover, e);
+                if (_hover._bounds.Contains(e.Location))
+                {
+                    _hover.OnMouseMove(e);
+                }
+                return;
+            }
 
             lock (_elementRef)
             {
@@ -575,19 +603,38 @@ namespace Zene.GUI
 
                 Span<Element> span = CollectionsMarshal.AsSpan(_elements);
 
-                for (int i = 0; i < span.Length; i++)
+                bool elementHover = false;
+
+                _hover = null;
+
+                //for (int i = 0; i < span.Length; i++)
+                // Reverse for loop - first element found backwards is the one in front
+                for (int i = span.Length - 1; i >= 0; i--)
                 {
                     if (!span[i].Visable) { continue; }
 
                     Cursor c = ManageMouseMove(span[i], e);
-                    // No curser set - mouse not over element
-                    if (c == null) { continue; }
+                    // _hover has been set - element hover
+                    if (_hover == null) { continue; }
+
+                    elementHover = true;
 
                     newCursor = c;
+                    break;
+                }
+
+                if (!elementHover)
+                {
+                    _hover = null;
+                    OnMouseMove(e);
                 }
 
                 _currentCursor = newCursor;
             }
+        }
+        protected virtual void OnMouseMove(MouseEventArgs e)
+        {
+            MouseMove?.Invoke(this, e);
         }
         private Cursor ManageMouseMove(Element e, MouseEventArgs m)
         {
@@ -599,7 +646,8 @@ namespace Zene.GUI
             // Mouse moves inside bounds
             if (mouseOverNew == e._mouseOver)
             {
-                e.OnMouseMove(new MouseEventArgs(m.Location - e._bounds.Centre));
+                _hover = e;
+                e.MouseMoveListener(new MouseEventArgs(m.Location - e._bounds.Centre));
                 return e._currentCursor;
             }
 
@@ -607,30 +655,16 @@ namespace Zene.GUI
             if (mouseOverNew)
             {
                 e._mouseOver = true;
+                _hover = e;
                 e.OnMouseEnter(new EventArgs());
-                e.OnMouseMove(new MouseEventArgs(e.Location - e._bounds.Centre));
+                e.MouseMoveListener(new MouseEventArgs(e.Location - e._bounds.Centre));
 
-                // Add to hover
-                // Will be false if element is already in hover
-                if (e._hoverIndex < 0)
-                {
-                    e._hoverIndex = _hover.Count;
-                    _hover.Add(e);
-                }
                 return e._currentCursor;
             }
 
             // Mouse leaves bounds
             e.OnMouseLeave(new EventArgs());
-            
-            // Element should stay in hover until OnMouseUp
-            // Removed if not currently being clicked
-            if (!MouseSelect)
-            {
-                e._hoverIndex = -1;
-                _hover.Remove(e);
-            }
-
+            e._mouseOver = false;
             return null;
         }
         
@@ -641,29 +675,14 @@ namespace Zene.GUI
 
             MouseDown?.Invoke(this, e);
 
-            // Update child elements
-            Span<Element> span = CollectionsMarshal.AsSpan(_hover);
+            // Not container for hover element
+            if (_hover == null) { return; }
 
-            for (int i = 0; i < _hover.Count; i++)
-            {
-                // Remove element if no longer a valid item
-                if (!span[i].Visable)
-                {
-                    span[i]._hoverIndex = -1;
-                    _hover.RemoveAt(i);
-                    i--;
-                    continue;
-                }
-
-                span[i].OnMouseDown(e);
-            }
+            Hover.OnMouseDown(e);
         }
         protected virtual void OnMouseUp(MouseEventArgs e)
         {
-            if (MouseSelect)
-            {
-                Click?.Invoke(this, e);
-            }
+            bool mouseDidSelect = MouseSelect;
 
             if (_window.MouseButton == MouseButton.None)
             {
@@ -672,29 +691,20 @@ namespace Zene.GUI
 
             MouseUp?.Invoke(this, e);
 
-            // Update child elements
-            Span<Element> span = CollectionsMarshal.AsSpan(_hover);
-
-            for (int i = 0; i < _hover.Count; i++)
+            if (mouseDidSelect)
             {
-                // Remove element if no longer a valid item
-                if (!span[i].Visable)
-                {
-                    span[i]._hoverIndex = -1;
-                    _hover.RemoveAt(i);
-                    i--;
-                    continue;
-                }
+                Click?.Invoke(this, e);
+            }
 
-                span[i].OnMouseUp(e);
+            // Not container for hover element
+            if (_hover == null) { return; }
 
-                // Mouse not hovering over and no mouse buttons pressed
-                if (!span[i]._mouseOver && !MouseSelect)
-                {
-                    span[i]._hoverIndex = -1;
-                    _hover.RemoveAt(i);
-                    i--;
-                }
+            Hover.OnMouseUp(e);
+
+            if (!_hover._mouseOver)
+            {
+                _mousePos = double.NaN;
+                OnMouseMove(e);
             }
         }
 
@@ -780,7 +790,7 @@ namespace Zene.GUI
 
         private bool _render = true;
         private Vector2 _boundOffsetReference;
-        protected virtual void OnSizeChange(VectorEventArgs e)
+        internal void SizeChangeListener(VectorEventArgs e)
         {
             // Cannot render an object this no inner content
             if (e.X <= 0 || e.Y <= 0)
@@ -793,7 +803,7 @@ namespace Zene.GUI
             // No bounds have changed - false call
             if (_bounds.Size == e.Value && _boundOffset == _boundOffsetReference) { return; }
             bool sameBounds = _bounds.Size == e.Value;
-            bool sameBoundOffset = _boundOffset == _boundOffsetReference;
+            //bool sameBoundOffset = _boundOffset == _boundOffsetReference;
             _bounds.Size = e.Value;
             _boundOffsetReference = _boundOffset;
 
@@ -807,11 +817,9 @@ namespace Zene.GUI
 
                 SetViewSize();
                 SetViewPos();
-
-                //if (!sameBoundOffset) { SetViewPos(); }
             }
 
-            SizeChange?.Invoke(this, e);
+            OnSizeChange(e);
 
             // Only change child elements if this OnSizeChange was caused
             // by a change in _bounds, not _boundOffset
@@ -831,18 +839,26 @@ namespace Zene.GUI
                 }
             }
         }
-        protected virtual void OnElementMove(VectorEventArgs e)
+        protected virtual void OnSizeChange(VectorEventArgs e)
+        {
+            SizeChange?.Invoke(this, e);
+        }
+        private void ElementMoveListener(VectorEventArgs e)
         {
             if (_bounds.Location == e.Value) { return; }
             _bounds.Location = e.Value;
-
-            ElementMove?.Invoke(this, e);
 
             // Set viewport if this was called from inside the render function
             if (_inRender && Actions.CurrentThread)
             {
                 SetViewPos();
             }
+
+            OnElementMove(e);
+        }
+        protected virtual void OnElementMove(VectorEventArgs e)
+        {
+            ElementMove?.Invoke(this, e);
         }
 
         protected virtual void OnUpdate(FrameEventArgs e)

@@ -27,7 +27,7 @@ namespace Zene.GUI
             _window.KeyDown += (_, e) => OnKeyDown(e);
             _window.KeyUp += (_, e) => OnKeyUp(e);
             _window.TextInput += (_, e) => OnTextInput(e);
-            _window.SizeChange += (_, e) => OnSizeChange((VectorEventArgs)e);
+            _window.SizeChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
             _window.Start += (_, _) => OnStart();
 
             //_shader = new BasicShader();
@@ -37,6 +37,7 @@ namespace Zene.GUI
             framebuffer = new TextureRenderer(w.Width, w.Height);
             framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
             framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
+            framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, framebuffer.Size));
         }
 
         private new void MouseMove(object s, MouseEventArgs e)
@@ -44,7 +45,7 @@ namespace Zene.GUI
             Vector2 ml = e.Location - (_window.Size * 0.5);
             ml.Y = -ml.Y;
 
-            OnMouseMove(new MouseEventArgs(ml));
+            MouseMoveListener(new MouseEventArgs(ml));
 
             _window.CursorStyle = _currentCursor;
         }
@@ -68,8 +69,6 @@ namespace Zene.GUI
         protected override void OnSizeChange(VectorEventArgs e)
         {
             base.OnSizeChange(e);
-
-            if (e.X <= 0 || e.Y <= 0) { return; }
 
             Actions.Push(() =>
             {
