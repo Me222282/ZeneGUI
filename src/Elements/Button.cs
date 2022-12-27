@@ -1,5 +1,4 @@
-﻿using System;
-using Zene.Graphics;
+﻿using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
 
@@ -24,7 +23,7 @@ namespace Zene.GUI
             DrawingBounds();
         }
 
-        private BorderShader _shader = BorderShader.GetInstance();
+        private readonly BorderShader _shader = BorderShader.GetInstance();
 
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
@@ -46,18 +45,20 @@ namespace Zene.GUI
 
         private double BorderWidthDraw()
         {
-            double v = _bw;
-
             if (MouseSelect | MouseHover)
             {
-                v += 2;
+                return _bw + 2;
+            }
+            if (Focused)
+            {
+                return _bw + 1;
             }
 
-            return v;
+            return _bw;
         }
         private void DrawingBounds()
         {
-            DrawingBoundOffset = new Vector2I(BorderWidthDraw());
+            DrawingBoundOffset = BorderWidthDraw();
         }
 
         protected override void OnUpdate(FrameEventArgs e)

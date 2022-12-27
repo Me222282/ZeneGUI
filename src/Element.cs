@@ -243,6 +243,10 @@ namespace Zene.GUI
         /// Determines whether the element is visable and interacts with the mouse.
         /// </summary>
         public bool Visable { get; set; } = true;
+        /// <summary>
+        /// Determines whether the element has input focus.
+        /// </summary>
+        public bool Focused { get; internal set; } = false;
 
         public bool UserResizable { get; protected set; }
 
@@ -262,6 +266,7 @@ namespace Zene.GUI
         public event VectorEventHandler ElementMove;
 
         public event FrameEventHandler Update;
+        public event FocusedEventHandler Focus;
 
         private readonly object _elementRef = new object();
         private readonly List<Element> _elements = new List<Element>();
@@ -392,33 +397,60 @@ namespace Zene.GUI
             }
         }
 
-        private RectangleI _viewReference;
-        private void SetViewSize()
+        private static RectangleI ViewClamp(RectangleI a, RectangleI b)
         {
-            framebuffer.Viewport.Size = (Vector2I)(_bounds.Size + _boundOffset);
+            int x = Math.Max(a.X, b.X);
+            int y = Math.Max(a.Y, b.Y);
 
-            _viewReference.Size = framebuffer.Viewport.Size;
+            int w = Math.Min(a.Right, b.Right) - x;
+            int h = Math.Min(a.Y + a.Height, b.Y + b.Height) - y;
+
+            return new RectangleI(x, y, w, h);
         }
-        private void SetViewPos()
+
+        private RectangleI _viewReference;
+        private RectangleI _scissorView;
+        private void SetViewRef()
         {
-            if (Parent == null)
+            if (Parent == null || _window == null)
             {
-                framebuffer.Viewport.Location = Vector2I.Zero;
-                _viewReference.Location = Vector2I.Zero;
+                _viewReference = new RectangleI(Vector2.Zero, _bounds.Size);
                 return;
             }
 
             Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + _boundOffset);
 
-            // Create viewport offset if this element is drawing
-            // straight to the parents framebuffer
-            framebuffer.Viewport.Location = (Vector2I)
-                ((
+            _viewReference = new RectangleI((
+                // Location
                     (_window.Width * 0.5) + drawingBounds.Left,
                     (_window.Height * 0.5) + drawingBounds.Bottom
-                ) + RenderOffset);
+                ) + RenderOffset,
+                // Size
+                drawingBounds.Size);
+        }
+        private void SetViewport()
+        {
+            framebuffer.Viewport.View = _viewReference;
+        }
+        private void SetScissor()
+        {
+            if (Parent == null)
+            {
+                framebuffer.Scissor.View = _viewReference;
+                _scissorView = _viewReference;
+                return;
+            }
 
-            _viewReference.Location = framebuffer.Viewport.Location;
+            RectangleI scissor = ViewClamp(_viewReference, Parent._scissorView);
+
+            // Element outside bounds of parent
+            if (scissor.Width < 0 || scissor.Height < 0)
+            {
+                scissor.Size = Vector2I.Zero;
+            }
+
+            framebuffer.Scissor.View = scissor;
+            _scissorView = scissor;
         }
 
         private bool _inRender = false;
@@ -441,14 +473,18 @@ namespace Zene.GUI
             framebuffer.Bind();
             _inRender = true;
 
-            if (Parent != null)
+            SetViewRef();
+            // Scissor
+            SetScissor();
+            // Element won't be drawn
+            if (framebuffer.Scissor.Width == 0 ||
+                framebuffer.Scissor.Height == 0)
             {
-                framebuffer.Scissor.View = Parent._viewReference;
+                return;
             }
 
             // Set viewport
-            SetViewPos();
-            SetViewSize();
+            SetViewport();
             OnUpdate(new FrameEventArgs(framebuffer));
 
             _inRender = false;
@@ -495,10 +531,10 @@ namespace Zene.GUI
             }
         }
 
-        protected virtual void OnTextInput(TextInputEventArgs e)
+        protected internal virtual void OnTextInput(TextInputEventArgs e)
         {
             TextInput?.Invoke(this, e);
-
+            /*
             // Update child elements
             lock (_elementRef)
             {
@@ -508,12 +544,12 @@ namespace Zene.GUI
                 {
                     span[i].OnTextInput(e);
                 }
-            }
+            }*/
         }
-        protected virtual void OnKeyDown(KeyEventArgs e)
+        protected internal virtual void OnKeyDown(KeyEventArgs e)
         {
             KeyDown?.Invoke(this, e);
-
+            /*
             // Update child elements
             lock (_elementRef)
             {
@@ -523,12 +559,12 @@ namespace Zene.GUI
                 {
                     span[i].OnKeyDown(e);
                 }
-            }
+            }*/
         }
-        protected virtual void OnKeyUp(KeyEventArgs e)
+        protected internal virtual void OnKeyUp(KeyEventArgs e)
         {
             KeyUp?.Invoke(this, e);
-
+            /*
             // Update child elements
             lock (_elementRef)
             {
@@ -538,7 +574,12 @@ namespace Zene.GUI
                 {
                     span[i].OnKeyUp(e);
                 }
-            }
+            }*/
+        }
+
+        protected internal virtual void OnFocus(FocusedEventArgs e)
+        {
+            Focus?.Invoke(this, e);
         }
 
         protected virtual void OnScroll(ScrollEventArgs e)
@@ -810,14 +851,17 @@ namespace Zene.GUI
             SetProjection();
 
             // If this call comes from inside the render function, on that thread
-            // Set framebuffer viewport and set text projection
+            // Set framebuffer viewport and scissor and set text projection
             if (_inRender && Actions.CurrentThread)
             {
                 textRender.Projection = Projection;
 
-                SetViewSize();
-                SetViewPos();
+                SetViewRef();
+                SetScissor();
+                SetViewport();
             }
+            // Set reference for viewport when rendered
+            SetViewRef();
 
             OnSizeChange(e);
 
@@ -848,10 +892,13 @@ namespace Zene.GUI
             if (_bounds.Location == e.Value) { return; }
             _bounds.Location = e.Value;
 
-            // Set viewport if this was called from inside the render function
+            // Set viewport and scissor if this is being called from render thread
+            // And element is currently being rendered
             if (_inRender && Actions.CurrentThread)
             {
-                SetViewPos();
+                SetViewRef();
+                SetScissor();
+                SetViewport();
             }
 
             OnElementMove(e);

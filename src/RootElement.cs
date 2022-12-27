@@ -10,7 +10,6 @@ namespace Zene.GUI
     public class RootElement : Element
     {
         internal override TextRenderer textRender { get; }
-        private readonly IBasicShader _shader;
 
         internal override TextureRenderer framebuffer { get; }
 
@@ -24,14 +23,13 @@ namespace Zene.GUI
             _window.MouseDown += (_, e) => OnMouseDown(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
             _window.MouseUp += (_, e) => OnMouseUp(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
             _window.Scroll += (_, e) => OnScroll(e);
-            _window.KeyDown += (_, e) => OnKeyDown(e);
-            _window.KeyUp += (_, e) => OnKeyUp(e);
-            _window.TextInput += (_, e) => OnTextInput(e);
+            _window.KeyDown += (_, e) => _focus?.OnKeyDown(e);
+            _window.KeyUp += (_, e) => _focus?.OnKeyUp(e);
+            _window.TextInput += (_, e) => _focus?.OnTextInput(e);
             _window.SizeChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
             _window.Start += (_, _) => OnStart();
 
-            //_shader = new BasicShader();
-            _shader = BasicShader.GetInstance();
+            _focus = this;
 
             textRender = new TextRenderer();
             framebuffer = new TextureRenderer(w.Width, w.Height);
@@ -39,6 +37,8 @@ namespace Zene.GUI
             framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
             framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, framebuffer.Size));
         }
+
+        private Element _focus;
 
         private new void MouseMove(object s, MouseEventArgs e)
         {
@@ -62,6 +62,8 @@ namespace Zene.GUI
 
             Render(Matrix4.Identity, Projection);
 
+            framebuffer.Scissor.Enabled = false;
+
             // Copy data to main framebuffer
             framebuffer.CopyFrameBuffer(current, BufferBit.Colour, TextureSampling.Nearest);
         }
@@ -74,6 +76,25 @@ namespace Zene.GUI
             {
                 framebuffer.Size = (Vector2I)e.Value;
             });
+        }
+
+        private readonly FocusedEventArgs _focusTrue = new FocusedEventArgs(true);
+        private readonly FocusedEventArgs _focusFalse = new FocusedEventArgs(false);
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            if (_focus != null)
+            {
+                _focus.Focused = false;
+                _focus.OnFocus(_focusFalse);
+            }
+
+            _focus = Hover;
+
+            if (_focus == null) { return; }
+            _focus.Focused = true;
+            _focus.OnFocus(_focusTrue);
         }
     }
 }

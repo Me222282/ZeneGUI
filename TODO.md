@@ -6,5 +6,3 @@
 - Resizable elements
 
 - Xml loading
-
-- Element focusing

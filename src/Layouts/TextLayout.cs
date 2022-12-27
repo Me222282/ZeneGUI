@@ -24,6 +24,7 @@ namespace Zene.GUI
         public Vector2 Centre { get; set; }
 
         public bool Relative { get; set; }
+        public bool TextInput { get; set; }
 
         public Box GetBounds(TextElement element, Vector2 size)
         {
@@ -40,6 +41,11 @@ namespace Zene.GUI
             }
 
             Vector2 textSize = element.Font.GetFrameSize(reference, element.CharSpace, element.LineSpace, 4);
+
+            if (TextInput)
+            {
+                textSize.X += element.Font.GetCharacterData('|').Size.X;
+            }
 
             textSize /= element.Font.LineHeight;
             textSize *= element.TextSize;

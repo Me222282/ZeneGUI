@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
@@ -15,14 +11,16 @@ namespace Zene.GUI
             : base(bounds)
         {
         }
-
         public TextInput(ILayout layout)
             : base(layout)
         {
-            
+            if (layout is TextLayout)
+            {
+                (layout as TextLayout).TextInput = true;
+            }
         }
 
-        private BorderShader _shader = BorderShader.GetInstance();
+        private readonly BorderShader _shader = BorderShader.GetInstance();
 
         public double BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
@@ -33,7 +31,7 @@ namespace Zene.GUI
         private StringBuilder _text = new StringBuilder();
         protected override string TextReference
         {
-            get => _text.ToString() + '|';
+            get => _text.ToString();
             set => _text = new StringBuilder(value);
         }
 
@@ -45,7 +43,7 @@ namespace Zene.GUI
 
         private void ResetCaret() => _timeOffset = _window.Timer;
 
-        protected override void OnTextInput(TextInputEventArgs e)
+        protected internal override void OnTextInput(TextInputEventArgs e)
         {
             base.OnTextInput(e);
 
@@ -54,7 +52,7 @@ namespace Zene.GUI
             ResetCaret();
             _caret++;
         }
-        protected override void OnKeyDown(KeyEventArgs e)
+        protected internal override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
 
@@ -209,13 +207,20 @@ namespace Zene.GUI
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;
 
-            if (_text.Length < 1 && DrawCaret)
+            if (_text.Length < 1 && DrawCaret && Focused)
             {
                 TextRenderer.DrawLeftBound("|", Font, 0, 0, -1, false);
                 return;
             }
 
-            TextRenderer.DrawLeftBound(_text.ToString(), Font, CharSpace, LineSpace, _caret, DrawCaret);
+            TextRenderer.DrawLeftBound(_text.ToString(), Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
+        }
+
+        protected internal override void OnFocus(FocusedEventArgs e)
+        {
+            base.OnFocus(e);
+
+            ResetCaret();
         }
     }
 }
