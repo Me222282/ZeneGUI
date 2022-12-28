@@ -14,7 +14,6 @@ namespace Zene.GUI
         internal override TextureRenderer framebuffer { get; }
 
         public RootElement(Window w)
-            : base(new Box(Vector2.Zero, w.Size))
         {
             _window = w;
 
@@ -27,7 +26,8 @@ namespace Zene.GUI
             _window.KeyUp += (_, e) => _focus?.OnKeyUp(e);
             _window.TextInput += (_, e) => _focus?.OnTextInput(e);
             _window.SizeChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
-            _window.Start += (_, _) => OnStart();
+
+            _window.Start += (_, _) => SizeChangeListener(new VectorEventArgs(_window.Size));
 
             _focus = this;
 

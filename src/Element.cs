@@ -29,11 +29,6 @@ namespace Zene.GUI
             Layout = layout;
         }
 
-        internal Element(Box bounds)
-        {
-            _bounds = bounds;
-        }
-
         internal Window _window;
         /// <summary>
         /// The parent element.
@@ -297,8 +292,6 @@ namespace Zene.GUI
 
             // Has layout
             if (e.Layout != null) { TriggerLayout(); }
-            // Trigger OnStart if window already executing
-            if (_window != null && _window.Running) { e.OnStart(); }
         }
         /// <summary>
         /// Removes a child element.
@@ -446,27 +439,6 @@ namespace Zene.GUI
                     textRender.Colour = new Colour(255, 255, 255);
 
                     span[i].Render(_viewRef * view, projection);
-                }
-            }
-        }
-
-        internal void OnStart()
-        {
-            // Set bounds to 0 so event methods are not ignored
-            Box rect = _bounds;
-            _bounds = new Box();
-
-            SizeChangeListener(new VectorEventArgs(rect.Size));
-            ElementMoveListener(new VectorEventArgs(rect.Location));
-            
-            // Trigger first OnSizeChange for child elements
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i].OnStart();
                 }
             }
         }
