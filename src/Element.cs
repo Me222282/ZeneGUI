@@ -113,11 +113,14 @@ namespace Zene.GUI
         {
             get
             {
+                // Mouse pos already calculated
+                if (_mouseOver) { return _mousePos; }
+
                 if (Parent == null)
                 {
                     Vector2 wml = _window.MouseLocation;
 
-                    return (wml.X, -wml.Y) - (_window.Size * 0.5);
+                    return (wml.X, -wml.Y) - (_window.Size * (0.5, -0.5));
                 }
 
                 return Parent.MouseLocation - _bounds.Centre;
