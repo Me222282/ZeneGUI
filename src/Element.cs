@@ -13,7 +13,15 @@ namespace Zene.GUI
     public abstract class Element
     {
         /// <summary>
-        /// Craetes an element from its bounds.
+        /// Creates an element.
+        /// </summary>
+        public Element()
+        {
+
+        }
+
+        /// <summary>
+        /// Creates an element from its bounds.
         /// </summary>
         /// <param name="bounds">The bounding box of the element.</param>
         /// <param name="framebuffer">Whether to create a framebuffer.</param>
@@ -22,7 +30,7 @@ namespace Zene.GUI
             _bounds = new Box(bounds);
         }
         /// <summary>
-        /// Craetes an element from a layout.
+        /// Creates an element from a layout.
         /// </summary>
         /// <param name="layout">The layout of the element.</param>
         /// <param name="framebuffer">Whether to create a framebuffer.</param>

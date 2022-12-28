@@ -7,6 +7,10 @@ namespace Zene.GUI
     /// </summary>
     public class Container : Element
     {
+        public Container()
+        {
+        }
+
         public Container(IBox bounds)
             : base(bounds)
         {

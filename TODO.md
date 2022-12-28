@@ -5,4 +5,4 @@
 
 - Resizable elements
 
-- Xml loading
+- Xml events

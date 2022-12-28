@@ -5,6 +5,11 @@ namespace Zene.GUI
 {
     public abstract class TextElement : Element
     {
+        public TextElement()
+            : base()
+        {
+        }
+
         public TextElement(IBox bounds)
             : base(bounds)
         {

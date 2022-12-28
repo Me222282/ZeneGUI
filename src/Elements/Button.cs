@@ -6,21 +6,23 @@ namespace Zene.GUI
 {
     public class Button : TextElement
     {
-        public Button(IBox bounds)
-            : base(bounds)
+        public Button()
         {
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = ColourF.Zero;
             DrawingBounds();
         }
-        public Button(ILayout layout)
-            : base(layout)
+
+        public Button(IBox bounds)
+            : this()
         {
-            CursorStyle = Cursor.Hand;
-            Text = "Button";
-            TextColour = ColourF.Zero;
-            DrawingBounds();
+            Bounds = new Box(bounds);
+        }
+        public Button(ILayout layout)
+            : this()
+        {
+            Layout = layout;
         }
 
         private readonly BorderShader _shader = BorderShader.GetInstance();

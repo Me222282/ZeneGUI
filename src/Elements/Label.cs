@@ -5,6 +5,11 @@ namespace Zene.GUI
 {
     public class Label : TextElement
     {
+        public Label()
+        {
+            Text = "Label";
+        }
+
         public Label(IBox bounds)
             : base(bounds)
         {

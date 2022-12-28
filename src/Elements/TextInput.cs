@@ -7,6 +7,10 @@ namespace Zene.GUI
 {
     public class TextInput : TextElement
     {
+        public TextInput()
+        {
+        }
+
         public TextInput(IBox bounds)
             : base(bounds)
         {

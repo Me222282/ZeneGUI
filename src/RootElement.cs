@@ -39,6 +39,7 @@ namespace Zene.GUI
         }
 
         private Element _focus;
+        public Element FocusElement => _focus;
 
         private new void MouseMove(object s, MouseEventArgs e)
         {
