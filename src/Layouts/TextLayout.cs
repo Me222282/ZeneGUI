@@ -104,8 +104,7 @@ namespace Zene.GUI
 
             return new Box(Centre * size * 0.5, textSize + Padding);
         }
-
-        public Box GetBounds(Element element, Vector2 size, int index, ReadOnlySpan<Element> neighbours)
-            => GetBounds(element as TextElement, size);
+        public Box GetBounds(LayoutArgs args)
+            => GetBounds(args.Element as TextElement, args.Size);
     }
 }

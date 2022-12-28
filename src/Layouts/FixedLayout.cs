@@ -165,7 +165,7 @@ namespace Zene.GUI
 
         public event EventHandler Change;
 
-        public Box GetBounds(Element element, Vector2 size, int index, ReadOnlySpan<Element> neighbours)
+        public Box GetBounds(LayoutArgs args)
             => _bounds;
 
         public static implicit operator FixedLayout(Box bounds) => new FixedLayout(bounds);

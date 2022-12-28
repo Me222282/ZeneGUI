@@ -671,9 +671,7 @@ namespace Zene.GUI
 
             lock (Parent._elementRef)
             {
-                Span<Element> span = CollectionsMarshal.AsSpan(Parent._elements);
-
-                BoundsSet(Layout.GetBounds(this, Parent.Size, _elementIndex, span));
+                BoundsSet(Layout.GetBounds(new LayoutArgs(this, Parent.Size, _elementIndex, Parent._elements)));
             }
             Parent._triggerMouseMove = true;
         }
@@ -785,7 +783,7 @@ namespace Zene.GUI
                         continue;
                     }
 
-                    span[i].BoundsSet(span[i].Layout.GetBounds(span[i], e.Value, i, span));
+                    span[i].BoundsSet(span[i].Layout.GetBounds(new LayoutArgs(span[i], e.Value, i, _elements)));
                 }
             }
         }

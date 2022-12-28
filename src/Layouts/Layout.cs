@@ -29,9 +29,9 @@ namespace Zene.GUI
 
         public event EventHandler Change;
 
-        public Box GetBounds(Element element, Vector2 size, int index, ReadOnlySpan<Element> neighbours)
+        public Box GetBounds(LayoutArgs args)
         {
-            Vector2 multiplier = size * 0.5;
+            Vector2 multiplier = args.Size * 0.5;
 
             return new Box(
                 _relative.Location * multiplier,
