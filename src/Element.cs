@@ -148,22 +148,20 @@ namespace Zene.GUI
         /// The bounds of the element.
         /// </summary>
         /// <remarks>
-        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
+        /// The set function sets <see cref="Layout"/> to a <see cref="FixedLayout"/> of the value.
         /// </remarks>
-        public Box Bounds => _bounds;
+        public Box Bounds
+        {
+            get => _bounds;
+            set => Layout = new FixedLayout(value);
+        }
         /// <summary>
         /// The size of the element.
         /// </summary>
-        /// <remarks>
-        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
-        /// </remarks>
         public Vector2 Size => _bounds.Size;
         /// <summary>
         /// The position of the element.
         /// </summary>
-        /// <remarks>
-        /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
-        /// </remarks>
         public Vector2 Location => _bounds.Location;
         private Vector2 _boundOffset;
         /// <summary>
