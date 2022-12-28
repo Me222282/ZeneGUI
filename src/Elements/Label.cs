@@ -10,12 +10,6 @@ namespace Zene.GUI
             Text = "Label";
         }
 
-        public Label(IBox bounds)
-            : base(bounds)
-        {
-            Text = "Label";
-        }
-
         public Label(ILayout layout)
             : base(layout)
         {

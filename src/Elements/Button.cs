@@ -14,11 +14,6 @@ namespace Zene.GUI
             DrawingBounds();
         }
 
-        public Button(IBox bounds)
-            : this()
-        {
-            Bounds = new Box(bounds);
-        }
         public Button(ILayout layout)
             : this()
         {

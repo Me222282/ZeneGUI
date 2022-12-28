@@ -11,10 +11,6 @@ namespace Zene.GUI
         {
         }
 
-        public TextInput(IBox bounds)
-            : base(bounds)
-        {
-        }
         public TextInput(ILayout layout)
             : base(layout)
         {

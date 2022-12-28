@@ -20,7 +20,6 @@ namespace Zene.GUI
             _elementTypes = _types.Where(ti =>
             {
                 Type type = ti.AsType();
-
                 return type.IsSubclassOf(typeof(Element));
             });
 
@@ -197,18 +196,18 @@ namespace Zene.GUI
             }
 
             // Find type
-            Type t = _types.FindType(constructor[0]);
-            if (t == null)
+            Type type = _types.FindType(constructor[0]);
+            if (type == null)
             {
                 throw new Exception("Constructor type doesn't exist");
             }
-            if (!t.IsAssignableTo(assign))
+            if (!type.IsAssignableTo(assign))
             {
                 throw new Exception("Invalid constructor type");
             }
 
             // Find all constructors
-            ConstructorInfo[] cinfos = t.GetConstructors();
+            ConstructorInfo[] cinfos = type.GetConstructors();
             if (cinfos.Length == 0)
             {
                 throw new Exception("Constructor doesn't exist");

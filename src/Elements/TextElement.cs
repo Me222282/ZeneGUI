@@ -10,11 +10,6 @@ namespace Zene.GUI
         {
         }
 
-        public TextElement(IBox bounds)
-            : base(bounds)
-        {
-        }
-
         public TextElement(ILayout layout)
             : base(layout)
         {

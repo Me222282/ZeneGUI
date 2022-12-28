@@ -11,11 +11,6 @@ namespace Zene.GUI
         {
         }
 
-        public Container(IBox bounds)
-            : base(bounds)
-        {
-        }
-
         public Container(ILayout layout)
             : base(layout)
         {

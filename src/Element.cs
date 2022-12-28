@@ -19,16 +19,6 @@ namespace Zene.GUI
         {
 
         }
-
-        /// <summary>
-        /// Creates an element from its bounds.
-        /// </summary>
-        /// <param name="bounds">The bounding box of the element.</param>
-        /// <param name="framebuffer">Whether to create a framebuffer.</param>
-        public Element(IBox bounds)
-        {
-            _bounds = new Box(bounds);
-        }
         /// <summary>
         /// Creates an element from a layout.
         /// </summary>
@@ -37,6 +27,11 @@ namespace Zene.GUI
         public Element(ILayout layout)
         {
             Layout = layout;
+        }
+
+        internal Element(Box bounds)
+        {
+            _bounds = bounds;
         }
 
         internal Window _window;
@@ -84,46 +79,37 @@ namespace Zene.GUI
 
         private Box _bounds;
         private Vector2 _mousePos;
-        private int _elementIndex = -1;
 
         private ILayout _layout = null;
         /// <summary>
-        /// The position layout of the element. <see cref="null"/> if no layout is used.
+        /// The layout of the element. Used to calculate the element's bounds.
         /// </summary>
         public ILayout Layout
         {
             get => _layout;
             set
             {
-                ILayout old = _layout;
+                if (_layout == value) { return; }
+
+                if (_layout != null)
+                {
+                    _layout.Change -= LayoutChange;
+                }
+
                 _layout = value;
+                _layout.Change += LayoutChange;
 
                 if (Parent == null) { return; }
 
-                if (value == null && old != null)
+                if (value == null)
                 {
-                    Parent.RemoveLayout(this);
+                    BoundsSet(new Box());
                     return;
                 }
 
-                if (old == null && value != null)
-                {
-                    Parent.AddLayout(this);
-                    return;
-                }
-
-                // && old != null
-                if (value != null)
-                {
-                    BoundsSet(value.GetBounds(this, Parent.Size));
-                    return;
-                }
+                TriggerLayout();
             }
         }
-        /// <summary>
-        /// Determines whether this element uses a layout.
-        /// </summary>
-        public bool UsingLayout => _layout != null;
 
         /// <summary>
         /// The local mouse position.
@@ -164,57 +150,21 @@ namespace Zene.GUI
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public Box Bounds
-        {
-            get => _bounds;
-            set
-            {
-                if (Layout != null || _bounds == value) { return; }
-
-                BoundsSet(value);
-
-                if (Parent == null) { return; }
-                Parent._triggerMouseMove = true;
-            }
-        }
+        public Box Bounds => _bounds;
         /// <summary>
         /// The size of the element.
         /// </summary>
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public Vector2 Size
-        {
-            get => _bounds.Size;
-            set
-            {
-                if (Layout != null || _bounds.Size == value) { return; }
-
-                SizeChangeListener(new VectorEventArgs(value));
-
-                if (Parent == null) { return; }
-                Parent._triggerMouseMove = true;
-            }
-        }
+        public Vector2 Size => _bounds.Size;
         /// <summary>
         /// The position of the element.
         /// </summary>
         /// <remarks>
         /// Cannot be set if <see cref="UsingLayout"/> is <see cref="true"/>.
         /// </remarks>
-        public Vector2 Location
-        {
-            get => _bounds.Location;
-            set
-            {
-                if (Layout != null || _bounds.Location == value) { return; }
-
-                ElementMoveListener(new VectorEventArgs(value));
-
-                if (Parent == null) { return; }
-                Parent._triggerMouseMove = true;
-            }
-        }
+        public Vector2 Location => _bounds.Location;
         private Vector2 _boundOffset;
         /// <summary>
         /// The offset added the the drawing bound's size.
@@ -257,6 +207,8 @@ namespace Zene.GUI
         public bool Focused { get; internal set; } = false;
 
         public bool UserResizable { get; protected set; }
+
+        private int _elementIndex = -1;
 
         public event TextInputEventHandler TextInput;
         public event KeyEventHandler KeyDown;
@@ -340,13 +292,13 @@ namespace Zene.GUI
 
             lock (_elementRef)
             {
-                e._elementIndex = _elements.Count;
+                _elementIndex = _elements.Count;
 
                 _elements.Add(e);
             }
 
             // Has layout
-            if (e.Layout != null) { AddLayout(e); }
+            if (e.Layout != null) { TriggerLayout(); }
             // Trigger OnStart if window already executing
             if (_window != null && _window.Running) { e.OnStart(); }
         }
@@ -362,34 +314,16 @@ namespace Zene.GUI
 
             // Element not a child of this
             if (!_elements.Remove(e)) { return false; }
-            
-            _layouts.Remove(e);
-            e._elementIndex = -1;
-            //e._hoverIndex = -1;
-            //_hover.Remove(e);
+
+            _elementIndex = -1;
             e._mouseOver = false;
 
             e.Parent = null;
             e.SetWindow(null);
 
-            // Set indexes for all other child elements
-            // THey may have changed due to element removal
-            SetElementIndexes();
+            TriggerLayout();
 
             return true;
-        }
-        
-        private void SetElementIndexes()
-        {
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i]._elementIndex = i;
-                }
-            }
         }
 
         private Vector2 RenderOffset
@@ -757,33 +691,22 @@ namespace Zene.GUI
             }
         }
 
-        private void AddLayout(Element e)
-        {
-            lock (_elLayoutRef)
-            {
-                _layouts.Add(e);
-            }
-
-            e.BoundsSet(e.Layout.GetBounds(e, _bounds.Size));
-        }
-        private void RemoveLayout(Element e)
-        {
-            lock (_elLayoutRef)
-            {
-                _layouts.Remove(e);
-            }
-        }
-
+        private void LayoutChange(object sender, EventArgs e) => TriggerLayout();
+        /// <summary>
+        /// Causes layout to be recalculated
+        /// </summary>
         protected void TriggerLayout()
         {
             if (Layout == null || Parent == null) { return; }
 
-            BoundsSet(Layout.GetBounds(this, Parent.Size));
+            lock (Parent._elementRef)
+            {
+                Span<Element> span = CollectionsMarshal.AsSpan(Parent._elements);
+
+                BoundsSet(Layout.GetBounds(this, Parent.Size, _elementIndex, span));
+            }
             Parent._triggerMouseMove = true;
         }
-
-        private readonly object _elLayoutRef = new object();
-        private readonly List<Element> _layouts = new List<Element>();
 
         private Vector2 _viewPan = 0d;
         /// <summary>
@@ -878,16 +801,21 @@ namespace Zene.GUI
             if (sameBounds) { return; }
 
             // Update child elements
-            lock (_elLayoutRef)
+            lock (_elementRef)
             {
-                Vector2 multiplier = e.Value * 0.5;
-                Span<Element> span = CollectionsMarshal.AsSpan(_layouts);
+                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
 
                 for (int i = 0; i < span.Length; i++)
                 {
-                    if (!span[i].Visable) { continue; }
+                    span[i]._elementIndex = i;
+                    if (!span[i].Visable ||
+                        span[i].Layout == null)// ||
+                        //span[i].Layout is FixedLayout)
+                    {
+                        continue;
+                    }
 
-                    span[i].BoundsSet(span[i].Layout.GetBounds(span[i], e.Value));
+                    span[i].BoundsSet(span[i].Layout.GetBounds(span[i], e.Value, i, span));
                 }
             }
         }

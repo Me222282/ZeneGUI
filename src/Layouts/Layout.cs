@@ -1,4 +1,5 @@
-﻿using Zene.Structs;
+﻿using System;
+using Zene.Structs;
 
 namespace Zene.GUI
 {
@@ -6,22 +7,35 @@ namespace Zene.GUI
     {
         public Layout(IBox box)
         {
-            Relative = new Box(box);
+            _relative = new Box(box);
         }
         public Layout(double x, double y, double width, double height)
         {
-            Relative = new Box((x, y), (width, height));
+            _relative = new Box((x, y), (width, height));
         }
 
-        public Box Relative { get; set; }
+        private Box _relative;
+        public Box Relative
+        {
+            get => _relative;
+            set
+            {
+                if (_relative == value) { return; }
+                
+                _relative = value;
+                Change?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
-        public Box GetBounds(Element element, Vector2 size)
+        public event EventHandler Change;
+
+        public Box GetBounds(Element element, Vector2 size, int index, ReadOnlySpan<Element> neighbours)
         {
             Vector2 multiplier = size * 0.5;
 
             return new Box(
-                Relative.Location * multiplier,
-                Relative.Size * multiplier
+                _relative.Location * multiplier,
+                _relative.Size * multiplier
             );
         }
     }

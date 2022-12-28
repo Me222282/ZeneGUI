@@ -10,21 +10,68 @@ namespace Zene.GUI
             Padding = padding;
             Centre = centre;
 
-            Relative = relative;
+            _relative = relative;
         }
         public TextLayout(double extraWidth, double extraHeight, double x, double y, bool relative = true)
         {
             Padding = (extraWidth, extraHeight);
             Centre = (x, y);
 
-            Relative = relative;
+            _relative = relative;
         }
 
-        public Vector2 Padding { get; set; }
-        public Vector2 Centre { get; set; }
+        public event EventHandler Change;
 
-        public bool Relative { get; set; }
-        public bool TextInput { get; set; }
+        private Vector2 _padding;
+        public Vector2 Padding
+        {
+            get => _padding;
+            set
+            {
+                if (_padding == value) { return; }
+                
+                _padding = value;
+                Change?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        private Vector2 _centre;
+        public Vector2 Centre
+        {
+            get => _centre;
+            set
+            {
+                if (_centre == value) { return; }
+                
+                _centre = value;
+                Change?.Invoke(this, EventArgs.Empty);
+            }
+        }
+
+        private bool _relative;
+
+        public bool Relative
+        {
+            get => _relative;
+            set
+            {
+                if (_relative == value) { return; }
+                
+                _relative = value;
+                Change?.Invoke(this, EventArgs.Empty);
+            }
+        }
+        private bool _textInput;
+        public bool TextInput
+        {
+            get => _textInput;
+            set
+            {
+                if (_textInput == value) { return; }
+                
+                _textInput = value;
+                Change?.Invoke(this, EventArgs.Empty);
+            }
+        }
 
         public Box GetBounds(TextElement element, Vector2 size)
         {
@@ -58,6 +105,7 @@ namespace Zene.GUI
             return new Box(Centre * size * 0.5, textSize + Padding);
         }
 
-        public Box GetBounds(Element element, Vector2 size) => GetBounds(element as TextElement, size);
+        public Box GetBounds(Element element, Vector2 size, int index, ReadOnlySpan<Element> neighbours)
+            => GetBounds(element as TextElement, size);
     }
 }
