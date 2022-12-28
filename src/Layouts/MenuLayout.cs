@@ -1,7 +1,7 @@
 ﻿using System;
 using Zene.Structs;
 
-namespace Zene.GUI.Layouts
+namespace Zene.GUI
 {
     public class MenuLayout : ILayout
     {
