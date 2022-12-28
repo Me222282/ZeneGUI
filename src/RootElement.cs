@@ -47,8 +47,6 @@ namespace Zene.GUI
             ml.Y = -ml.Y;
 
             MouseMoveListener(new MouseEventArgs(ml));
-
-            _window.CursorStyle = _currentCursor;
         }
 
         /// <summary>

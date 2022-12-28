@@ -178,10 +178,30 @@ namespace Zene.GUI
             }
         }
 
+        private bool IsParentHover
+        {
+            get
+            {
+                if (Parent == null) { return true; }
+
+                return Parent._hover == this && Parent.IsParentHover;
+            }
+        }
         /// <summary>
         /// Determines whether the mouse is hovering over this element.
         /// </summary>
-        public bool MouseHover => _mouseOver && _hover == null;
+        public bool MouseHover
+        {
+            get
+            {
+                if (Parent == null)
+                {
+                    return _hover == null;
+                }
+
+                return _hover == null && IsParentHover;
+            }
+        }
         /// <summary>
         /// Determines whether the mouse is selecting this element.
         /// </summary>
@@ -544,13 +564,20 @@ namespace Zene.GUI
             if (_mousePos == e.Location) { return; }
             _mousePos = e.Location;
 
-            if (MouseSelect && _hover != null)
+            if (_window.MouseButton != MouseButton.None && _hover != null)
             {
+                Element hover = Hover;
+
                 //_hover.OnMouseMove(e);
                 //ManageMouseMove(_hover, e);
-                if (_hover._bounds.Contains(e.Location))
+                if (hover._bounds.Contains(e.Location))
                 {
-                    _hover.OnMouseMove(e);
+                    hover._mouseOver = true;
+                    hover.OnMouseMove(new MouseEventArgs(e.Location - hover._bounds.Location));
+                }
+                else
+                {
+                    hover._mouseOver = false;
                 }
                 return;
             }
@@ -588,6 +615,12 @@ namespace Zene.GUI
                 }
 
                 _currentCursor = newCursor;
+            }
+
+            // Set cursor if this is root element
+            if (Parent == null)
+            {
+                _window.CursorStyle = _currentCursor;
             }
         }
         protected virtual void OnMouseMove(MouseEventArgs e)
@@ -659,10 +692,10 @@ namespace Zene.GUI
 
             Hover.OnMouseUp(e);
 
-            if (!_hover._mouseOver)
+            if (!MouseSelect & Parent == null)
             {
                 _mousePos = double.NaN;
-                OnMouseMove(e);
+                MouseMoveListener(e);
             }
         }
 
