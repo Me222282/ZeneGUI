@@ -435,6 +435,8 @@ namespace Zene.GUI
 
                     // Set text render projection
                     textRender.Projection = span[i].Projection;
+                    textRender.View = Matrix4.Identity;
+                    textRender.Model = Matrix4.Identity;
                     // Default colour
                     textRender.Colour = new Colour(255, 255, 255);
 
