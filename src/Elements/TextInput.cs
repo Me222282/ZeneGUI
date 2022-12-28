@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
 using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
@@ -26,13 +27,19 @@ namespace Zene.GUI
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BackgroundColour { get; set; }
         public double CornerRadius { get; set; } = 0d;
+        public bool SingleLine { get; set; } = false;
 
         private int _caret = 0;
         private StringBuilder _text = new StringBuilder();
         protected override string TextReference
         {
             get => _text.ToString();
-            set => _text = new StringBuilder(value);
+            set
+            {
+                _text = new StringBuilder(value);
+
+                _caret = Math.Clamp(_caret, 0, _text.Length);
+            }
         }
 
         private double _timeOffset = 0;
@@ -86,7 +93,7 @@ namespace Zene.GUI
                 ResetCaret();
                 return;
             }
-            if (e[Keys.Enter])
+            if (!SingleLine && (e[Keys.Enter] || e[Keys.NumPadEnter]))
             {
                 _text.Insert(_caret, '\n');
                 TriggerLayout();

@@ -106,6 +106,12 @@ namespace Zene.GUI
             }
         }
 
+        private Vector2 CalculateMousePos(Vector2 rootPos)
+        {
+            if (Parent == null) { return rootPos; }
+
+            return Parent.CalculateMousePos(rootPos) - _bounds.Centre;
+        }
         /// <summary>
         /// The local mouse position.
         /// </summary>
@@ -348,7 +354,7 @@ namespace Zene.GUI
                 {
                     return Vector2.Zero;
                 }
-                
+
                 return Parent.RenderOffset + Parent._bounds.Centre + Parent._viewPan;
             }
         }
@@ -377,7 +383,7 @@ namespace Zene.GUI
             Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + _boundOffset);
 
             _viewReference = new RectangleI((
-                // Location
+                    // Location
                     (_window.Width * 0.5) + drawingBounds.Left,
                     (_window.Height * 0.5) + drawingBounds.Bottom
                 ) + RenderOffset,
@@ -444,7 +450,7 @@ namespace Zene.GUI
             OnUpdate(new FrameEventArgs(framebuffer));
 
             _inRender = false;
-            
+
             // Draw child elements
             lock (_elementRef)
             {
@@ -548,7 +554,7 @@ namespace Zene.GUI
         protected virtual void OnMouseLeave(EventArgs e)
         {
             _mouseOver = false;
-            
+
             MouseLeave?.Invoke(this, e);
 
             // Not container for hover element
@@ -568,12 +574,12 @@ namespace Zene.GUI
             {
                 Element hover = Hover;
 
-                //_hover.OnMouseMove(e);
-                //ManageMouseMove(_hover, e);
-                if (hover._bounds.Contains(e.Location))
+                Vector2 hoverMP = hover.CalculateMousePos(e.Location);
+                if (hover._bounds.Contains(hoverMP))
                 {
                     hover._mouseOver = true;
-                    hover.OnMouseMove(new MouseEventArgs(e.Location - hover._bounds.Location));
+                    hover._mousePos = hoverMP;
+                    hover.OnMouseMove(new MouseEventArgs(hoverMP));
                 }
                 else
                 {
@@ -658,7 +664,7 @@ namespace Zene.GUI
             e._mouseOver = false;
             return null;
         }
-        
+
         private bool _mouseOver = false;
         protected virtual void OnMouseDown(MouseEventArgs e)
         {
@@ -669,7 +675,8 @@ namespace Zene.GUI
             // Not container for hover element
             if (_hover == null) { return; }
 
-            Hover.OnMouseDown(e);
+            Element hover = Hover;
+            hover.OnMouseDown(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
         }
         protected virtual void OnMouseUp(MouseEventArgs e)
         {
@@ -690,7 +697,8 @@ namespace Zene.GUI
             // Not container for hover element
             if (_hover == null) { return; }
 
-            Hover.OnMouseUp(e);
+            Element hover = Hover;
+            hover.OnMouseUp(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
 
             if (!MouseSelect & Parent == null)
             {
@@ -816,7 +824,7 @@ namespace Zene.GUI
                     span[i]._elementIndex = i;
                     if (!span[i].Visable ||
                         span[i].Layout == null)// ||
-                        //span[i].Layout is FixedLayout)
+                                               //span[i].Layout is FixedLayout)
                     {
                         continue;
                     }
