@@ -51,14 +51,15 @@ namespace Zene.GUI
         public void AddParser<T>(Func<string, T> func) => _stringParses.Add(typeof(T), s => func(s));
 
         private Window _window;
-        private Type _winType;
-        public RootElement LoadGUI(Window window, string src)
+        private object _events;
+        public RootElement LoadGUI(Window window, string src, object events = null)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
 
+            _events = events;
             _window = window;
-            _winType = window.GetType();
+
             RootElement re = new RootElement(window);
 
             if (root.ChildNodes.Count == 0)
@@ -88,7 +89,7 @@ namespace Zene.GUI
             }
 
             _window = null;
-            _winType = null;
+            _events = null;
 
             return re;
         }
@@ -165,29 +166,45 @@ namespace Zene.GUI
                 throw new Exception($"{type.Name} doesn't have attribute {name}");
             }
 
-            Delegate d = ParseEventString(value, ei.EventHandlerType);
+            Delegate d;
+            try
+            {
+                d = ParseEventString(value, ei.EventHandlerType, _window);
+            }
+            catch
+            {
+                if (_events == null) { throw; }
+
+                d = ParseEventString(value, ei.EventHandlerType, _events);
+            }
+
             ei.AddEventHandler(e, d);
         }
 
-        private Delegate ParseEventString(string value, Type t)
+        private static Delegate ParseEventString(string value, Type delegateType, object methodSource)
         {
+            if (methodSource == null)
+            {
+                throw new Exception("No method source");
+            }
+
             if (value[^1] == ')' && value[^2] == '(')
             {
                 value = value.Remove(value.Length - 2);
             }
 
-            MethodInfo mi = _winType.GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            MethodInfo mi = methodSource.GetType().GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
             if (mi == null)
             {
-                throw new Exception($"Method {value} doen't exist");
+                throw new Exception($"Method {value} is not accessible");
             }
 
             if (mi.IsStatic)
             {
-                return mi.CreateDelegate(t);
+                return mi.CreateDelegate(delegateType);
             }
 
-            return mi.CreateDelegate(t, _window);
+            return mi.CreateDelegate(delegateType, methodSource);
         }
 
         private object ParseString(string value, Type returnType)
