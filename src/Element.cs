@@ -619,6 +619,11 @@ namespace Zene.GUI
         }
 
         private bool _triggerMouseMove = false;
+        private void TriggerFullMouseMove()
+        {
+            RootElement._triggerMouseMove = true;
+        }
+
         internal void MouseMoveListener(MouseEventArgs e)
         {
             if (_mousePos == e.Location) { return; }
@@ -774,7 +779,7 @@ namespace Zene.GUI
             {
                 BoundsSet(Layout.GetBounds(new LayoutArgs(this, Parent.Size, _elementIndex, Parent._elements)));
             }
-            Parent._triggerMouseMove = true;
+            TriggerFullMouseMove();
         }
 
         private Vector2 _viewPan = 0d;
@@ -787,6 +792,7 @@ namespace Zene.GUI
             set
             {
                 _viewPan = value;
+                _triggerMouseMove = true;
 
                 if (_inRender)
                 {
@@ -805,6 +811,7 @@ namespace Zene.GUI
             set
             {
                 _viewScale = value;
+                _triggerMouseMove = true;
 
                 if (_inRender)
                 {
