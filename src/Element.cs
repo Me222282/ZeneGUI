@@ -321,6 +321,16 @@ namespace Zene.GUI
             // Has layout
             if (e.Layout != null) { TriggerLayout(); }
         }
+
+        private static void ResetElement(Element e)
+        {
+            e._elementIndex = -1;
+            e._mouseOver = false;
+            e.Focused = false;
+
+            e.Parent = null;
+            e.SetRoots(null, null);
+        }
         /// <summary>
         /// Removes a child element.
         /// </summary>
@@ -334,15 +344,24 @@ namespace Zene.GUI
             // Element not a child of this
             if (!_elements.Remove(e)) { return false; }
 
-            _elementIndex = -1;
-            e._mouseOver = false;
-
-            e.Parent = null;
-            e.SetRoots(null, null);
-
+            ResetElement(e);
             TriggerLayout();
 
             return true;
+        }
+        /// <summary>
+        /// Removes all child elements.
+        /// </summary>
+        public void ClearChildren()
+        {
+            foreach (Element e in _elements)
+            {
+                ResetElement(e);
+            }
+
+            _elements.Clear();
+
+            TriggerLayout();
         }
 
         private Vector2 _renderOffset = Vector2.Zero;
@@ -523,7 +542,7 @@ namespace Zene.GUI
             Focus?.Invoke(this, e);
         }
 
-        protected virtual void OnScroll(ScrollEventArgs e)
+        protected internal virtual void OnScroll(ScrollEventArgs e)
         {
             Scroll?.Invoke(this, e);
 

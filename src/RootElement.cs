@@ -14,21 +14,29 @@ namespace Zene.GUI
         internal override TextureRenderer framebuffer { get; }
 
         public RootElement(Window w)
+            : this(w, true)
+        {
+            
+        }
+        internal RootElement(Window w, bool events = true)
         {
             _window = w;
             RootElement = this;
 
-            // Add events listeners
-            _window.MouseMove += MouseMove;
-            _window.MouseDown += (_, e) => OnMouseDown(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
-            _window.MouseUp += (_, e) => OnMouseUp(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
-            _window.Scroll += (_, e) => OnScroll(e);
-            _window.KeyDown += (_, e) => OnKeyDown(e);
-            _window.KeyUp += (_, e) => _focus?.OnKeyUp(e);
-            _window.TextInput += (_, e) => _focus?.OnTextInput(e);
-            _window.SizeChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
+            if (events)
+            {
+                // Add events listeners
+                _window.MouseMove += MouseMove;
+                _window.MouseDown += (_, e) => OnMouseDown(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
+                _window.MouseUp += (_, e) => OnMouseUp(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
+                _window.Scroll += (_, e) => OnScroll(e);
+                _window.KeyDown += (_, e) => OnKeyDown(e);
+                _window.KeyUp += (_, e) => _focus?.OnKeyUp(e);
+                _window.TextInput += (_, e) => _focus?.OnTextInput(e);
+                _window.SizePixelChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
 
-            _window.Start += (_, _) => SizeChangeListener(new VectorEventArgs(_window.Size));
+                _window.Start += (_, _) => SizeChangeListener(new VectorEventArgs(_window.Size));
+            }
 
             _focus = this;
 
@@ -42,7 +50,7 @@ namespace Zene.GUI
         private Element _focus;
         public Element FocusElement => _focus;
 
-        private new void MouseMove(object s, MouseEventArgs e)
+        internal new void MouseMove(object s, MouseEventArgs e)
         {
             Vector2 ml = e.Location - (_window.Size * 0.5);
             ml.Y = -ml.Y;
@@ -102,7 +110,7 @@ namespace Zene.GUI
             SetFocus(Hover);
         }
 
-        private new void OnKeyDown(KeyEventArgs e)
+        internal new void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
 

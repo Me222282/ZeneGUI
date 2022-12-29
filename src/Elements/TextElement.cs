@@ -9,7 +9,6 @@ namespace Zene.GUI
             : base()
         {
         }
-
         public TextElement(ILayout layout)
             : base(layout)
         {

@@ -52,15 +52,32 @@ namespace Zene.GUI
 
         private Window _window;
         private object _events;
+        private Type _eventType;
+
         public RootElement LoadGUI(Window window, string src, object events = null)
+        {
+            RootElement root = new RootElement(window);
+            LoadGUI(root, src, events, events?.GetType());
+            return root;
+        }
+        public void LoadGUI(RootElement root, string src, object events = null)
+            => LoadGUI(root, src, events, events?.GetType());
+        public RootElement LoadGUI(Window window, string src, Type events)
+        {
+            RootElement root = new RootElement(window);
+            LoadGUI(root, src, null, events);
+            return root;
+        }
+        public void LoadGUI(RootElement root, string src, Type events)
+            => LoadGUI(root, src, null, events);
+        private void LoadGUI(RootElement re, string src, object events, Type et)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
 
             _events = events;
-            _window = window;
-
-            RootElement re = new RootElement(window);
+            _eventType = et;
+            _window = re._window;
 
             if (root.ChildNodes.Count == 0)
             {
@@ -90,8 +107,7 @@ namespace Zene.GUI
 
             _window = null;
             _events = null;
-
-            return re;
+            _eventType = null;
         }
 
         private Element ParseNode(XmlNode node, Element parent)
@@ -169,21 +185,21 @@ namespace Zene.GUI
             Delegate d;
             try
             {
-                d = ParseEventString(value, ei.EventHandlerType, _window);
+                d = ParseEventString(value, ei.EventHandlerType, _window, _window.GetType()); ;
             }
             catch
             {
-                if (_events == null) { throw; }
+                if (_eventType == null) { throw; }
 
-                d = ParseEventString(value, ei.EventHandlerType, _events);
+                d = ParseEventString(value, ei.EventHandlerType, _events, _eventType);
             }
 
             ei.AddEventHandler(e, d);
         }
 
-        private static Delegate ParseEventString(string value, Type delegateType, object methodSource)
+        private static Delegate ParseEventString(string value, Type delegateType, object methodSource, Type sourceType)
         {
-            if (methodSource == null)
+            if (sourceType == null)
             {
                 throw new Exception("No method source");
             }
@@ -193,7 +209,7 @@ namespace Zene.GUI
                 value = value.Remove(value.Length - 2);
             }
 
-            MethodInfo mi = methodSource.GetType().GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+            MethodInfo mi = sourceType.GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
             if (mi == null)
             {
                 throw new Exception($"Method {value} is not accessible");
