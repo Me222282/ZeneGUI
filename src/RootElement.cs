@@ -23,6 +23,8 @@ namespace Zene.GUI
             _window = w;
             RootElement = this;
 
+            _mouseOver = true;
+
             if (events)
             {
                 // Add events listeners

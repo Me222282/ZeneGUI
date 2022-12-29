@@ -176,15 +176,6 @@ namespace Zene.GUI
             }
         }
 
-        private bool IsParentHover
-        {
-            get
-            {
-                if (Parent == null) { return true; }
-
-                return Parent._hover == this && Parent.IsParentHover;
-            }
-        }
         /// <summary>
         /// Determines whether the mouse is hovering over this element.
         /// </summary>
@@ -197,9 +188,13 @@ namespace Zene.GUI
                     return _hover == null;
                 }
 
-                return _hover == null && IsParentHover;
+                return _hover == null && _mouseOver;
             }
         }
+        /// <summary>
+        /// Determines whether the mouse cursor is inside the bounds of this element.
+        /// </summary>
+        public bool MouseInBounds => _mouseOver;
         /// <summary>
         /// Determines whether the mouse is selecting this element.
         /// </summary>
@@ -476,9 +471,7 @@ namespace Zene.GUI
             // Thus mouse hover may become inaccurate
             if (_triggerMouseMove && _mouseOver)
             {
-                Vector2 mp = _mousePos;
-                _mousePos = double.NaN;
-                MouseMoveListener(new MouseEventArgs(mp));
+                MouseMoveListener(new MouseEventArgs(_mousePos), false);
                 _window.CursorStyle = _currentCursor;
             }
 
@@ -619,14 +612,11 @@ namespace Zene.GUI
         }
 
         private bool _triggerMouseMove = false;
-        private void TriggerFullMouseMove()
-        {
-            RootElement._triggerMouseMove = true;
-        }
+        private void TriggerFullMouseMove() => RootElement._triggerMouseMove = true;
 
-        internal void MouseMoveListener(MouseEventArgs e)
+        internal void MouseMoveListener(MouseEventArgs e, bool check = true)
         {
-            if (_mousePos == e.Location) { return; }
+            if (check && _mousePos == e.Location) { return; }
             _mousePos = e.Location;
 
             if (_window.MouseButton != MouseButton.None && _hover != null)
@@ -655,6 +645,7 @@ namespace Zene.GUI
 
                 bool elementHover = false;
 
+                Element oldHover = _hover;
                 _hover = null;
 
                 //for (int i = 0; i < span.Length; i++)
@@ -663,7 +654,7 @@ namespace Zene.GUI
                 {
                     if (!span[i].Visable) { continue; }
 
-                    Cursor c = ManageMouseMove(span[i], e);
+                    Cursor c = ManageMouseMove(span[i], e, check);
                     // _hover has been set - element hover
                     if (_hover == null) { continue; }
 
@@ -677,6 +668,11 @@ namespace Zene.GUI
                 {
                     _hover = null;
                     OnMouseMove(e);
+                }
+                if (oldHover != null && oldHover != _hover)
+                {
+                    oldHover._mouseOver = false;
+                    oldHover.OnMouseLeave(new EventArgs());
                 }
 
                 _currentCursor = newCursor;
@@ -692,7 +688,7 @@ namespace Zene.GUI
         {
             MouseMove?.Invoke(this, e);
         }
-        private Cursor ManageMouseMove(Element e, MouseEventArgs m)
+        private Cursor ManageMouseMove(Element e, MouseEventArgs m, bool check)
         {
             Vector2 mouseLocal = (m.Location - _viewPan) / _viewScale;
             bool mouseOverNew = e._bounds.Contains(mouseLocal);
@@ -704,28 +700,27 @@ namespace Zene.GUI
             if (mouseOverNew == e._mouseOver)
             {
                 _hover = e;
-                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre));
+                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre), check);
                 return e._currentCursor;
             }
 
-            // Mouse enters bounds
-            if (mouseOverNew)
+            // Mouse leaving bounds
+            if (!mouseOverNew)
             {
-                e._mouseOver = true;
-                _hover = e;
-                e.OnMouseEnter(new EventArgs());
-                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre));
-
-                return e._currentCursor;
+                // Make sure OnMouseLeave is called
+                if (_hover == e) { _hover = null; }
+                return null;
             }
 
-            // Mouse leaves bounds
-            e.OnMouseLeave(new EventArgs());
-            e._mouseOver = false;
-            return null;
+            e._mouseOver = true;
+            _hover = e;
+            e.OnMouseEnter(new EventArgs());
+            e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre), check);
+
+            return e._currentCursor;
         }
 
-        private bool _mouseOver = false;
+        internal bool _mouseOver = false;
         protected internal virtual void OnMouseDown(MouseEventArgs e)
         {
             MouseSelect = true;
@@ -760,10 +755,9 @@ namespace Zene.GUI
             Element hover = Hover;
             hover.OnMouseUp(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
 
-            if (!MouseSelect & Parent == null)
+            if (!MouseSelect && Parent == null)
             {
-                _mousePos = double.NaN;
-                MouseMoveListener(e);
+                TriggerFullMouseMove();
             }
         }
 
