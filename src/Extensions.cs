@@ -72,5 +72,23 @@ namespace Zene.GUI
 
             return str.Substring(i, str.Length - count);
         }
+
+        public static MethodInfo GetMethod(this Type type, string name, int parameterCount, BindingFlags bindingFlags)
+        {
+            MethodInfo[] mis = type.GetMethods(bindingFlags);
+
+            foreach (MethodInfo mi in mis)
+            {
+                if (mi.Name != name ||
+                    mi.GetParameters().Length != parameterCount)
+                {
+                    continue;
+                }
+
+                return mi;
+            }
+
+            return null;
+        }
     }
 }

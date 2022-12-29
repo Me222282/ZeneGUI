@@ -182,22 +182,24 @@ namespace Zene.GUI
                 throw new Exception($"{type.Name} doesn't have attribute {name}");
             }
 
+            int delegateParamterCount = ei.EventHandlerType.GetMethod("Invoke").GetParameters().Length;
+
             Delegate d;
             try
             {
-                d = ParseEventString(value, ei.EventHandlerType, _window, _window.GetType()); ;
+                d = ParseEventString(value, ei.EventHandlerType, delegateParamterCount, _window, _window.GetType()); ;
             }
             catch
             {
                 if (_eventType == null) { throw; }
 
-                d = ParseEventString(value, ei.EventHandlerType, _events, _eventType);
+                d = ParseEventString(value, ei.EventHandlerType, delegateParamterCount, _events, _eventType);
             }
 
             ei.AddEventHandler(e, d);
         }
 
-        private static Delegate ParseEventString(string value, Type delegateType, object methodSource, Type sourceType)
+        private static Delegate ParseEventString(string value, Type delegateType, int paramCount, object methodSource, Type sourceType)
         {
             if (sourceType == null)
             {
@@ -209,7 +211,7 @@ namespace Zene.GUI
                 value = value.Remove(value.Length - 2);
             }
 
-            MethodInfo mi = sourceType.GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
+            MethodInfo mi = sourceType.GetMethod(value, paramCount, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static);
             if (mi == null)
             {
                 throw new Exception($"Method {value} is not accessible");
