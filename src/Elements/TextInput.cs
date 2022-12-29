@@ -26,7 +26,7 @@ namespace Zene.GUI
         public double BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BackgroundColour { get; set; }
-        public double CornerRadius { get; set; } = 0d;
+        public double CornerRadius { get; set; } = 0.01;
         public bool SingleLine { get; set; } = false;
 
         private int _caret = 0;
@@ -191,11 +191,21 @@ namespace Zene.GUI
             return false;
         }
 
+        private double BorderWidthDraw()
+        {
+            if (Focused)
+            {
+                return BorderWidth + 1d;
+            }
+
+            return BorderWidth;
+        }
+
         protected override void OnUpdate(FrameEventArgs e)
         {
             base.OnUpdate(e);
 
-            _shader.BorderWidth = BorderWidth;
+            _shader.BorderWidth = BorderWidthDraw();
             DrawingBoundOffset = _shader.BorderWidth;
 
             _shader.BorderColour = BorderColour;

@@ -128,7 +128,7 @@ namespace Zene.GUI
                         throw new Exception($"{node.Name} doesn't have a Text property");
                     }
 
-                    pi.SetValue(element, child.Value);
+                    pi.SetValue(element, child.Value.Trim());
                     continue;
                 }
 
@@ -166,6 +166,8 @@ namespace Zene.GUI
 
         public object ParseString(string value, Type returnType)
         {
+            value = value.Trim();
+
             try
             {
                 TypeConverter tc = TypeDescriptor.GetConverter(returnType);

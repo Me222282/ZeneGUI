@@ -10,7 +10,7 @@ namespace Zene.GUI
         {
             CursorStyle = Cursor.Hand;
             Text = "Button";
-            TextColour = ColourF.Zero;
+            TextColour = new ColourF(0f, 0f, 0f);
             DrawingBounds();
         }
 
@@ -25,17 +25,7 @@ namespace Zene.GUI
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
 
-        private double _bw = 5d;
-        public double BorderWidth
-        {
-            get => _bw;
-            set
-            {
-                _bw = value;
-
-                DrawingBounds();
-            }
-        }
+        public double BorderWidth { get; set; } = 3d;
         public double CornerRadius { get; set; } = 0.1;
 
         public ITexture Texture { get; set; } = null;
@@ -44,14 +34,14 @@ namespace Zene.GUI
         {
             if (MouseSelect | MouseHover)
             {
-                return _bw + 2;
+                return BorderWidth + 2;
             }
             if (Focused)
             {
-                return _bw + 1;
+                return BorderWidth + 1;
             }
 
-            return _bw;
+            return BorderWidth;
         }
         private void DrawingBounds()
         {

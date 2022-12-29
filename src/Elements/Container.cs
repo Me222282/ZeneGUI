@@ -1,5 +1,6 @@
 ﻿using Zene.Graphics;
 using Zene.Structs;
+using Zene.Windowing;
 
 namespace Zene.GUI
 {

@@ -129,7 +129,7 @@ namespace Zene.GUI
                     return (wml.X, -wml.Y) - (_window.Size * (0.5, -0.5));
                 }
 
-                return Parent.MouseLocation - _bounds.Centre;
+                return ((Parent.MouseLocation - Parent._viewPan) / Parent._viewScale) - _bounds.Centre;
             }
             set
             {
@@ -139,7 +139,7 @@ namespace Zene.GUI
                     return;
                 }
 
-                Parent.MouseLocation = value + _bounds.Centre;
+                Parent.MouseLocation = ((value + _bounds.Centre) * Parent._viewScale) + Parent._viewPan;
             }
         }
 
@@ -352,17 +352,15 @@ namespace Zene.GUI
             return true;
         }
 
-        private Vector2 RenderOffset
+        private Vector2 _renderOffset = Vector2.Zero;
+        private double _renderScale = 1d;
+        private void RenderOffsetScale()
         {
-            get
-            {
-                if (Parent == null)
-                {
-                    return Vector2.Zero;
-                }
+            if (Parent == null) { return; }
 
-                return Parent.RenderOffset + Parent._bounds.Centre + Parent._viewPan;
-            }
+            _renderScale = Parent._renderScale * Parent._viewScale;
+
+            _renderOffset = Parent._renderOffset + ((Parent._bounds.Centre + Parent._viewPan) * Parent._renderScale);
         }
 
         private static RectangleI ViewClamp(RectangleI a, RectangleI b)
@@ -386,13 +384,14 @@ namespace Zene.GUI
                 return;
             }
 
-            Box drawingBounds = new Box(_bounds.Centre, _bounds.Size + _boundOffset);
+            RenderOffsetScale();
+            Box drawingBounds = new Box(_bounds.Centre * _renderScale, (_bounds.Size + _boundOffset) * _renderScale);
 
             _viewReference = new RectangleI((
                     // Location
                     (_window.Width * 0.5) + drawingBounds.Left,
                     (_window.Height * 0.5) + drawingBounds.Bottom
-                ) + RenderOffset,
+                ) + _renderOffset,
                 // Size
                 drawingBounds.Size);
         }
@@ -641,7 +640,8 @@ namespace Zene.GUI
         }
         private Cursor ManageMouseMove(Element e, MouseEventArgs m)
         {
-            bool mouseOverNew = e._bounds.Contains(m.Location);
+            Vector2 mouseLocal = (m.Location - _viewPan) / _viewScale;
+            bool mouseOverNew = e._bounds.Contains(mouseLocal);
 
             // Mouse not in bounds
             if ((mouseOverNew == e._mouseOver) && (e._mouseOver == false)) { return null; }
@@ -650,7 +650,7 @@ namespace Zene.GUI
             if (mouseOverNew == e._mouseOver)
             {
                 _hover = e;
-                e.MouseMoveListener(new MouseEventArgs(m.Location - e._bounds.Centre));
+                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre));
                 return e._currentCursor;
             }
 
@@ -660,7 +660,7 @@ namespace Zene.GUI
                 e._mouseOver = true;
                 _hover = e;
                 e.OnMouseEnter(new EventArgs());
-                e.MouseMoveListener(new MouseEventArgs(e.Location - e._bounds.Centre));
+                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre));
 
                 return e._currentCursor;
             }
@@ -760,7 +760,7 @@ namespace Zene.GUI
         private Matrix4 _viewRef = Matrix4.Identity;
         private void SetView()
         {
-            _viewRef = Matrix4.CreateBox(new Box(_viewPan, ViewScale));
+            _viewRef = Matrix4.CreateBox(new Box(_viewPan, _viewScale));
             CalculateProjMat();
         }
         private void SetProjection()
