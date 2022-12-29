@@ -341,8 +341,11 @@ namespace Zene.GUI
             // This element is not e.Parent - cannot be removed
             if (e.Parent != this) { return false; }
 
-            // Element not a child of this
-            if (!_elements.Remove(e)) { return false; }
+            lock (_elementRef)
+            {
+                // Element not a child of this
+                if (!_elements.Remove(e)) { return false; }
+            }
 
             ResetElement(e);
             TriggerLayout();
@@ -359,9 +362,41 @@ namespace Zene.GUI
                 ResetElement(e);
             }
 
-            _elements.Clear();
+            lock (_elementRef)
+            {
+                _elements.Clear();
+            }
 
             TriggerLayout();
+        }
+
+        /// <summary>
+        /// Finds the first element of a certain type.
+        /// </summary>
+        /// <typeparam name="T">The type of element to search for.</typeparam>
+        /// <returns></returns>
+        public T Find<T>()
+            where T : Element
+        {
+            if (this is T)
+            {
+                return this as T;
+            }
+
+            lock (_elements)
+            {
+                foreach (Element e in _elements)
+                {
+                    T test = e.Find<T>();
+
+                    if (test != null)
+                    {
+                        return test;
+                    }
+                }
+            }
+
+            return null;
         }
 
         private Vector2 _renderOffset = Vector2.Zero;

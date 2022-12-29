@@ -60,6 +60,9 @@ namespace Zene.GUI
         public bool RemoveChild(Element e) => RootElement.RemoveChild(e);
         public void ClearChildren() => RootElement.ClearChildren();
 
+        public T Find<T>() where T : Element
+            => RootElement.Find<T>();
+
         protected override void OnUpdate(EventArgs e)
         {
             base.OnUpdate(e);
