@@ -514,6 +514,8 @@ namespace Zene.GUI
 
                     State.DepthTesting = false;
 
+                    span[i].SetView();
+
                     // Set text render projection
                     textRender.Projection = span[i].Projection;
                     textRender.View = Matrix4.Identity;
@@ -786,7 +788,11 @@ namespace Zene.GUI
             {
                 _viewPan = value;
 
-                SetView();
+                if (_inRender)
+                {
+                    SetView();
+                    textRender.Projection = Projection;
+                }
             }
         }
         private double _viewScale = 1d;
@@ -800,7 +806,11 @@ namespace Zene.GUI
             {
                 _viewScale = value;
 
-                SetView();
+                if (_inRender)
+                {
+                    SetView();
+                    textRender.Projection = Projection;
+                }
             }
         }
 
@@ -854,12 +864,11 @@ namespace Zene.GUI
             {
                 textRender.Projection = Projection;
 
+                // Set reference for viewport when rendered
                 SetViewRef();
                 SetScissor();
                 SetViewport();
             }
-            // Set reference for viewport when rendered
-            SetViewRef();
 
             OnSizeChange(e);
 
