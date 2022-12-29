@@ -232,6 +232,8 @@ namespace Zene.GUI
 
         private int _elementIndex = -1;
 
+        public bool TabShifting { get; set; } = true;
+
         public event TextInputEventHandler TextInput;
         public event KeyEventHandler KeyDown;
         public event KeyEventHandler KeyUp;
@@ -276,6 +278,10 @@ namespace Zene.GUI
         /// <returns></returns>
         public bool this[MouseButton button] => _window[button];
 
+        /// <summary>
+        /// Gets the number of children this element has.
+        /// </summary>
+        public int ChildCount => _elements.Count;
         /// <summary>
         /// Get the child element at an index.
         /// </summary>
@@ -666,7 +672,7 @@ namespace Zene.GUI
         }
 
         private bool _mouseOver = false;
-        protected virtual void OnMouseDown(MouseEventArgs e)
+        protected internal virtual void OnMouseDown(MouseEventArgs e)
         {
             MouseSelect = true;
 
@@ -678,7 +684,7 @@ namespace Zene.GUI
             Element hover = Hover;
             hover.OnMouseDown(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
         }
-        protected virtual void OnMouseUp(MouseEventArgs e)
+        protected internal virtual void OnMouseUp(MouseEventArgs e)
         {
             bool mouseDidSelect = MouseSelect;
 
@@ -861,6 +867,68 @@ namespace Zene.GUI
         protected virtual void OnUpdate(FrameEventArgs e)
         {
             Update?.Invoke(this, e);
+        }
+
+        internal Element LowestFirstElement()
+        {
+            if (_elements.Count == 0) { return this; }
+
+            return _elements[0].LowestFirstElement();
+        }
+        internal Element LowestLastElement()
+        {
+            if (_elements.Count == 0) { return this; }
+
+            return _elements[^1].LowestLastElement();
+        }
+
+        internal Element NextElement()
+        {
+            if (Parent == null) { return null; }
+
+            Element next;
+
+            // This is last element
+            if (_elementIndex == (Parent._elements.Count - 1))
+            {
+                next = Parent.NextElement();
+
+                // Loop round to first element
+                if (next == null)
+                {
+                    next = RootElement;
+                }
+            }
+            else
+            {
+                next = Parent._elements[_elementIndex + 1];
+            }
+
+            return next.LowestFirstElement();
+        }
+        internal Element PreviousElement()
+        {
+            if (Parent == null) { return null; }
+
+            Element next;
+
+            // This is fisrt element
+            if (_elementIndex == 0)
+            {
+                next = Parent.PreviousElement();
+
+                // Loop round to first element
+                if (next == null)
+                {
+                    next = RootElement;
+                }
+            }
+            else
+            {
+                next = Parent._elements[_elementIndex - 1];
+            }
+
+            return next.LowestLastElement();
         }
     }
 }

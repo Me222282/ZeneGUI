@@ -22,7 +22,7 @@ namespace Zene.GUI
             _window.MouseDown += (_, e) => OnMouseDown(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
             _window.MouseUp += (_, e) => OnMouseUp(new MouseEventArgs(MouseLocation, e.Button, e.Modifier));
             _window.Scroll += (_, e) => OnScroll(e);
-            _window.KeyDown += (_, e) => _focus?.OnKeyDown(e);
+            _window.KeyDown += (_, e) => OnKeyDown(e);
             _window.KeyUp += (_, e) => _focus?.OnKeyUp(e);
             _window.TextInput += (_, e) => _focus?.OnTextInput(e);
             _window.SizeChange += (_, e) => SizeChangeListener((VectorEventArgs)e);
@@ -77,23 +77,94 @@ namespace Zene.GUI
             });
         }
 
-        private readonly FocusedEventArgs _focusTrue = new FocusedEventArgs(true);
-        private readonly FocusedEventArgs _focusFalse = new FocusedEventArgs(false);
-        protected override void OnMouseDown(MouseEventArgs e)
+        private void SetFocus(Element e)
         {
-            base.OnMouseDown(e);
-
             if (_focus != null)
             {
                 _focus.Focused = false;
                 _focus.OnFocus(_focusFalse);
             }
 
-            _focus = Hover;
+            _focus = e;
 
             if (_focus == null) { return; }
             _focus.Focused = true;
             _focus.OnFocus(_focusTrue);
+        }
+
+        private readonly FocusedEventArgs _focusTrue = new FocusedEventArgs(true);
+        private readonly FocusedEventArgs _focusFalse = new FocusedEventArgs(false);
+        protected internal override void OnMouseDown(MouseEventArgs e)
+        {
+            base.OnMouseDown(e);
+
+            SetFocus(Hover);
+        }
+
+        private new void OnKeyDown(KeyEventArgs e)
+        {
+            base.OnKeyDown(e);
+
+            // No focus, no event
+            if (_focus == null) { return; }
+
+            // Shift focus from tab
+            if (_focus.TabShifting && e[Keys.Tab])
+            {
+                if (e[Mods.Shift])
+                {
+                    FocusShiftLeft();
+                    return;
+                }
+
+                FocusShiftRight();
+                return;
+            }
+
+            _focus?.OnKeyDown(e);
+
+            // Simulate click event
+            if (e[Keys.Enter])
+            {
+                _focus.OnMouseDown(new MouseEventArgs(MouseButton.Left, e.Modifier));
+                _focus.OnMouseUp(new MouseEventArgs(MouseButton.Left, e.Modifier));
+                return;
+            }
+        }
+
+        private void FocusShiftRight()
+        {
+            if (_focus == null) { return; }
+
+            Element next = _focus.LowestFirstElement();
+            if (_focus != next)
+            {
+                SetFocus(next);
+                return;
+            }
+
+            // Only one element in GUI tree
+            if (_focus.Parent == null) { return; }
+
+            next = _focus.NextElement();
+            SetFocus(next);
+        }
+        private void FocusShiftLeft()
+        {
+            if (_focus == null) { return; }
+
+            Element previous = _focus.LowestLastElement();
+            if (_focus != previous)
+            {
+                SetFocus(previous);
+                return;
+            }
+
+            // Only one element in GUI tree
+            if (_focus.Parent == null) { return; }
+
+            previous = _focus.PreviousElement();
+            SetFocus(previous);
         }
     }
 }
