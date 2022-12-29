@@ -16,6 +16,7 @@ namespace Zene.GUI
         public RootElement(Window w)
         {
             _window = w;
+            RootElement = this;
 
             // Add events listeners
             _window.MouseMove += MouseMove;
@@ -153,17 +154,18 @@ namespace Zene.GUI
         {
             if (_focus == null) { return; }
 
-            Element previous = _focus.LowestLastElement();
-            if (_focus != previous)
-            {
-                SetFocus(previous);
-                return;
-            }
+            Element previous;
 
             // Only one element in GUI tree
-            if (_focus.Parent == null) { return; }
-
-            previous = _focus.PreviousElement();
+            if (_focus.Parent == null)
+            {
+                previous = _focus.LowestLastElement();
+            }
+            else
+            {
+                previous = _focus.PreviousElement();
+            }
+            
             SetFocus(previous);
         }
     }

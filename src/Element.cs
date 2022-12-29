@@ -17,7 +17,7 @@ namespace Zene.GUI
         /// </summary>
         public Element()
         {
-
+            
         }
         /// <summary>
         /// Creates an element from a layout.
@@ -37,15 +37,7 @@ namespace Zene.GUI
         /// <summary>
         /// The root element of this GUI instance.
         /// </summary>
-        public Element RootElement
-        {
-            get
-            {
-                if (Parent == null) { return this; }
-
-                return Parent.RootElement;
-            }
-        }
+        public RootElement RootElement { get; internal set; } = null;
 
         internal virtual TextRenderer textRender => Parent.textRender;
         /// <summary>
@@ -289,9 +281,10 @@ namespace Zene.GUI
         /// <returns></returns>
         public Element this[int index] => _elements[index];
 
-        private void SetWindow(Window w)
+        private void SetRoots(Window w, RootElement re)
         {
             _window = w;
+            RootElement = re;
 
             // Set child elements
             lock (_elementRef)
@@ -300,7 +293,7 @@ namespace Zene.GUI
 
                 for (int i = 0; i < span.Length; i++)
                 {
-                    span[i].SetWindow(_window);
+                    span[i].SetRoots(_window, re);
                 }
             }
         }
@@ -316,7 +309,7 @@ namespace Zene.GUI
             }
 
             e.Parent = this;
-            if (_window != null) { e.SetWindow(_window); }
+            if (_window != null) { e.SetRoots(_window, RootElement); }
 
             lock (_elementRef)
             {
@@ -345,7 +338,7 @@ namespace Zene.GUI
             e._mouseOver = false;
 
             e.Parent = null;
-            e.SetWindow(null);
+            e.SetRoots(null, null);
 
             TriggerLayout();
 
@@ -904,7 +897,7 @@ namespace Zene.GUI
                 next = Parent._elements[_elementIndex + 1];
             }
 
-            return next.LowestFirstElement();
+            return next?.LowestFirstElement();
         }
         internal Element PreviousElement()
         {
@@ -928,7 +921,7 @@ namespace Zene.GUI
                 next = Parent._elements[_elementIndex - 1];
             }
 
-            return next.LowestLastElement();
+            return next?.LowestLastElement();
         }
     }
 }
