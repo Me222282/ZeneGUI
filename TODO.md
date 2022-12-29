@@ -5,4 +5,4 @@
 
 - Resizable elements
 
-- Xml events
+- Xml property types as tags

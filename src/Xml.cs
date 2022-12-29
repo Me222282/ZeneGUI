@@ -14,8 +14,6 @@ namespace Zene.GUI
     {
         public Xml()
         {
-            _guiAsm = Assembly.GetExecutingAssembly();
-
             _types = AppDomain.CurrentDomain.GetAllTypes();
             _elementTypes = _types.Where(ti =>
             {
@@ -47,18 +45,20 @@ namespace Zene.GUI
 
         private readonly IEnumerable<TypeInfo> _types;
         private readonly IEnumerable<TypeInfo> _elementTypes;
-        private readonly Assembly _asm = Assembly.GetEntryAssembly();
-        private readonly Assembly _guiAsm;
         private readonly Dictionary<Type, StringParser> _stringParses = new Dictionary<Type, StringParser>();
 
         public void AddParser(StringParser func, Type returnType) => _stringParses.Add(returnType, func);
         public void AddParser<T>(Func<string, T> func) => _stringParses.Add(typeof(T), s => func(s));
 
+        private Window _window;
+        private Type _winType;
         public RootElement LoadGUI(Window window, string src)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
 
+            _window = window;
+            _winType = window.GetType();
             RootElement re = new RootElement(window);
 
             if (root.ChildNodes.Count == 0)
@@ -87,6 +87,9 @@ namespace Zene.GUI
                 re.AddChild(e);
             }
 
+            _window = null;
+            _winType = null;
+
             return re;
         }
 
@@ -114,7 +117,7 @@ namespace Zene.GUI
 
             foreach (XmlAttribute a in node.Attributes)
             {
-                ParseAttribute(a, t, element);
+                ParseAttribute(a.Name, a.Value, t, element);
             }
 
             foreach (XmlNode child in node.ChildNodes)
@@ -142,29 +145,52 @@ namespace Zene.GUI
             return element;
         }
 
-        private void ParseAttribute(XmlAttribute a, Type type, object e)
+        private void ParseAttribute(string name, string value, Type type, object e)
         {
-            PropertyInfo p = type.GetProperty(a.Name);
+            PropertyInfo p = type.GetProperty(name);
             if (p == null || !p.CanWrite)
             {
-                throw new Exception($"{a.ParentNode.Name} doesn't have attribute {a.Name}");
+                ParseEventAttribute(name, value, type, e);
+                return;
             }
 
-            object o = ParseString(a.Value, p.PropertyType);
+            object o = ParseString(value, p.PropertyType);
             p.SetValue(e, o);
         }
-        /*
-        private object ParseString(string value, Type returnType)
+        private void ParseEventAttribute(string name, string value, Type type, object e)
         {
-            if (!_stringParses.TryGetValue(returnType, out StringParser parser) || parser == null)
+            EventInfo ei = type.GetEvent(name);
+            if (ei == null)
             {
-                throw new Exception($"Cannot parse string to type {returnType.Name}");
+                throw new Exception($"{type.Name} doesn't have attribute {name}");
             }
 
-            return parser(value);
-        }*/
+            Delegate d = ParseEventString(value, ei.EventHandlerType);
+            ei.AddEventHandler(e, d);
+        }
 
-        public object ParseString(string value, Type returnType)
+        private Delegate ParseEventString(string value, Type t)
+        {
+            if (value[^1] == ')' && value[^2] == '(')
+            {
+                value = value.Remove(value.Length - 2);
+            }
+
+            MethodInfo mi = _winType.GetMethod(value, BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            if (mi == null)
+            {
+                throw new Exception($"Method {value} doen't exist");
+            }
+
+            if (mi.IsStatic)
+            {
+                return mi.CreateDelegate(t);
+            }
+
+            return mi.CreateDelegate(t, _window);
+        }
+
+        private object ParseString(string value, Type returnType)
         {
             value = value.Trim();
 
@@ -360,17 +386,7 @@ namespace Zene.GUI
                 value = node.InnerText;
             }
 
-            ParsePropertyAttribute(name, value, parent.GetType(), parent);
-        }
-        private void ParsePropertyAttribute(string name, string value, Type type, object e)
-        {
-            PropertyInfo p = type.GetProperty(name);
-            if (p == null || !p.CanWrite)
-            {
-                throw new Exception($"{type.Name} doesn't have attribute {name}");
-            }
-
-            p.SetValue(e, ParseString(value, p.PropertyType));
+            ParseAttribute(name, value, parent.GetType(), parent);
         }
     }
 }
