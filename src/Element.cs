@@ -144,21 +144,50 @@ namespace Zene.GUI
         /// The bounds of the element.
         /// </summary>
         /// <remarks>
-        /// The set function sets <see cref="Layout"/> to a <see cref="FixedLayout"/> of the value.
+        /// Can only be set if <see cref="Layout"/> is of type <see cref="FixedLayout"/>.
         /// </remarks>
         public Box Bounds
         {
             get => _bounds;
-            set => Layout = new FixedLayout(value);
+            set
+            {
+                if (Layout is not FixedLayout fl) { return; }
+
+                fl.Bounds = value;
+            }
         }
         /// <summary>
         /// The size of the element.
         /// </summary>
-        public Vector2 Size => _bounds.Size;
+        /// <remarks>
+        /// Can only be set if <see cref="Layout"/> is of type  <see cref="FixedLayout"/>.
+        /// </remarks>
+        public Vector2 Size
+        {
+            get => _bounds.Size;
+            set
+            {
+                if (Layout is not FixedLayout fl) { return; }
+
+                fl.Size = value;
+            }
+        }
         /// <summary>
         /// The position of the element.
         /// </summary>
-        public Vector2 Location => _bounds.Location;
+        /// <remarks>
+        /// Can only be set if <see cref="Layout"/> is of type  <see cref="FixedLayout"/>.
+        /// </remarks>
+        public Vector2 Location
+        {
+            get => _bounds.Location;
+            set
+            {
+                if (Layout is not FixedLayout fl) { return; }
+
+                fl.Location = value;
+            }
+        }
         private Vector2 _boundOffset;
         /// <summary>
         /// The offset added the the drawing bound's size.
