@@ -5,13 +5,15 @@ namespace Zene.GUI
 {
     public class XSpacerLayout : ILayoutManager
     {
+#pragma warning disable CS0067
         public event EventHandler Change;
+#pragma warning restore CS0067
 
         private double _multipler;
         private double _offset;
         public void SetupManager(LayoutArgs args)
         {
-            _multipler = args.Size.X / args.Neighbours.Length;
+            _multipler = args.Size.X / (args.Neighbours.Length + 1);
             _offset = args.Size.X * -0.5;
         }
 
