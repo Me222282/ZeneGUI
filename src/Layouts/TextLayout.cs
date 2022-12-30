@@ -76,7 +76,6 @@ namespace Zene.GUI
         }
 
         private bool _relative;
-
         public bool Relative
         {
             get => _relative;
@@ -117,25 +116,31 @@ namespace Zene.GUI
 
             Vector2 textSize = element.Font.GetFrameSize(reference, element.CharSpace, element.LineSpace, 4);
 
-            if (TextInput)
+            if (_textInput)
             {
                 textSize.X += element.Font.GetCharacterData('|').Size.X;
             }
 
             textSize /= element.Font.LineHeight;
             textSize *= element.TextSize;
-            textSize += Padding;
+            textSize += _padding;
 
-            textSize = new Vector2(
-                Math.Max(textSize.X, _minSize.X),
-                Math.Max(textSize.Y, _minSize.Y));
-
-            if (!Relative)
+            if (!_relative)
             {
-                return new Box(Centre, textSize);
+                textSize = new Vector2(
+                    Math.Max(textSize.X, _minSize.X),
+                    Math.Max(textSize.Y, _minSize.Y));
+
+                return new Box(_centre, textSize);
             }
 
-            return new Box(Centre * size * 0.5, textSize);
+            Vector2 m = size * 0.5;
+
+            textSize = new Vector2(
+                Math.Max(textSize.X, _minSize.X * m.X),
+                Math.Max(textSize.Y, _minSize.Y * m.Y));
+
+            return new Box(_centre * m, textSize);
         }
         public Box GetBounds(LayoutArgs args)
             => GetBounds(args.Element as TextElement, args.Size);

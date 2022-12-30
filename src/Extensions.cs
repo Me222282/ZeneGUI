@@ -90,5 +90,24 @@ namespace Zene.GUI
 
             return null;
         }
+
+        public static PropertyInfo GetPropertyUnambiguous(this Type type, string name, BindingFlags flags)
+        {
+            flags |= BindingFlags.DeclaredOnly;
+
+            while (type != null)
+            {
+                PropertyInfo property = type.GetProperty(name, flags);
+
+                if (property is not null)
+                {
+                    return property;
+                }
+
+                type = type.BaseType;
+            }
+
+            return null;
+        }
     }
 }

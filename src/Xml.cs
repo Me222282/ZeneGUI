@@ -164,7 +164,17 @@ namespace Zene.GUI
 
         private void ParseAttribute(string name, string value, Type type, object e)
         {
-            PropertyInfo p = type.GetProperty(name);
+            PropertyInfo p;
+
+            if (name == "Layout")
+            {
+                p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
+            }
+            else
+            {
+                p = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+            }
+            
             if (p == null || !p.CanWrite)
             {
                 ParseEventAttribute(name, value, type, e);
