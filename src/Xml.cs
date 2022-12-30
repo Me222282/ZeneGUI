@@ -379,6 +379,11 @@ namespace Zene.GUI
                 throw new Exception("Invalid constructor syntax");
             }
 
+            if (strings[^1] == "")
+            {
+                strings.RemoveAt(strings.Count - 1);
+            }
+
             return strings.ToArray();
         }
 

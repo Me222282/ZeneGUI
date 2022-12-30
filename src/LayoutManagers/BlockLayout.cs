@@ -1,7 +1,7 @@
 ﻿using System;
 using Zene.Structs;
 
-namespace Zene.GUI.LayoutManagers
+namespace Zene.GUI
 {
     public class BlockLayout : ILayoutManager
     {
