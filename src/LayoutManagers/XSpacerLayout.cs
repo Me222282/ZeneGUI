@@ -13,13 +13,13 @@ namespace Zene.GUI
         private double _offset;
         public void SetupManager(LayoutArgs args)
         {
-            _multipler = args.Size.X / (args.Neighbours.Length + 1);
+            _multipler = args.Size.X / args.Neighbours.Length;
             _offset = args.Size.X * -0.5;
         }
 
         public Box GetBounds(LayoutArgs args, Box layoutResult)
         {
-            layoutResult.Location = (_offset + (_multipler * (args.Index + 1)), 0d);
+            layoutResult.Location = (_offset + (_multipler * (args.Index + 0.5)), 0d);
 
             return layoutResult;
         }
