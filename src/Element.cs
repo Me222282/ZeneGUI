@@ -17,7 +17,8 @@ namespace Zene.GUI
         /// </summary>
         public Element()
         {
-            
+            _hover = this;
+            _finalHover = this;
         }
         /// <summary>
         /// Creates an element from a layout.
@@ -25,8 +26,14 @@ namespace Zene.GUI
         /// <param name="layout">The layout of the element.</param>
         /// <param name="framebuffer">Whether to create a framebuffer.</param>
         public Element(ILayout layout)
+            : this()
         {
             Layout = layout;
+        }
+
+        protected internal Element(TextRenderer textRenderer)
+        {
+            _textRender = textRenderer;
         }
 
         internal Window _window;
@@ -39,11 +46,11 @@ namespace Zene.GUI
         /// </summary>
         public RootElement RootElement { get; internal set; } = null;
 
-        internal virtual TextRenderer textRender => Parent.textRender;
+        private TextRenderer _textRender;
         /// <summary>
         /// Text rendering object.
         /// </summary>
-        public TextRenderer TextRenderer => textRender;
+        public TextRenderer TextRenderer => _textRender;
 
         protected ActionManager Actions
         {
@@ -57,12 +64,6 @@ namespace Zene.GUI
                 return _window.GraphicsContext.Actions;
             }
         }
-
-        internal virtual IFramebuffer framebuffer => Parent.framebuffer;
-        /// <summary>
-        /// The framebuffer objects are drawn to.
-        /// </summary>
-        public IFramebuffer Framebuffer => framebuffer;
 
         private Box _bounds;
         private Vector2 _mousePos;
@@ -102,7 +103,7 @@ namespace Zene.GUI
         {
             if (Parent == null) { return rootPos; }
 
-            return Parent.CalculateMousePos(rootPos) - _bounds.Centre;
+            return ((Parent.CalculateMousePos(rootPos) - Parent._viewPan) / Parent._viewScale) - _bounds.Centre;
         }
         /// <summary>
         /// The local mouse position.
@@ -214,10 +215,10 @@ namespace Zene.GUI
             {
                 if (Parent == null)
                 {
-                    return _hover == null;
+                    return _hover == this;
                 }
 
-                return _hover == null && _mouseOver;
+                return _hover == this && _mouseOver;
             }
         }
         /// <summary>
@@ -305,10 +306,11 @@ namespace Zene.GUI
         /// <returns></returns>
         public Element this[int index] => _elements[index];
 
-        private void SetRoots(Window w, RootElement re)
+        private void SetRoots()
         {
-            _window = w;
-            RootElement = re;
+            _window = Parent?._window;
+            RootElement = Parent?.RootElement;
+            _textRender = Parent?._textRender;
 
             // Set child elements
             lock (_elementRef)
@@ -317,7 +319,7 @@ namespace Zene.GUI
 
                 for (int i = 0; i < span.Length; i++)
                 {
-                    span[i].SetRoots(_window, re);
+                    span[i].SetRoots();
                 }
             }
         }
@@ -333,7 +335,7 @@ namespace Zene.GUI
             }
 
             e.Parent = this;
-            if (_window != null) { e.SetRoots(_window, RootElement); }
+            if (_window != null) { e.SetRoots(); }
 
             lock (_elementRef)
             {
@@ -353,7 +355,7 @@ namespace Zene.GUI
             e.Focused = false;
 
             e.Parent = null;
-            e.SetRoots(null, null);
+            e.SetRoots();
         }
         /// <summary>
         /// Removes a child element.
@@ -468,13 +470,13 @@ namespace Zene.GUI
         }
         private void SetViewport()
         {
-            framebuffer.Viewport.View = _viewReference;
+            RootElement._framebuffer.Viewport.View = _viewReference;
         }
         private void SetScissor()
         {
             if (Parent == null)
             {
-                framebuffer.Scissor.View = _viewReference;
+                RootElement._framebuffer.Scissor.View = _viewReference;
                 _scissorView = _viewReference;
                 return;
             }
@@ -487,7 +489,7 @@ namespace Zene.GUI
                 scissor.Size = Vector2I.Zero;
             }
 
-            framebuffer.Scissor.View = scissor;
+            RootElement._framebuffer.Scissor.View = scissor;
             _scissorView = scissor;
         }
 
@@ -506,22 +508,22 @@ namespace Zene.GUI
 
             _triggerMouseMove = false;
 
-            framebuffer.Bind();
+            RootElement._framebuffer.Bind();
             _inRender = true;
 
             SetViewRef();
             // Scissor
             SetScissor();
             // Element won't be drawn
-            if (framebuffer.Scissor.Width == 0 ||
-                framebuffer.Scissor.Height == 0)
+            if (RootElement._framebuffer.Scissor.Width == 0 ||
+                RootElement._framebuffer.Scissor.Height == 0)
             {
                 return;
             }
 
             // Set viewport
             SetViewport();
-            OnUpdate(new FrameEventArgs(framebuffer));
+            OnUpdate(new FrameEventArgs(RootElement._framebuffer));
 
             _inRender = false;
 
@@ -539,11 +541,11 @@ namespace Zene.GUI
                     span[i].SetView();
 
                     // Set text render projection
-                    textRender.Projection = span[i].Projection;
-                    textRender.View = Matrix4.Identity;
-                    textRender.Model = Matrix4.Identity;
+                    _textRender.Projection = span[i].Projection;
+                    _textRender.View = Matrix4.Identity;
+                    _textRender.Model = Matrix4.Identity;
                     // Default colour
-                    textRender.Colour = new Colour(255, 255, 255);
+                    _textRender.Colour = new Colour(255, 255, 255);
 
                     span[i].Render(_viewRef * view, projection);
                 }
@@ -606,23 +608,16 @@ namespace Zene.GUI
             Scroll?.Invoke(this, e);
 
             // Not container for hover element
-            if (_hover == null) { return; }
+            if (_hover == this) { return; }
 
-            Hover.OnScroll(e);
+            _finalHover.OnScroll(e);
         }
 
         //private int _hoverIndex = -1;
         //private readonly List<Element> _hover = new List<Element>();
-        private Element _hover = null;
-        public Element Hover
-        {
-            get
-            {
-                if (_hover == null) { return this; }
-
-                return _hover.Hover;
-            }
-        }
+        private Element _hover;
+        private Element _finalHover;
+        public Element Hover => _finalHover;
         protected virtual void OnMouseEnter(EventArgs e)
         {
             MouseEnter?.Invoke(this, e);
@@ -632,25 +627,19 @@ namespace Zene.GUI
             _mouseOver = false;
 
             MouseLeave?.Invoke(this, e);
-
-            // Not container for hover element
-            if (_hover == null) { return; }
-
-            Hover.OnMouseLeave(e);
-            _hover = null;
         }
 
         private bool _triggerMouseMove = false;
         private void TriggerFullMouseMove() => RootElement._triggerMouseMove = true;
 
-        internal void MouseMoveListener(MouseEventArgs e, bool check = true)
+        internal Element MouseMoveListener(MouseEventArgs e, bool check = true)
         {
-            if (check && _mousePos == e.Location) { return; }
+            if (check && _mousePos == e.Location) { return _finalHover; }
             _mousePos = e.Location;
 
-            if (_window.MouseButton != MouseButton.None && _hover != null)
+            if (_window.MouseButton != MouseButton.None && _hover != this)
             {
-                Element hover = Hover;
+                Element hover = _finalHover;
 
                 Vector2 hoverMP = hover.CalculateMousePos(e.Location);
                 if (hover._bounds.Contains(hoverMP))
@@ -663,19 +652,20 @@ namespace Zene.GUI
                 {
                     hover._mouseOver = false;
                 }
-                return;
+                return hover;
             }
+
+            Vector2 mouseLocal = (e.Location - _viewPan) / _viewScale;
+
+            bool elementHover = false;
+
+            Element oldHover = _hover;
+            _hover = this;
+            _finalHover = this;
 
             lock (_elementRef)
             {
-                Cursor newCursor = CursorStyle;
-
                 Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                bool elementHover = false;
-
-                Element oldHover = _hover;
-                _hover = null;
 
                 //for (int i = 0; i < span.Length; i++)
                 // Reverse for loop - first element found backwards is the one in front
@@ -683,28 +673,46 @@ namespace Zene.GUI
                 {
                     if (!span[i].Visable) { continue; }
 
-                    Cursor c = ManageMouseMove(span[i], e, check);
+                    bool hover = ManageMouseMove(span[i], mouseLocal);
                     // _hover has been set - element hover
-                    if (_hover == null) { continue; }
+                    if (!hover) { continue; }
 
                     elementHover = true;
-
-                    newCursor = c;
                     break;
                 }
+            }
 
-                if (!elementHover)
+            if (oldHover != _hover)
+            {
+                if (oldHover != null)
                 {
-                    _hover = null;
-                    OnMouseMove(e);
-                }
-                if (oldHover != null && oldHover != _hover)
-                {
-                    oldHover._mouseOver = false;
-                    oldHover.OnMouseLeave(new EventArgs());
+                    EventArgs mlE = new EventArgs();
+
+                    oldHover.OnMouseLeave(mlE);
+                    
+                    if (oldHover._hover != oldHover)
+                    {
+                        oldHover._finalHover.OnMouseLeave(mlE);
+                    }
                 }
 
-                _currentCursor = newCursor;
+                _hover._mouseOver = true;
+                _hover.OnMouseEnter(new EventArgs());
+            }
+
+            // Could have been set to false in previous if statement
+            _mouseOver = true;
+
+            if (!elementHover)
+            {
+                _currentCursor = CursorStyle;
+                OnMouseMove(e);
+            }
+            else
+            {
+                _finalHover = _hover.MouseMoveListener(new MouseEventArgs(mouseLocal - _hover._bounds.Centre), check);
+
+                _currentCursor = _hover._currentCursor;
             }
 
             // Set cursor if this is root element
@@ -712,41 +720,23 @@ namespace Zene.GUI
             {
                 _window.CursorStyle = _currentCursor;
             }
+
+            return _finalHover;
         }
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
             MouseMove?.Invoke(this, e);
         }
-        private Cursor ManageMouseMove(Element e, MouseEventArgs m, bool check)
+        private bool ManageMouseMove(Element e, Vector2 mousePos)
         {
-            Vector2 mouseLocal = (m.Location - _viewPan) / _viewScale;
-            bool mouseOverNew = e._bounds.Contains(mouseLocal);
+            bool mouseOverNew = e._bounds.Contains(mousePos);
 
             // Mouse not in bounds
-            if ((mouseOverNew == e._mouseOver) && (e._mouseOver == false)) { return null; }
-            // mouseOverNew will also equal true
-            // Mouse moves inside bounds
-            if (mouseOverNew == e._mouseOver)
-            {
-                _hover = e;
-                e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre), check);
-                return e._currentCursor;
-            }
+            if (!mouseOverNew) { return false; }
 
-            // Mouse leaving bounds
-            if (!mouseOverNew)
-            {
-                // Make sure OnMouseLeave is called
-                if (_hover == e) { _hover = null; }
-                return null;
-            }
-
-            e._mouseOver = true;
+            // Mouse inside bounds
             _hover = e;
-            e.OnMouseEnter(new EventArgs());
-            e.MouseMoveListener(new MouseEventArgs(mouseLocal - e._bounds.Centre), check);
-
-            return e._currentCursor;
+            return true;
         }
 
         internal bool _mouseOver = false;
@@ -757,10 +747,9 @@ namespace Zene.GUI
             MouseDown?.Invoke(this, e);
 
             // Not container for hover element
-            if (_hover == null) { return; }
+            if (_hover == this) { return; }
 
-            Element hover = Hover;
-            hover.OnMouseDown(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
+            _finalHover.OnMouseDown(new MouseEventArgs(_finalHover.MouseLocation, e.Button, e.Modifier));
         }
         protected internal virtual void OnMouseUp(MouseEventArgs e)
         {
@@ -779,10 +768,9 @@ namespace Zene.GUI
             }
 
             // Not container for hover element
-            if (_hover == null) { return; }
+            if (_hover == this) { return; }
 
-            Element hover = Hover;
-            hover.OnMouseUp(new MouseEventArgs(hover.MouseLocation, e.Button, e.Modifier));
+            _finalHover.OnMouseUp(new MouseEventArgs(_finalHover.MouseLocation, e.Button, e.Modifier));
 
             if (!MouseSelect && Parent == null)
             {
@@ -820,7 +808,7 @@ namespace Zene.GUI
                 if (_inRender)
                 {
                     SetView();
-                    textRender.Projection = Projection;
+                    _textRender.Projection = Projection;
                 }
             }
         }
@@ -839,7 +827,7 @@ namespace Zene.GUI
                 if (_inRender)
                 {
                     SetView();
-                    textRender.Projection = Projection;
+                    _textRender.Projection = Projection;
                 }
             }
         }
@@ -892,7 +880,7 @@ namespace Zene.GUI
             // Set framebuffer viewport and scissor and set text projection
             if (_inRender && Actions.CurrentThread)
             {
-                textRender.Projection = Projection;
+                _textRender.Projection = Projection;
 
                 // Set reference for viewport when rendered
                 SetViewRef();

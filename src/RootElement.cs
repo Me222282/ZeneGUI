@@ -9,16 +9,13 @@ namespace Zene.GUI
     /// </summary>
     public class RootElement : Element
     {
-        internal override TextRenderer textRender { get; }
-
-        internal override TextureRenderer framebuffer { get; }
-
         public RootElement(Window w)
             : this(w, true)
         {
             
         }
         internal RootElement(Window w, bool events = true)
+            : base(new TextRenderer())
         {
             _window = w;
             RootElement = this;
@@ -42,15 +39,16 @@ namespace Zene.GUI
 
             _focus = this;
 
-            textRender = new TextRenderer();
-            framebuffer = new TextureRenderer(w.Width, w.Height);
-            framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
-            framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
-            framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, framebuffer.Size));
+            _framebuffer = new TextureRenderer(w.Width, w.Height);
+            _framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
+            _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
+            _framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, _framebuffer.Size));
         }
 
         private Element _focus;
         public Element FocusElement => _focus;
+
+        internal readonly TextureRenderer _framebuffer;
 
         internal new void MouseMove(object s, MouseEventArgs e)
         {
@@ -67,15 +65,15 @@ namespace Zene.GUI
         {
             IFramebuffer current = State.GetBoundFramebuffer(FrameTarget.Draw);
 
-            framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
-            framebuffer.Scissor.Enabled = true;
+            _framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
+            _framebuffer.Scissor.Enabled = true;
 
             Render(Matrix4.Identity, Projection);
 
-            framebuffer.Scissor.Enabled = false;
+            _framebuffer.Scissor.Enabled = false;
 
             // Copy data to main framebuffer
-            framebuffer.CopyFrameBuffer(current, BufferBit.Colour, TextureSampling.Nearest);
+            _framebuffer.CopyFrameBuffer(current, BufferBit.Colour, TextureSampling.Nearest);
         }
 
         protected override void OnSizeChange(VectorEventArgs e)
@@ -84,7 +82,7 @@ namespace Zene.GUI
 
             Actions.Push(() =>
             {
-                framebuffer.Size = (Vector2I)e.Value;
+                _framebuffer.Size = (Vector2I)e.Value;
             });
         }
 
