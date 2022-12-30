@@ -1,15 +1,28 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Zene.Structs;
 
 namespace Zene.GUI
 {
+    /// <summary>
+    /// Arguments for <see cref="ILayout"/> and <see cref="ILayoutManager"/> calls.
+    /// </summary>
     public class LayoutArgs
     {
         public LayoutArgs(Element e, Vector2 s, int i, List<Element> n)
         {
+            if (e == null)
+            {
+                throw new ArgumentNullException($"{nameof(e)}");
+            }
+            if (n == null)
+            {
+                throw new ArgumentNullException($"{nameof(n)}");
+            }
+
             Element = e;
             Size = s;
-            Index = i;
+            Index = Math.Clamp(i, 0, n.Count);
             Neighbours = new ElementReference(n);
         }
 
@@ -29,5 +42,31 @@ namespace Zene.GUI
         /// A reference to the neighbouring elements.
         /// </summary>
         public ElementReference Neighbours { get; }
+
+        /// <summary>
+        /// Gets the neighbouring element next in the list.
+        /// </summary>
+        /// <returns></returns>
+        public Element NextElement()
+        {
+            // Last element
+            if ((Index + 1) == Neighbours.Length)
+            {
+                return null;
+            }
+
+            return Neighbours[Index + 1];
+        }
+        /// <summary>
+        /// Gets the neighbouring element proceding in the list.
+        /// </summary>
+        /// <returns></returns>
+        public Element PreviousElement()
+        {
+            // First element
+            if (Index == 0) { return null; }
+
+            return Neighbours[Index - 1];
+        }
     }
 }

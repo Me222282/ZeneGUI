@@ -1,4 +1,5 @@
-﻿using Zene.Graphics;
+﻿using System;
+using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
 
@@ -11,13 +12,13 @@ namespace Zene.GUI
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = new ColourF(0f, 0f, 0f);
-            DrawingBounds();
         }
-
-        public Button(ILayout layout)
-            : this()
+        public Button(TextLayout layout)
+            : base(layout)
         {
-            Layout = layout;
+            CursorStyle = Cursor.Hand;
+            Text = "Button";
+            TextColour = new ColourF(0f, 0f, 0f);
         }
 
         private readonly BorderShader _shader = BorderShader.GetInstance();
@@ -43,10 +44,6 @@ namespace Zene.GUI
 
             return BorderWidth;
         }
-        private void DrawingBounds()
-        {
-            DrawingBoundOffset = BorderWidthDraw();
-        }
 
         protected override void OnUpdate(FrameEventArgs e)
         {
@@ -63,7 +60,7 @@ namespace Zene.GUI
                 c -= new Vector4(0.1, 0.1, 0.1, 0d);
             }
 
-            _shader.BorderWidth = BorderWidthDraw();
+            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
             DrawingBoundOffset = _shader.BorderWidth;
 
             _shader.BorderColour = BorderColour;

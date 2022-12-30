@@ -11,14 +11,10 @@ namespace Zene.GUI
         public TextInput()
         {
         }
-
-        public TextInput(ILayout layout)
+        public TextInput(TextLayout layout)
             : base(layout)
         {
-            if (layout is TextLayout)
-            {
-                (layout as TextLayout).TextInput = true;
-            }
+            layout.TextInput = true;
         }
 
         private readonly BorderShader _shader = BorderShader.GetInstance();
@@ -205,7 +201,7 @@ namespace Zene.GUI
         {
             base.OnUpdate(e);
 
-            _shader.BorderWidth = BorderWidthDraw();
+            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
             DrawingBoundOffset = _shader.BorderWidth;
 
             _shader.BorderColour = BorderColour;

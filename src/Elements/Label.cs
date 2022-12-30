@@ -1,4 +1,5 @@
-﻿using Zene.Graphics;
+﻿using System;
+using Zene.Graphics;
 using Zene.Structs;
 
 namespace Zene.GUI
@@ -10,7 +11,7 @@ namespace Zene.GUI
             Text = "Label";
         }
 
-        public Label(ILayout layout)
+        public Label(TextLayout layout)
             : base(layout)
         {
             Text = "Label";
@@ -37,7 +38,7 @@ namespace Zene.GUI
         {
             base.OnUpdate(e);
             
-            _shader.BorderWidth = BorderWidthDraw();
+            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
             DrawingBoundOffset = _shader.BorderWidth;
 
             _shader.BorderColour = BorderColour;

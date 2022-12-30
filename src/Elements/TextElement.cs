@@ -3,13 +3,14 @@ using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public abstract class TextElement : Element
+    public abstract class TextElement : Element<TextLayout>
     {
         public TextElement()
-            : base()
+            : base(new TextLayout(3d, 0d, true))
         {
+            
         }
-        public TextElement(ILayout layout)
+        public TextElement(TextLayout layout)
             : base(layout)
         {
         }

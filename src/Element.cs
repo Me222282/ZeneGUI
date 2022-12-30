@@ -85,17 +85,46 @@ namespace Zene.GUI
                 }
 
                 _layout = value;
-                _layout.Change += LayoutChange;
-
-                if (Parent == null) { return; }
 
                 if (value == null)
                 {
                     BoundsSet(new Box());
+                    TriggerFullMouseMove();
                     return;
                 }
 
+                _layout.Change += LayoutChange;
+
+                if (Parent == null) { return; }
+
                 TriggerLayout();
+            }
+        }
+
+        private ILayoutManager _layoutManager = null;
+        /// <summary>
+        /// An object that does extra processing for child element size and location.
+        /// </summary>
+        public ILayoutManager LayoutManager
+        {
+            get => _layoutManager;
+            set
+            {
+                if (_layoutManager == value) { return; }
+
+                if (_layoutManager != null)
+                {
+                    _layoutManager.Change -= LayoutManagerChange;
+                }
+
+                _layoutManager = value;
+
+                if (value != null)
+                {
+                    _layoutManager.Change += LayoutChange;
+                }
+
+                UpdateChildLayouts();
             }
         }
 
@@ -152,7 +181,13 @@ namespace Zene.GUI
             get => _bounds;
             set
             {
-                if (Layout is not FixedLayout fl) { return; }
+                if (_layout == null)
+                {
+                    Layout = new FixedLayout(value);
+                    return;
+                }
+
+                if (_layout is not FixedLayout fl) { return; }
 
                 fl.Bounds = value;
             }
@@ -168,7 +203,13 @@ namespace Zene.GUI
             get => _bounds.Size;
             set
             {
-                if (Layout is not FixedLayout fl) { return; }
+                if (_layout == null)
+                {
+                    Layout = new FixedLayout(0d, value);
+                    return;
+                }
+
+                if (_layout is not FixedLayout fl) { return; }
 
                 fl.Size = value;
             }
@@ -184,7 +225,13 @@ namespace Zene.GUI
             get => _bounds.Location;
             set
             {
-                if (Layout is not FixedLayout fl) { return; }
+                if (_layout == null)
+                {
+                    Layout = new FixedLayout(value, 0d);
+                    return;
+                }
+
+                if (_layout is not FixedLayout fl) { return; }
 
                 fl.Location = value;
             }
@@ -345,7 +392,7 @@ namespace Zene.GUI
             }
 
             // Has layout
-            if (e.Layout != null) { TriggerLayout(); }
+            if (e._layout != null) { TriggerLayout(); }
         }
 
         private static void ResetElement(Element e)
@@ -660,8 +707,7 @@ namespace Zene.GUI
             bool elementHover = false;
 
             Element oldHover = _hover;
-            _hover = this;
-            _finalHover = this;
+            Element newHover = this;
 
             lock (_elementRef)
             {
@@ -673,14 +719,17 @@ namespace Zene.GUI
                 {
                     if (!span[i].Visable) { continue; }
 
-                    bool hover = ManageMouseMove(span[i], mouseLocal);
+                    bool hover = span[i]._bounds.Contains(mouseLocal);
                     // _hover has been set - element hover
                     if (!hover) { continue; }
 
+                    newHover = span[i];
                     elementHover = true;
                     break;
                 }
             }
+
+            _hover = newHover;
 
             if (oldHover != _hover)
             {
@@ -705,6 +754,7 @@ namespace Zene.GUI
 
             if (!elementHover)
             {
+                _finalHover = this;
                 _currentCursor = CursorStyle;
                 OnMouseMove(e);
             }
@@ -778,21 +828,6 @@ namespace Zene.GUI
             }
         }
 
-        private void LayoutChange(object sender, EventArgs e) => TriggerLayout();
-        /// <summary>
-        /// Causes layout to be recalculated
-        /// </summary>
-        protected void TriggerLayout()
-        {
-            if (Layout == null || Parent == null) { return; }
-
-            lock (Parent._elementRef)
-            {
-                BoundsSet(Layout.GetBounds(new LayoutArgs(this, Parent.Size, _elementIndex, Parent._elements)));
-            }
-            TriggerFullMouseMove();
-        }
-
         private Vector2 _viewPan = 0d;
         /// <summary>
         /// The view panning of the element - applies to child elements.
@@ -855,6 +890,70 @@ namespace Zene.GUI
         /// </summary>
         public Matrix4 FixedProjection => _projRef;
 
+        private void LayoutChange(object sender, EventArgs e) => TriggerLayout();
+        /// <summary>
+        /// Causes layout to be recalculated
+        /// </summary>
+        protected void TriggerLayout()
+        {
+            if (_layout == null || Parent == null) { return; }
+
+            if (Parent._layoutManager != null)
+            {
+                Parent.UpdateChildLayouts();
+                return;
+            }
+
+            lock (Parent._elementRef)
+            {
+                BoundsSet(_layout.GetBounds(new LayoutArgs(this, Parent.Size, _elementIndex, Parent._elements)));
+            }
+            TriggerFullMouseMove();
+        }
+        private void LayoutManagerChange(object sender, EventArgs e)
+        {
+            if (_layoutManager == null) { return; }
+
+            UpdateChildLayouts();
+            TriggerFullMouseMove();
+        }
+        private void UpdateChildLayouts()
+        {
+            bool layoutManager = _layoutManager != null;
+
+            lock (_elementRef)
+            {
+                // Pre processing for layout manager
+                if (layoutManager)
+                {
+                    _layoutManager.SetupManager(new LayoutArgs(this, _bounds.Size, 0, _elements));
+                }
+
+                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i]._elementIndex = i;
+                    if (!span[i].Visable ||
+                        span[i]._layout == null)// ||
+                        //span[i].Layout is FixedLayout)
+                    {
+                        continue;
+                    }
+
+                    LayoutArgs la = new LayoutArgs(span[i], _bounds.Size, i, _elements);
+                    Box newBounds = span[i]._layout.GetBounds(la);
+
+                    if (layoutManager)
+                    {
+                        newBounds = _layoutManager.GetBounds(la, newBounds);
+                    }
+
+                    span[i].BoundsSet(newBounds);
+                }
+            }
+        }
+
         private bool _render = true;
         private Vector2 _boundOffsetReference;
         internal void SizeChangeListener(VectorEventArgs e)
@@ -895,23 +994,7 @@ namespace Zene.GUI
             if (sameBounds) { return; }
 
             // Update child elements
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i]._elementIndex = i;
-                    if (!span[i].Visable ||
-                        span[i].Layout == null)// ||
-                                               //span[i].Layout is FixedLayout)
-                    {
-                        continue;
-                    }
-
-                    span[i].BoundsSet(span[i].Layout.GetBounds(new LayoutArgs(span[i], e.Value, i, _elements)));
-                }
-            }
+            UpdateChildLayouts();
         }
         protected virtual void OnSizeChange(VectorEventArgs e)
         {

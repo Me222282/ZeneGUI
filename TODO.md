@@ -6,3 +6,5 @@
 - Resizable elements
 
 - Xml property types as tags
+
+- Layouts for automatically organising elements
