@@ -121,13 +121,13 @@ namespace Zene.GUI
             Type t = _elementTypes.FindType(node.Name);
             if (t == null)
             {
-                throw new Exception("Tag name doesn't exist");
+                throw new Exception("Tag name does not exist");
             }
 
             ConstructorInfo constructor = t.GetConstructor(Array.Empty<Type>());
             if (constructor == null)
             {
-                throw new Exception("Type doesn't have a constructor with no parameters");
+                throw new Exception("Type does not have a parameterless constructor");
             }
 
             Element element = constructor.Invoke(null) as Element;
@@ -164,17 +164,8 @@ namespace Zene.GUI
 
         private void ParseAttribute(string name, string value, Type type, object e)
         {
-            PropertyInfo p;
+            PropertyInfo p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
 
-            if (name == "Layout")
-            {
-                p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
-            }
-            else
-            {
-                p = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            }
-            
             if (p == null || !p.CanWrite)
             {
                 ParseEventAttribute(name, value, type, e);
@@ -397,8 +388,13 @@ namespace Zene.GUI
             return strings.ToArray();
         }
 
-        private void ParseProperty(XmlNode node, Element parent)
+        private void ParseProperty(XmlNode node, object parent)
         {
+            if (parent == null)
+            {
+                throw new Exception("No parent to set property");
+            }
+
             XmlAttributeCollection xac = node.Attributes;
 
             if (xac.Count > 2 || xac.Count == 0)
@@ -431,12 +427,68 @@ namespace Zene.GUI
             {
                 value = xac[1].Value;
             }
+            else if (node.ChildNodes.Count > 0 &&
+                    node.ChildNodes[0].NodeType != XmlNodeType.Text)
+            {
+                ParseAttributeObject(name, node.ChildNodes[0], parent.GetType(), parent);
+                return;
+            }
             else
             {
                 value = node.InnerText;
             }
 
             ParseAttribute(name, value, parent.GetType(), parent);
+        }
+        private void ParseAttributeObject(string name, XmlNode value, Type type, object e)
+        {
+            PropertyInfo p;
+
+            if (name == "Layout")
+            {
+                p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
+            }
+            else
+            {
+                p = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
+            }
+
+            object o = ParseObjectProp(value, p.PropertyType, null);
+            p.SetValue(e, o);
+        }
+        private object ParseObjectProp(XmlNode node, Type type, object parent)
+        {
+            if (node.Name == "Property")
+            {
+                ParseProperty(node, parent);
+                return null;
+            }
+
+            Type t = _types.FindType(node.Name);
+            if (t == null)
+            {
+                throw new Exception("Tag name does not exist");
+            }
+
+            if (!t.IsAssignableTo(type))
+            {
+                throw new Exception("Tag name does not match expected type");
+            }
+
+            ConstructorInfo constructor = t.GetConstructor(Array.Empty<Type>());
+            if (constructor == null)
+            {
+                throw new Exception("Type does not have a parameterless constructor");
+            }
+
+            object obj = constructor.Invoke(null);
+
+            foreach (XmlAttribute a in node.Attributes)
+            {
+                ParseAttribute(a.Name, a.Value, t, obj);
+            }
+
+            return obj;
         }
     }
 }

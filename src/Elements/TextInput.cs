@@ -204,6 +204,12 @@ namespace Zene.GUI
             _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
             DrawingBoundOffset = _shader.BorderWidth;
 
+            // No point drawing box
+            if (BackgroundColour.A <= 0f && (BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+            {
+                goto DrawText;
+            }
+
             _shader.BorderColour = BorderColour;
             _shader.Radius = CornerRadius;
 
@@ -214,6 +220,8 @@ namespace Zene.GUI
             _shader.Size = Size;
             _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
             Shapes.Square.Draw();
+
+        DrawText:
 
             if (Font == null || Text == null) { return; }
 

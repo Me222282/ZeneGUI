@@ -11,19 +11,24 @@ namespace Zene.GUI
     {
         public LayoutArgs(Element e, Vector2 s, int i, List<Element> n)
         {
-            if (e == null)
-            {
-                throw new ArgumentNullException($"{nameof(e)}");
-            }
             if (n == null)
             {
                 throw new ArgumentNullException($"{nameof(n)}");
             }
 
-            Element = e;
+            Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
+
             Size = s;
             Index = Math.Clamp(i, 0, n.Count);
             Neighbours = new ElementReference(n);
+        }
+        public LayoutArgs(Element e, Vector2 s, int i, ElementReference n)
+        {
+            Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
+
+            Size = s;
+            Index = Math.Clamp(i, 0, n.Length);
+            Neighbours = n;
         }
 
         /// <summary>

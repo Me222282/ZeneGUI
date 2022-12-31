@@ -101,11 +101,11 @@ namespace Zene.GUI
             }
         }
 
-        private ILayoutManager _layoutManager = null;
+        private LayoutManager _layoutManager = null;
         /// <summary>
         /// An object that does extra processing for child element size and location.
         /// </summary>
-        public ILayoutManager LayoutManager
+        public LayoutManager LayoutManager
         {
             get => _layoutManager;
             set
@@ -124,7 +124,7 @@ namespace Zene.GUI
                     _layoutManager.Change += LayoutChange;
                 }
 
-                UpdateChildLayouts();
+                UpdateChildLayouts(_bounds.Size);
             }
         }
 
@@ -294,7 +294,7 @@ namespace Zene.GUI
 
         public bool UserResizable { get; protected set; }
 
-        private int _elementIndex = -1;
+        internal int _elementIndex = -1;
 
         public bool TabShifting { get; set; } = true;
 
@@ -900,7 +900,7 @@ namespace Zene.GUI
 
             if (Parent._layoutManager != null)
             {
-                Parent.UpdateChildLayouts();
+                Parent.UpdateChildLayouts(Parent._bounds.Size);
                 return;
             }
 
@@ -914,51 +914,36 @@ namespace Zene.GUI
         {
             if (_layoutManager == null) { return; }
 
-            UpdateChildLayouts();
+            UpdateChildLayouts(_bounds.Size);
             TriggerFullMouseMove();
         }
-        private void UpdateChildLayouts()
-        {
-            bool layoutManager = _layoutManager != null;
 
-            lock (_elementRef)
+        private void UpdateChildLayouts(Vector2 size)
+        {
+            if (_elements.Count > 0)
             {
-                // Pre processing for layout manager
-                if (layoutManager)
+                if (_layoutManager == null)
                 {
-                    _layoutManager.SetupManager(new LayoutArgs(this, _bounds.Size, 0, _elements));
+                    _layoutManager = LayoutManager.Empty;
                 }
 
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
+                lock (_elementRef)
                 {
-                    span[i]._elementIndex = i;
-                    if (!span[i].Visable ||
-                        span[i]._layout == null)// ||
-                        //span[i].Layout is FixedLayout)
-                    {
-                        continue;
-                    }
-
-                    LayoutArgs la = new LayoutArgs(span[i], _bounds.Size, i, _elements);
-                    Box newBounds = span[i]._layout.GetBounds(la);
-
-                    if (layoutManager)
-                    {
-                        newBounds = _layoutManager.GetBounds(la, newBounds);
-                    }
-
-                    span[i].BoundsSet(newBounds);
+                    size = _layoutManager.ManageLayouts(new LayoutArgs(this, size, 0, _elements),
+                        (e, b) => e.BoundsSet(b));
                 }
             }
-        }
 
+            if (_bounds.Size != size)
+            {
+                SetRenderSize(new VectorEventArgs(size));
+            }
+        }
         private bool _render = true;
         private Vector2 _boundOffsetReference;
-        internal void SizeChangeListener(VectorEventArgs e)
+        private void SetRenderSize(VectorEventArgs e)
         {
-            // Cannot render an object this no inner content
+            // Cannot render an object with no inner content
             if (e.X <= 0 || e.Y <= 0)
             {
                 _render = false;
@@ -966,10 +951,6 @@ namespace Zene.GUI
             }
             else { _render = true; }
 
-            // No bounds have changed - false call
-            if (_bounds.Size == e.Value && _boundOffset == _boundOffsetReference) { return; }
-            bool sameBounds = _bounds.Size == e.Value;
-            //bool sameBoundOffset = _boundOffset == _boundOffsetReference;
             _bounds.Size = e.Value;
             _boundOffsetReference = _boundOffset;
 
@@ -988,13 +969,21 @@ namespace Zene.GUI
             }
 
             OnSizeChange(e);
+        }
+        internal void SizeChangeListener(VectorEventArgs e)
+        {
+            // No bounds have changed - false call
+            if (_bounds.Size == e.Value && _boundOffset == _boundOffsetReference) { return; }
 
-            // Only change child elements if this OnSizeChange was caused
-            // by a change in _bounds, not _boundOffset
-            if (sameBounds) { return; }
+            // Size change results in child elements being repositioned
+            if (_bounds.Size != e.Value)
+            {
+                UpdateChildLayouts(e.Value);
+                return;
+            }
 
-            // Update child elements
-            UpdateChildLayouts();
+            // Update _bounds and view references
+            SetRenderSize(e);
         }
         protected virtual void OnSizeChange(VectorEventArgs e)
         {

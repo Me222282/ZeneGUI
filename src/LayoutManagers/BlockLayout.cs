@@ -3,8 +3,13 @@ using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public class BlockLayout : ILayoutManager
+    public class BlockLayout : LayoutManager
     {
+        public BlockLayout()
+        {
+
+        }
+
         public BlockLayout(Vector4 margin)
         {
             _margin = margin;
@@ -43,15 +48,68 @@ namespace Zene.GUI
             }
         }
 
-        public event EventHandler Change;
+        /// <summary>
+        /// The margin on the left side.
+        /// </summary>
+        public double Left
+        {
+            get => _margin.X;
+            set
+            {
+                if (_margin.X == value) { return; }
 
-        private void InvokeChange() => Change?.Invoke(this, EventArgs.Empty);
+                _margin.X = value;
+                InvokeChange();
+            }
+        }
+        /// <summary>
+        /// The margin on the right side.
+        /// </summary>
+        public double Right
+        {
+            get => _margin.Z;
+            set
+            {
+                if (_margin.Z == value) { return; }
+
+                _margin.Z = value;
+                InvokeChange();
+            }
+        }
+        /// <summary>
+        /// The margin on the top side.
+        /// </summary>
+        public double Top
+        {
+            get => _margin.Y;
+            set
+            {
+                if (_margin.Y == value) { return; }
+
+                _margin.Y = value;
+                InvokeChange();
+            }
+        }
+        /// <summary>
+        /// The margin on the bottom side.
+        /// </summary>
+        public double Bottom
+        {
+            get => _margin.W;
+            set
+            {
+                if (_margin.W == value) { return; }
+
+                _margin.W = value;
+                InvokeChange();
+            }
+        }
 
         private double _left;
         private double _right;
         private double _lowestY;
         private Vector2 _current;
-        public void SetupManager(LayoutArgs args)
+        protected override void SetupManager(LayoutArgs args)
         {
             _right = args.Size.X * 0.5;
             _left = -_right;
@@ -68,7 +126,7 @@ namespace Zene.GUI
             }
         }
 
-        public Box GetBounds(LayoutArgs args, Box layoutResult)
+        protected override Box GetBounds(LayoutArgs args, Box layoutResult)
         {
             Vector2 size = layoutResult.Size;
 

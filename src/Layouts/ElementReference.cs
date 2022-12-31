@@ -1,5 +1,7 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 
 namespace Zene.GUI
 {
@@ -14,6 +16,8 @@ namespace Zene.GUI
         private readonly List<Element> _elements;
 
         public Element this[int index] => _elements[index];
+
+        public ReadOnlySpan<Element> AsSpan() => CollectionsMarshal.AsSpan(_elements);
 
         IEnumerator IEnumerable.GetEnumerator() => _elements.GetEnumerator();
         public IEnumerator<Element> GetEnumerator() => _elements.GetEnumerator();
