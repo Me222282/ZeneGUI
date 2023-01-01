@@ -540,7 +540,7 @@ namespace Zene.GUI
             _scissorView = scissor;
         }
 
-        private bool _inRender = false;
+        private bool _inRender => RootElement._renderFocus == this;
         internal void Render(Matrix4 view, Matrix4 projection)
         {
             if (!_render) { return; }
@@ -556,7 +556,7 @@ namespace Zene.GUI
             _triggerMouseMove = false;
 
             RootElement._framebuffer.Bind();
-            _inRender = true;
+            RootElement._renderFocus = this;
 
             SetViewRef();
             // Scissor
@@ -572,7 +572,7 @@ namespace Zene.GUI
             SetViewport();
             OnUpdate(new FrameEventArgs(RootElement._framebuffer));
 
-            _inRender = false;
+            RootElement._renderFocus = null;
 
             // Draw child elements
             lock (_elementRef)
@@ -950,7 +950,8 @@ namespace Zene.GUI
                 SetRenderSize(new VectorEventArgs(size));
 
                 // Trigger parent layout recalculation if this call was not from parents layout calculation
-                if (Parent._layoutManager != null &&
+                if (Parent != null &&
+                    Parent._layoutManager != null &&
                     !Parent._managingLayouts)
                 {
                     Parent.UpdateChildLayouts(Parent._bounds.Size);
@@ -992,7 +993,8 @@ namespace Zene.GUI
         internal void SizeChangeListener(VectorEventArgs e)
         {
             // No bounds have changed - false call
-            if (_bounds.Size == e.Value && _boundOffset == _boundOffsetReference) { return; }
+            // Rounded to integers - no change interger wise means no render change
+            if ((_bounds.Size.RoundedInt() == e.Value.RoundedInt()) && _boundOffset == _boundOffsetReference) { return; }
 
             // Size change results in child elements being repositioned
             if (_bounds.Size != e.Value)
@@ -1010,7 +1012,8 @@ namespace Zene.GUI
         }
         private void ElementMoveListener(VectorEventArgs e)
         {
-            if (_bounds.Location == e.Value) { return; }
+            // Rounded to integers - no change interger wise means no render change
+            if (_bounds.Location.RoundedInt() == e.Value.RoundedInt()) { return; }
             _bounds.Location = e.Value;
 
             // Set viewport and scissor if this is being called from render thread

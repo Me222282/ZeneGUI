@@ -50,6 +50,8 @@ namespace Zene.GUI
 
         internal readonly TextureRenderer _framebuffer;
 
+        internal Element _renderFocus = null;
+
         internal new void MouseMove(object s, MouseEventArgs e)
         {
             Vector2 ml = e.Location - (_window.Size * 0.5);
