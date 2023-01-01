@@ -892,7 +892,7 @@ namespace Zene.GUI
 
         private void LayoutChange(object sender, EventArgs e) => TriggerLayout();
         /// <summary>
-        /// Causes layout to be recalculated
+        /// Causes layout to be recalculated.
         /// </summary>
         protected void TriggerLayout()
         {
@@ -910,9 +910,16 @@ namespace Zene.GUI
             }
             TriggerFullMouseMove();
         }
-        private void LayoutManagerChange(object sender, EventArgs e)
+        private void LayoutManagerChange(object sender, EventArgs e) => TriggerLayoutManger();
+        /// <summary>
+        /// Causes child layouts to be recalculated.
+        /// </summary>
+        /// <remarks>
+        /// Can potentially cause parent's layout to recalculated as well.
+        /// </remarks>
+        protected void TriggerLayoutManger()
         {
-            if (_layoutManager == null) { return; }
+            if (_layoutManager == null || _layoutManager is LayoutManager) { return; }
 
             UpdateChildLayouts(_bounds.Size);
             TriggerFullMouseMove();
@@ -922,6 +929,8 @@ namespace Zene.GUI
         {
             if (_elements.Count > 0)
             {
+                _managingLayouts = true;
+
                 if (_layoutManager == null)
                 {
                     _layoutManager = LayoutManager.Empty;
@@ -932,14 +941,24 @@ namespace Zene.GUI
                     size = _layoutManager.ManageLayouts(new LayoutArgs(this, size, 0, _elements),
                         (e, b) => e.BoundsSet(b));
                 }
+
+                _managingLayouts = false;
             }
 
             if (_bounds.Size != size)
             {
                 SetRenderSize(new VectorEventArgs(size));
+
+                // Trigger parent layout recalculation if this call was not from parents layout calculation
+                if (Parent._layoutManager != null &&
+                    !Parent._managingLayouts)
+                {
+                    Parent.UpdateChildLayouts(Parent._bounds.Size);
+                }
             }
         }
         private bool _render = true;
+        private bool _managingLayouts = false;
         private Vector2 _boundOffsetReference;
         private void SetRenderSize(VectorEventArgs e)
         {
