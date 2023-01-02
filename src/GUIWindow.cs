@@ -63,7 +63,7 @@ namespace Zene.GUI
         public T Find<T>() where T : Element
             => RootElement.Find<T>();
 
-        protected override void OnUpdate(EventArgs e)
+        protected override void OnUpdate(FrameEventArgs e)
         {
             base.OnUpdate(e);
 

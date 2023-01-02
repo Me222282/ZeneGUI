@@ -210,6 +210,8 @@ namespace Zene.GUI
                 goto DrawText;
             }
 
+            e.Context.Shader = _shader;
+
             _shader.BorderColour = BorderColour;
             _shader.Radius = CornerRadius;
 
@@ -219,7 +221,8 @@ namespace Zene.GUI
             _shader.Matrix3 = Projection;
             _shader.Size = Size;
             _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
-            Shapes.Square.Draw();
+
+            e.Context.DrawObject(Shapes.Square);
 
         DrawText:
 
@@ -230,11 +233,11 @@ namespace Zene.GUI
 
             if (_text.Length < 1 && DrawCaret && Focused)
             {
-                TextRenderer.DrawLeftBound("|", Font, 0, 0, -1, false);
+                TextRenderer.DrawLeftBound(e.Context, "|", Font, 0, 0, -1, false);
                 return;
             }
 
-            TextRenderer.DrawLeftBound(_text.ToString(), Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
+            TextRenderer.DrawLeftBound(e.Context, _text.ToString(), Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
         }
 
         protected internal override void OnFocus(FocusedEventArgs e)

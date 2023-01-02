@@ -1,5 +1,6 @@
 ﻿using Zene.Graphics;
 using Zene.Structs;
+using Zene.Windowing;
 
 namespace Zene.GUI
 {
@@ -27,7 +28,7 @@ namespace Zene.GUI
             // No colour
             if (Colour.A <= 0f) { return; }
 
-            _shader.Bind();
+            e.Context.Shader = _shader;
 
             _shader.ColourSource = ColourSource.UniformColour;
             _shader.Colour = Colour;
@@ -35,7 +36,7 @@ namespace Zene.GUI
             _shader.Matrix2 = Matrix4.Identity;
             _shader.Matrix3 = Matrix4.Identity;
 
-            Shapes.Square.Draw();
+            e.Context.DrawObject(Shapes.Square);
         }
     }
 }

@@ -31,7 +31,7 @@ namespace Zene.GUI
             Layout = layout;
         }
 
-        protected internal Element(TextRenderer textRenderer)
+        internal Element(TextRenderer textRenderer)
         {
             _textRender = textRenderer;
         }
@@ -570,7 +570,7 @@ namespace Zene.GUI
 
             // Set viewport
             SetViewport();
-            OnUpdate(new FrameEventArgs(RootElement._framebuffer));
+            OnUpdate(new FrameEventArgs(RootElement.DrawManager));
 
             RootElement._renderFocus = null;
 

@@ -43,12 +43,16 @@ namespace Zene.GUI
             _framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
             _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
             _framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, _framebuffer.Size));
+
+            DrawManager = new DrawManager(_framebuffer);
         }
 
         private Element _focus;
         public Element FocusElement => _focus;
 
         internal readonly TextureRenderer _framebuffer;
+
+        public DrawManager DrawManager { get; }
 
         internal Element _renderFocus = null;
 

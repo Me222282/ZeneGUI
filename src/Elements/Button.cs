@@ -60,6 +60,8 @@ namespace Zene.GUI
                 c -= new Vector4(0.1, 0.1, 0.1, 0d);
             }
 
+            e.Context.Shader = _shader;
+
             _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
             DrawingBoundOffset = _shader.BorderWidth;
 
@@ -87,7 +89,8 @@ namespace Zene.GUI
             _shader.Matrix3 = Projection;
             _shader.Size = Size;
             _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
-            Shapes.Square.Draw();
+
+            e.Context.DrawObject(Shapes.Square);
 
         DrawText:
 
@@ -95,7 +98,7 @@ namespace Zene.GUI
 
             TextRenderer.Model = Matrix4.CreateScale(TextSize);
             TextRenderer.Colour = TextColour;
-            TextRenderer.DrawCentred(Text, Font, CharSpace, LineSpace);
+            TextRenderer.DrawCentred(e.Context, Text, Font, CharSpace, LineSpace);
         }
     }
 }
