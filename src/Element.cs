@@ -148,7 +148,7 @@ namespace Zene.GUI
                 {
                     Vector2 wml = _window.MouseLocation;
 
-                    return (wml.X, -wml.Y) - (_window.Size * (0.5, -0.5));
+                    return wml - (_window.Size * 0.5);
                 }
 
                 return ((Parent.MouseLocation - Parent._viewPan) / Parent._viewScale) - _bounds.Centre;
@@ -324,7 +324,7 @@ namespace Zene.GUI
         /// </summary>
         /// <param name="key">THe key to query</param>
         /// <returns></returns>
-        public bool this[Keys key] => _window[key];
+        public bool this[Keys key] => Focused && _window[key];
         /// <summary>
         /// Determines whether <paramref name="mod"/> is currently active.
         /// </summary>
@@ -334,13 +334,13 @@ namespace Zene.GUI
         /// <param name="mod">The modifier to query.</param>
         /// <exception cref="NotSupportedException"></exception>
         /// <returns></returns>
-        public bool this[Mods mod] => _window[mod];
+        public bool this[Mods mod] => Focused && _window[mod];
         /// <summary>
         /// Determines whether <paramref name="button"/> is currently pressed.
         /// </summary>
         /// <param name="button">The mouse button to query.</param>
         /// <returns></returns>
-        public bool this[MouseButton button] => _window[button];
+        public bool this[MouseButton button] => MouseSelect && _window[button];
 
         /// <summary>
         /// Gets the number of children this element has.
@@ -444,7 +444,7 @@ namespace Zene.GUI
         }
 
         /// <summary>
-        /// Finds the first element of a certain type.
+        /// Finds the first child element of a certain type.
         /// </summary>
         /// <typeparam name="T">The type of element to search for.</typeparam>
         /// <returns></returns>
@@ -483,31 +483,20 @@ namespace Zene.GUI
             _renderOffset = Parent._renderOffset + ((Parent._bounds.Centre + Parent._viewPan) * Parent._renderScale);
         }
 
-        private static RectangleI ViewClamp(RectangleI a, RectangleI b)
-        {
-            int x = Math.Max(a.X, b.X);
-            int y = Math.Max(a.Y, b.Y);
-
-            int w = Math.Min(a.Right, b.Right) - x;
-            int h = Math.Min(a.Y + a.Height, b.Y + b.Height) - y;
-
-            return new RectangleI(x, y, w, h);
-        }
-
-        private RectangleI _viewReference;
-        private RectangleI _scissorView;
+        private GLBox _viewReference;
+        private GLBox _scissorView;
         private void SetViewRef()
         {
             if (Parent == null || _window == null)
             {
-                _viewReference = new RectangleI(Vector2.Zero, _bounds.Size);
+                _viewReference = new GLBox(Vector2.Zero, _bounds.Size);
                 return;
             }
 
             RenderOffsetScale();
             Box drawingBounds = new Box(_bounds.Centre * _renderScale, (_bounds.Size + _boundOffset) * _renderScale);
 
-            _viewReference = new RectangleI((
+            _viewReference = new GLBox((
                     // Location
                     (_window.Width * 0.5) + drawingBounds.Left,
                     (_window.Height * 0.5) + drawingBounds.Bottom
@@ -528,7 +517,7 @@ namespace Zene.GUI
                 return;
             }
 
-            RectangleI scissor = ViewClamp(_viewReference, Parent._scissorView);
+            GLBox scissor = _viewReference.Clamp(Parent._scissorView);
 
             // Element outside bounds of parent
             if (scissor.Width < 0 || scissor.Height < 0)

@@ -42,7 +42,7 @@ namespace Zene.GUI
             _framebuffer = new TextureRenderer(w.Width, w.Height);
             _framebuffer.SetColourAttachment(0, TextureFormat.Rgba8);
             _framebuffer.SetDepthAttachment(TextureFormat.Depth24Stencil8, false);
-            _framebuffer.Scissor = new Scissor(new RectangleI(Vector2I.Zero, _framebuffer.Size));
+            _framebuffer.Scissor = new Scissor(Vector2I.Zero, _framebuffer.Size);
 
             DrawManager = new DrawManager(_framebuffer);
         }
@@ -59,7 +59,6 @@ namespace Zene.GUI
         internal new void MouseMove(object s, MouseEventArgs e)
         {
             Vector2 ml = e.Location - (_window.Size * 0.5);
-            ml.Y = -ml.Y;
 
             MouseMoveListener(new MouseEventArgs(ml));
         }
