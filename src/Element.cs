@@ -668,6 +668,8 @@ namespace Zene.GUI
         private bool _triggerMouseMove = false;
         private void TriggerFullMouseMove() => RootElement._triggerMouseMove = true;
 
+        protected virtual bool PointInBounds(Vector2 point) => _bounds.Contains(point);
+
         internal Element MouseMoveListener(MouseEventArgs e, bool check = true)
         {
             if (check && _mousePos == e.Location) { return _finalHover; }
@@ -708,7 +710,7 @@ namespace Zene.GUI
                 {
                     if (!span[i].Visable) { continue; }
 
-                    bool hover = span[i]._bounds.Contains(mouseLocal);
+                    bool hover = span[i].PointInBounds(mouseLocal);
                     // _hover has been set - element hover
                     if (!hover) { continue; }
 
@@ -765,17 +767,6 @@ namespace Zene.GUI
         protected virtual void OnMouseMove(MouseEventArgs e)
         {
             MouseMove?.Invoke(this, e);
-        }
-        private bool ManageMouseMove(Element e, Vector2 mousePos)
-        {
-            bool mouseOverNew = e._bounds.Contains(mousePos);
-
-            // Mouse not in bounds
-            if (!mouseOverNew) { return false; }
-
-            // Mouse inside bounds
-            _hover = e;
-            return true;
         }
 
         internal bool _mouseOver = false;
