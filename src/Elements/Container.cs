@@ -36,7 +36,7 @@ namespace Zene.GUI
             _shader.Matrix2 = Matrix4.Identity;
             _shader.Matrix3 = Matrix4.Identity;
 
-            e.Context.DrawObject(Shapes.Square);
+            e.Context.Draw(Shapes.Square);
         }
     }
 }

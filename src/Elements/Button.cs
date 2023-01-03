@@ -90,7 +90,7 @@ namespace Zene.GUI
             _shader.Size = Size;
             _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
 
-            e.Context.DrawObject(Shapes.Square);
+            e.Context.Draw(Shapes.Square);
 
         DrawText:
 

@@ -69,7 +69,7 @@ namespace Zene.GUI
 
             BaseFramebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
 
-            RootElement.Render();
+            DrawManager.Draw(RootElement);
         }
 
         protected override void OnMouseMove(MouseEventArgs e)
