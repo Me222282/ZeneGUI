@@ -7,7 +7,7 @@ namespace Zene.GUI
     /// <summary>
     /// The root parent element.
     /// </summary>
-    public class RootElement : Element, IDrawObject
+    public class RootElement : Element, IRenderable
     {
         public RootElement(Window w)
             : this(w, true)
@@ -63,7 +63,7 @@ namespace Zene.GUI
             MouseMoveListener(new MouseEventArgs(ml));
         }
 
-        public Renderable GetRenderable(IDrawingContext context)
+        public void OnRender(IDrawingContext context)
         {
             _framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
             _framebuffer.Scissor.Enabled = true;
@@ -72,7 +72,7 @@ namespace Zene.GUI
 
             _framebuffer.Scissor.Enabled = false;
 
-            return new Renderable(_framebuffer, new GLBox(Vector2I.Zero, _framebuffer.Size), BufferBit.Colour, TextureSampling.Nearest);
+            context.WriteFramebuffer(_framebuffer, BufferBit.Colour, TextureSampling.Nearest);
         }
 
         protected override void OnSizeChange(VectorEventArgs e)
