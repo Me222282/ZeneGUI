@@ -10,7 +10,7 @@ namespace Zene.GUI
     /// <summary>
     /// The base class for all GUI elements.
     /// </summary>
-    public abstract class Element
+    public abstract class Element : IElementManager
     {
         /// <summary>
         /// Creates an element.
@@ -35,6 +35,8 @@ namespace Zene.GUI
         {
             _textRender = textRenderer;
         }
+
+        public Window Handle => _window;
 
         internal Window _window;
         /// <summary>

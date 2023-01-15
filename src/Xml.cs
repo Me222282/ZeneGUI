@@ -60,7 +60,7 @@ namespace Zene.GUI
             LoadGUI(root, src, events, events?.GetType());
             return root;
         }
-        public void LoadGUI(RootElement root, string src, object events = null)
+        public void LoadGUI(IElementManager root, string src, object events = null)
             => LoadGUI(root, src, events, events?.GetType());
         public RootElement LoadGUI(Window window, string src, Type events)
         {
@@ -68,16 +68,16 @@ namespace Zene.GUI
             LoadGUI(root, src, null, events);
             return root;
         }
-        public void LoadGUI(RootElement root, string src, Type events)
+        public void LoadGUI(IElementManager root, string src, Type events)
             => LoadGUI(root, src, null, events);
-        private void LoadGUI(RootElement re, string src, object events, Type et)
+        private void LoadGUI(IElementManager re, string src, object events, Type et)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
 
             _events = events;
             _eventType = et;
-            _window = re._window;
+            _window = re.Handle;
 
             if (root.ChildNodes.Count == 0)
             {
@@ -110,7 +110,7 @@ namespace Zene.GUI
             _eventType = null;
         }
 
-        private Element ParseNode(XmlNode node, Element parent)
+        private Element ParseNode(XmlNode node, object parent)
         {
             if (node.Name == "Property")
             {
@@ -118,6 +118,10 @@ namespace Zene.GUI
                 return null;
             }
 
+            return ParseElement(node);
+        }
+        private Element ParseElement(XmlNode node)
+        {
             Type t = _elementTypes.FindType(node.Name);
             if (t == null)
             {
