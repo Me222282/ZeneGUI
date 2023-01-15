@@ -237,7 +237,7 @@ namespace Zene.GUI
                 return;
             }
 
-            TextRenderer.DrawLeftBound(e.Context, _text.ToString(), Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
+            TextRenderer.DrawLeftBound(e.Context, TextReference, Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
         }
 
         protected internal override void OnFocus(FocusedEventArgs e)
