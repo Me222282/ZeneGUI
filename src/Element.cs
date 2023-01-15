@@ -397,18 +397,32 @@ namespace Zene.GUI
             if (e._layout != null) { TriggerLayout(); }
         }
 
-        private static void ResetElement(Element e)
+        private void ResetElement()
         {
-            e._elementIndex = -1;
-            e._mouseOver = false;
+            _elementIndex = -1;
+            _mouseOver = false;
 
-            if (e.Focused)
+            if (Focused)
             {
-                e.RootElement.SetFocus(null);
+                RootElement.SetFocus(null);
             }
 
-            e.Parent = null;
-            e.SetRoots();
+            Parent = null;
+
+            _window = null;
+            RootElement = null;
+            _textRender = null;
+
+            // Set child elements
+            lock (_elementRef)
+            {
+                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
+
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i].ResetElement();
+                }
+            }
         }
         /// <summary>
         /// Removes a child element.
@@ -426,7 +440,7 @@ namespace Zene.GUI
                 if (!_elements.Remove(e)) { return false; }
             }
 
-            ResetElement(e);
+            e.ResetElement();
             TriggerLayout();
 
             return true;
@@ -436,16 +450,11 @@ namespace Zene.GUI
         /// </summary>
         public void ClearChildren()
         {
-            foreach (Element e in _elements)
-            {
-                ResetElement(e);
-            }
-
             lock (_elementRef)
             {
                 foreach (Element e in _elements)
                 {
-                    ResetElement(e);
+                    e.ResetElement();
                 }
 
                 _elements.Clear();
@@ -653,6 +662,8 @@ namespace Zene.GUI
 
         internal Element MouseMoveListener(MouseEventArgs e, bool check = true)
         {
+            if (_window == null) { return _finalHover; }
+
             if (check && _mousePos == e.Location) { return _finalHover; }
             _mousePos = e.Location;
 
@@ -753,6 +764,8 @@ namespace Zene.GUI
         internal bool _mouseOver = false;
         protected internal virtual void OnMouseDown(MouseEventArgs e)
         {
+            if (_window == null) { return; }
+
             MouseSelect = true;
 
             MouseDown?.Invoke(this, e);
@@ -764,6 +777,8 @@ namespace Zene.GUI
         }
         protected internal virtual void OnMouseUp(MouseEventArgs e)
         {
+            if (_window == null) { return; }
+
             bool mouseDidSelect = MouseSelect;
 
             if (_window.MouseButton == MouseButton.None)
