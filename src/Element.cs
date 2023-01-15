@@ -401,7 +401,11 @@ namespace Zene.GUI
         {
             e._elementIndex = -1;
             e._mouseOver = false;
-            e.Focused = false;
+
+            if (e.Focused)
+            {
+                e.RootElement.SetFocus(null);
+            }
 
             e.Parent = null;
             e.SetRoots();
@@ -439,8 +443,16 @@ namespace Zene.GUI
 
             lock (_elementRef)
             {
+                foreach (Element e in _elements)
+                {
+                    ResetElement(e);
+                }
+
                 _elements.Clear();
             }
+
+            _hover = this;
+            _finalHover = this;
 
             TriggerLayout();
         }
@@ -593,47 +605,14 @@ namespace Zene.GUI
         protected internal virtual void OnTextInput(TextInputEventArgs e)
         {
             TextInput?.Invoke(this, e);
-            /*
-            // Update child elements
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i].OnTextInput(e);
-                }
-            }*/
         }
         protected internal virtual void OnKeyDown(KeyEventArgs e)
         {
             KeyDown?.Invoke(this, e);
-            /*
-            // Update child elements
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i].OnKeyDown(e);
-                }
-            }*/
         }
         protected internal virtual void OnKeyUp(KeyEventArgs e)
         {
             KeyUp?.Invoke(this, e);
-            /*
-            // Update child elements
-            lock (_elementRef)
-            {
-                Span<Element> span = CollectionsMarshal.AsSpan(_elements);
-
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i].OnKeyUp(e);
-                }
-            }*/
         }
 
         protected internal virtual void OnFocus(FocusedEventArgs e)

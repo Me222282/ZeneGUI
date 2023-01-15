@@ -85,7 +85,7 @@ namespace Zene.GUI
             });
         }
 
-        private void SetFocus(Element e)
+        internal void SetFocus(Element e)
         {
             if (_focus != null)
             {
@@ -132,7 +132,7 @@ namespace Zene.GUI
             _focus?.OnKeyDown(e);
 
             // Simulate click event
-            if (e[Keys.Enter])
+            if (e[Keys.Enter] && _focus != null)
             {
                 _focus.OnMouseDown(new MouseEventArgs(MouseButton.Left, e.Modifier));
                 _focus.OnMouseUp(new MouseEventArgs(MouseButton.Left, e.Modifier));
