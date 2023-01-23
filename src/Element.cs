@@ -32,6 +32,7 @@ namespace Zene.GUI
         }
 
         internal Element(TextRenderer textRenderer)
+            : this()
         {
             _textRender = textRenderer;
         }
@@ -384,7 +385,6 @@ namespace Zene.GUI
             }
 
             e.Parent = this;
-            if (_window != null) { e.SetRoots(); }
 
             lock (_elementRef)
             {
@@ -392,9 +392,14 @@ namespace Zene.GUI
 
                 _elements.Add(e);
             }
+            
+            if (_window == null) { return; }
 
+            e.SetRoots();
+            TriggerLayout();
+            
             // Has layout
-            if (e._layout != null) { TriggerLayout(); }
+            if (e._layout != null && _layoutManager != null) { e.TriggerLayout(); }
         }
 
         private void ResetElement()
