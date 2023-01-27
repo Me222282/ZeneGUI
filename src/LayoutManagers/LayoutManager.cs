@@ -41,7 +41,7 @@ namespace Zene.GUI
                     continue;
                 }
 
-                LayoutArgs la = new LayoutArgs(span[i], args.Size, i, args.Neighbours);
+                LayoutArgs la = new LayoutArgs(span[i], args.Size, args.Neighbours);
                 Box newBounds = layout.GetBounds(la);
 
                 newBounds = GetBounds(la, newBounds);

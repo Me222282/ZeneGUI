@@ -298,7 +298,8 @@ namespace Zene.GUI
         public bool UserResizable { get; protected set; }
 
         internal int _elementIndex = -1;
-
+        public int CurrentIndex => _elementIndex;
+        
         public bool TabShifting { get; set; } = true;
 
         public event TextInputEventHandler TextInput;
@@ -401,7 +402,53 @@ namespace Zene.GUI
             // Has layout
             if (e._layout != null && _layoutManager != null) { e.TriggerLayout(); }
         }
-
+        
+        public bool SwapChildren(Element a, Element b)
+        {
+            lock (_elementRef)
+            {
+                int indexA = _elements.IndexOf(a);
+                if (indexA < 0)
+                {
+                    return false;
+                }
+                
+                int indexB = _elements.IndexOf(b);
+                if (indexB < 0)
+                {
+                    return false;
+                }
+                
+                a._elementIndex = indexB;
+                b._elementIndex = indexA;
+                
+                _elements.Swap(indexA, indexB);
+            }
+            
+            return true;
+        }
+        public bool SwapChildren(int indexA, int indexB)
+        {   
+            lock (_elementRef)
+            {
+                if (indexA < 0 || indexA >= _elements.Count)
+                {
+                    return false;
+                }
+                if (indexB < 0 || indexB >= _elements.Count)
+                {
+                    return false;
+                }
+                
+                _elements[indexA]._elementIndex = indexB;
+                _elements[indexB]._elementIndex = indexA;
+                
+                _elements.Swap(indexA, indexB);
+            }
+            
+            return true;
+        }
+        
         private void ResetElement()
         {
             _elementIndex = -1;
@@ -887,7 +934,7 @@ namespace Zene.GUI
 
             lock (Parent._elementRef)
             {
-                BoundsSet(_layout.GetBounds(new LayoutArgs(this, Parent.Size, _elementIndex, Parent._elements)));
+                BoundsSet(_layout.GetBounds(new LayoutArgs(this, Parent.Size, Parent._elements)));
             }
             TriggerFullMouseMove();
         }
@@ -919,7 +966,7 @@ namespace Zene.GUI
 
                 lock (_elementRef)
                 {
-                    size = _layoutManager.ManageLayouts(new LayoutArgs(this, size, 0, _elements),
+                    size = _layoutManager.ManageLayouts(new LayoutArgs(this, size, _elements),
                         (e, b) => e.BoundsSet(b));
                 }
 

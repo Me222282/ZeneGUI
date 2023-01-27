@@ -9,7 +9,7 @@ namespace Zene.GUI
     /// </summary>
     public class LayoutArgs
     {
-        public LayoutArgs(Element e, Vector2 s, int i, List<Element> n)
+        public LayoutArgs(Element e, Vector2 s, List<Element> n)
         {
             if (n == null)
             {
@@ -19,15 +19,15 @@ namespace Zene.GUI
             Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
 
             Size = s;
-            Index = Math.Clamp(i, 0, n.Count);
+            Index = e.CurrentIndex;
             Neighbours = new ElementReference(n);
         }
-        public LayoutArgs(Element e, Vector2 s, int i, ElementReference n)
+        public LayoutArgs(Element e, Vector2 s, ElementReference n)
         {
             Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
 
             Size = s;
-            Index = Math.Clamp(i, 0, n.Length);
+            Index = e.CurrentIndex;
             Neighbours = n;
         }
 
