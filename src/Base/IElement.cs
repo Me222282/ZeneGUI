@@ -55,6 +55,8 @@ namespace Zene.GUI
             }
         }
 
+        public string Id { get; }
+
         public ILayout Layout { get; }
         public ILayoutManager LayoutManager { get; }
 

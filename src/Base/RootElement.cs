@@ -74,6 +74,8 @@ namespace Zene.GUI
 
         public Vector2 MouseLocation => Properties.mousePos;
 
+        public string Id => "@root";
+
         public bool IsMouseHover(Vector2 mousePos) => true;
 
         private void OnMouseMove(MouseEventArgs e)
@@ -117,5 +119,19 @@ namespace Zene.GUI
             }
         }
         private void Scroll(ScrollEventArgs e) => Hover.OnScroll(e);
+
+        public void AddChild(IElement element) => Elements.Add(element);
+        public void RemoveChild(IElement element) => Elements.Remove(element);
+
+        public void ClearChildren() => Elements.Clear();
+
+        public void SwapChildren(int indexA, int indexB) => Elements.Swap(indexA, indexB);
+        public void SwapChildren(IElement a, IElement b) => Elements.Swap(a, b);
+
+        public T Find<T>() where T : class, IElement
+            => Elements.RecursiveFind<T>();
+        public T Find<T>(string id) where T : class, IElement
+            => Elements.RecursiveFind<T>(id);
+        public IElement Find(string id) => Elements.RecursiveFind(id);
     }
 }

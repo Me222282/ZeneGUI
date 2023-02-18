@@ -35,6 +35,8 @@ namespace Zene.GUI
         public virtual ElementList Children { get; }
         public IElement Parent => Properties.parent;
 
+        public string Id { get; set; }
+
         private ILayout _layout = FixedLayout.Default;
         public ILayout Layout
         {
