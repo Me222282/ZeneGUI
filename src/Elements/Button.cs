@@ -12,6 +12,7 @@ namespace Zene.GUI
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = new ColourF(0f, 0f, 0f);
+            Graphics = new Renderer(this);
         }
         public Button(TextLayout layout)
             : base(layout)
@@ -19,9 +20,8 @@ namespace Zene.GUI
             CursorStyle = Cursor.Hand;
             Text = "Button";
             TextColour = new ColourF(0f, 0f, 0f);
+            Graphics = new Renderer(this);
         }
-
-        private readonly BorderShader _shader = BorderShader.GetInstance();
 
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
@@ -30,6 +30,8 @@ namespace Zene.GUI
         public double CornerRadius { get; set; } = 0.1;
 
         public ITexture Texture { get; set; } = null;
+
+        public override GraphicsManager Graphics { get; }
 
         private double BorderWidthDraw()
         {
@@ -45,60 +47,68 @@ namespace Zene.GUI
             return BorderWidth;
         }
 
-        protected override void OnUpdate(FrameEventArgs e)
+        private class Renderer : GraphicsManager<Button>
         {
-            base.OnUpdate(e);
-
-            Vector4 c = (Vector4)Colour;
-
-            if (MouseSelect)
+            public Renderer(Button source)
+                : base(source)
             {
-                c -= new Vector4(0.2, 0.2, 0.2, 0d);
-            }
-            else if (MouseHover)
-            {
-                c -= new Vector4(0.1, 0.1, 0.1, 0d);
+
             }
 
-            e.Context.Shader = _shader;
+            private readonly BorderShader _shader = BorderShader.GetInstance();
 
-            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
-            DrawingBoundOffset = _shader.BorderWidth;
-
-            // No point drawing box
-            if (Colour.A <= 0f && (BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+            public override void OnRender(DrawManager context)
             {
-                goto DrawText;
+                Vector4 c = (Vector4)Source.Colour;
+
+                if (Source.MouseSelect)
+                {
+                    c -= new Vector4(0.2, 0.2, 0.2, 0d);
+                }
+                else if (Source.MouseHover)
+                {
+                    c -= new Vector4(0.1, 0.1, 0.1, 0d);
+                }
+
+                context.Shader = _shader;
+
+                _shader.BorderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                Size = Source.Size + _shader.BorderWidth;
+
+                // No point drawing box
+                if (Source.Colour.A <= 0f && (Source.BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+                {
+                    goto DrawText;
+                }
+
+                _shader.BorderColour = Source.BorderColour;
+                _shader.Radius = Source.CornerRadius;
+
+                if (Source.Texture != null)
+                {
+                    _shader.ColourSource = ColourSource.Texture;
+                    _shader.TextureSlot = 0;
+                    Source.Texture.Bind(0);
+                }
+                else
+                {
+                    _shader.ColourSource = ColourSource.UniformColour;
+                    _shader.Colour = (ColourF)c;
+                }
+
+                _shader.Size = Source.Size;
+
+                context.Model = Matrix4.CreateScale(Source.Bounds.Size);
+                context.Draw(Shapes.Square);
+
+            DrawText:
+
+                if (Source.Font == null || Source.Text == null) { return; }
+
+                TextRenderer.Model = Matrix4.CreateScale(Source.TextSize);
+                TextRenderer.Colour = Source.TextColour;
+                TextRenderer.DrawCentred(context, Source.Text, Source.Font, Source.CharSpace, Source.LineSpace);
             }
-
-            _shader.BorderColour = BorderColour;
-            _shader.Radius = CornerRadius;
-
-            if (Texture != null)
-            {
-                _shader.ColourSource = ColourSource.Texture;
-                _shader.TextureSlot = 0;
-                Texture.Bind(0);
-            }
-            else
-            {
-                _shader.ColourSource = ColourSource.UniformColour;
-                _shader.Colour = (ColourF)c;
-            }
-
-            _shader.Matrix3 = Projection;
-            _shader.Size = Size;
-            _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
-
-            e.Context.Draw(Shapes.Square);
-
-        DrawText:
-
-            if (Font == null || Text == null) { return; }
-
-            TextRenderer.Model = Matrix4.CreateScale(TextSize);
-            TextRenderer.Colour = TextColour;
-            TextRenderer.DrawCentred(e.Context, Text, Font, CharSpace, LineSpace);
         }
     }
 }

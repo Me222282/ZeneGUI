@@ -168,6 +168,8 @@ namespace Zene.GUI
         public Box GetBounds(LayoutArgs args)
             => _bounds;
 
+        public static readonly FixedLayout Default = new FixedLayout(0d, 0d, 1d, 1d);
+
         public static implicit operator FixedLayout(Box bounds) => new FixedLayout(bounds);
         public static implicit operator FixedLayout(Rectangle bounds) => new FixedLayout(bounds);
     }

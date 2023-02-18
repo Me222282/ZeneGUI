@@ -23,7 +23,7 @@ namespace Zene.GUI
             {
                 TextReference = value;
 
-                TriggerLayout();
+                TriggerChange();
             }
         }
         private int _charSpace = 0;
@@ -34,7 +34,7 @@ namespace Zene.GUI
             {
                 _charSpace = value;
 
-                TriggerLayout();
+                TriggerChange();
             }
         }
         private int _lineSpace = 0;
@@ -45,7 +45,7 @@ namespace Zene.GUI
             {
                 _lineSpace = value;
 
-                TriggerLayout();
+                TriggerChange();
             }
         }
         private double _textSize = 10d;
@@ -56,7 +56,7 @@ namespace Zene.GUI
             {
                 _textSize = value;
 
-                TriggerLayout();
+                TriggerChange();
             }
         }
         public ColourF TextColour { get; set; } = new ColourF(1f, 1f, 1f);
@@ -68,7 +68,7 @@ namespace Zene.GUI
             {
                 _font = value;
 
-                TriggerLayout();
+                TriggerChange();
             }
         }
     }

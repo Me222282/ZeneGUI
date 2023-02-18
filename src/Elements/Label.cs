@@ -1,7 +1,6 @@
 ﻿using System;
 using Zene.Graphics;
 using Zene.Structs;
-using Zene.Windowing;
 
 namespace Zene.GUI
 {
@@ -10,20 +9,22 @@ namespace Zene.GUI
         public Label()
         {
             Text = "Label";
+            Graphics = new Renderer(this);
         }
 
         public Label(TextLayout layout)
             : base(layout)
         {
             Text = "Label";
+            Graphics = new Renderer(this);
         }
-
-        private readonly BorderShader _shader = BorderShader.GetInstance();
 
         public double BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BackgroundColour { get; set; }
         public double CornerRadius { get; set; } = 0.01;
+
+        public override GraphicsManager Graphics { get; }
 
         private double BorderWidthDraw()
         {
@@ -35,40 +36,48 @@ namespace Zene.GUI
             return BorderWidth;
         }
 
-        protected override void OnUpdate(FrameEventArgs e)
+        private class Renderer : GraphicsManager<Label>
         {
-            base.OnUpdate(e);
-
-            e.Context.Shader = _shader;
-
-            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
-            DrawingBoundOffset = _shader.BorderWidth;
-
-            // No point drawing box
-            if (BackgroundColour.A <= 0f && (BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+            public Renderer(Label source)
+                : base(source)
             {
-                goto DrawText;
+
             }
 
-            _shader.BorderColour = BorderColour;
-            _shader.Radius = CornerRadius;
+            private readonly BorderShader _shader = BorderShader.GetInstance();
 
-            _shader.ColourSource = ColourSource.UniformColour;
-            _shader.Colour = BackgroundColour;
+            public override void OnRender(DrawManager context)
+            {
+                context.Shader = _shader;
 
-            _shader.Matrix3 = Projection;
-            _shader.Size = Size;
-            _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
+                _shader.BorderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                Size = Source.Size +  _shader.BorderWidth;
 
-            e.Context.Draw(Shapes.Square);
+                // No point drawing box
+                if (Source.BackgroundColour.A <= 0f && (Source.BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+                {
+                    goto DrawText;
+                }
 
-        DrawText:
+                _shader.BorderColour = Source.BorderColour;
+                _shader.Radius = Source.CornerRadius;
 
-            if (Font == null || Text == null) { return; }
+                _shader.ColourSource = ColourSource.UniformColour;
+                _shader.Colour = Source.BackgroundColour;
 
-            TextRenderer.Model = Matrix4.CreateScale(TextSize);
-            TextRenderer.Colour = TextColour;
-            TextRenderer.DrawCentred(e.Context, Text, Font, CharSpace, LineSpace);
+                _shader.Size = Source.Size;
+
+                context.Model = Matrix4.CreateScale(Source.Bounds.Size);
+                context.Draw(Shapes.Square);
+
+            DrawText:
+
+                if (Source.Font == null || Source.Text == null) { return; }
+
+                TextRenderer.Model = Matrix4.CreateScale(Source.TextSize);
+                TextRenderer.Colour = Source.TextColour;
+                TextRenderer.DrawCentred(context, Source.Text, Source.Font, Source.CharSpace, Source.LineSpace);
+            }
         }
     }
 }

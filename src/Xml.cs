@@ -18,7 +18,7 @@ namespace Zene.GUI
             _elementTypes = _types.Where(ti =>
             {
                 Type type = ti.AsType();
-                return type.IsSubclassOf(typeof(Element));
+                return type.IsAssignableTo(typeof(IElement));
             });
 
             AddParser(str =>
@@ -57,27 +57,27 @@ namespace Zene.GUI
         public RootElement LoadGUI(Window window, string src, object events = null)
         {
             RootElement root = new RootElement(window);
-            LoadGUI(root, src, events, events?.GetType());
+            LoadGUI(root.Elements, src, events, events?.GetType());
             return root;
         }
-        public void LoadGUI(IElementManager root, string src, object events = null)
+        public void LoadGUI(ElementList root, string src, object events = null)
             => LoadGUI(root, src, events, events?.GetType());
         public RootElement LoadGUI(Window window, string src, Type events)
         {
             RootElement root = new RootElement(window);
-            LoadGUI(root, src, null, events);
+            LoadGUI(root.Elements, src, null, events);
             return root;
         }
-        public void LoadGUI(IElementManager root, string src, Type events)
+        public void LoadGUI(ElementList root, string src, Type events)
             => LoadGUI(root, src, null, events);
-        private void LoadGUI(IElementManager re, string src, object events, Type et)
+        private void LoadGUI(ElementList re, string src, object events, Type et)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
 
             _events = events;
             _eventType = et;
-            _window = re.Handle;
+            _window = re.Source.Properties.handle.Window;
 
             if (root.ChildNodes.Count == 0)
             {
@@ -98,11 +98,11 @@ namespace Zene.GUI
 
             foreach (XmlNode node in xnl)
             {
-                Element e = ParseNode(node, re);
+                IElement e = ParseNode(node, re.Source);
                 // Property node
                 if (e == null) { continue; }
 
-                re.AddChild(e);
+                re.Add(e);
             }
 
             _window = null;
@@ -110,7 +110,7 @@ namespace Zene.GUI
             _eventType = null;
         }
 
-        private Element ParseNode(XmlNode node, object parent)
+        private IElement ParseNode(XmlNode node, object parent)
         {
             if (node.Name == "Property")
             {
@@ -120,7 +120,7 @@ namespace Zene.GUI
 
             return ParseElement(node);
         }
-        private Element ParseElement(XmlNode node)
+        private IElement ParseElement(XmlNode node)
         {
             Type t = _elementTypes.FindType(node.Name);
             if (t == null)
@@ -134,7 +134,7 @@ namespace Zene.GUI
                 throw new Exception("Type does not have a parameterless constructor");
             }
 
-            Element element = constructor.Invoke(null) as Element;
+            IElement element = constructor.Invoke(null) as IElement;
 
             foreach (XmlAttribute a in node.Attributes)
             {
@@ -156,11 +156,18 @@ namespace Zene.GUI
                     continue;
                 }
 
-                Element e = ParseNode(child, element);
+                if (child.NodeType != XmlNodeType.Element) { continue; }
+
+                IElement e = ParseNode(child, element);
                 // Property node
                 if (e == null) { continue; }
 
-                element.AddChild(e);
+                if (!element.IsParent)
+                {
+                    throw new Exception($"{node.Name} cannot have child elements.");
+                }
+
+                element.Children.Add(e);
             }
 
             return element;
@@ -264,14 +271,10 @@ namespace Zene.GUI
             }
 
             // Find type
-            Type type = _types.FindType(constructor[0]);
+            Type type = _types.FindType(constructor[0], assign);
             if (type == null)
             {
-                throw new Exception("Constructor type doesn't exist");
-            }
-            if (!type.IsAssignableTo(assign))
-            {
-                throw new Exception("Invalid constructor type");
+                throw new Exception("Constructor type is invalid or doesn't exist");
             }
 
             // Find all constructors
@@ -447,15 +450,7 @@ namespace Zene.GUI
         private void ParseAttributeObject(string name, XmlNode value, Type type, object e)
         {
             PropertyInfo p;
-
-            if (name == "Layout")
-            {
-                p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
-            }
-            else
-            {
-                p = type.GetProperty(name, BindingFlags.Public | BindingFlags.Instance);
-            }
+            p = type.GetPropertyUnambiguous(name, BindingFlags.Public | BindingFlags.Instance);
 
             object o = ParseObjectProp(value, p.PropertyType, null);
             p.SetValue(e, o);
@@ -468,15 +463,10 @@ namespace Zene.GUI
                 return null;
             }
 
-            Type t = _types.FindType(node.Name);
+            Type t = _types.FindType(node.Name, type);
             if (t == null)
             {
-                throw new Exception("Tag name does not exist");
-            }
-
-            if (!t.IsAssignableTo(type))
-            {
-                throw new Exception("Tag name does not match expected type");
+                throw new Exception("Tag name does not match expected type or does not exist");
             }
 
             ConstructorInfo constructor = t.GetConstructor(Array.Empty<Type>());

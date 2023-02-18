@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Zene.Structs;
 
 namespace Zene.GUI
@@ -9,32 +8,19 @@ namespace Zene.GUI
     /// </summary>
     public class LayoutArgs
     {
-        public LayoutArgs(Element e, Vector2 s, List<Element> n)
+        public LayoutArgs(IElement e, Vector2 s, ElementList n)
         {
-            if (n == null)
-            {
-                throw new ArgumentNullException($"{nameof(n)}");
-            }
-
-            Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
+            Element = e ?? throw new ArgumentNullException(nameof(e));
 
             Size = s;
-            Index = e.CurrentIndex;
-            Neighbours = new ElementReference(n);
-        }
-        public LayoutArgs(Element e, Vector2 s, ElementReference n)
-        {
-            Element = e ?? throw new ArgumentNullException($"{nameof(e)}");
-
-            Size = s;
-            Index = e.CurrentIndex;
+            Index = e.Properties.ElementIndex;
             Neighbours = n;
         }
 
         /// <summary>
         /// The element being processed.
         /// </summary>
-        public Element Element { get; }
+        public IElement Element { get; }
         /// <summary>
         /// The bounding size of the parent element.
         /// </summary>
@@ -46,13 +32,13 @@ namespace Zene.GUI
         /// <summary>
         /// A reference to the neighbouring elements.
         /// </summary>
-        public ElementReference Neighbours { get; }
+        public ElementList Neighbours { get; }
 
         /// <summary>
         /// Gets the neighbouring element next in the list.
         /// </summary>
         /// <returns></returns>
-        public Element NextElement()
+        public IElement NextElement()
         {
             // Last element
             if ((Index + 1) == Neighbours.Length)
@@ -66,7 +52,7 @@ namespace Zene.GUI
         /// Gets the neighbouring element proceding in the list.
         /// </summary>
         /// <returns></returns>
-        public Element PreviousElement()
+        public IElement PreviousElement()
         {
             // First element
             if (Index == 0) { return null; }

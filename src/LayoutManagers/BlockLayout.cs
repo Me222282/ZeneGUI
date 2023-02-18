@@ -3,30 +3,54 @@ using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public class BlockLayout : LayoutManager
+    public class BlockLayout : LayoutManagerI<BlockLayout.Instance>
     {
+        public class Instance : ILayoutManagerInstance
+        {
+            public double _left;
+            public double _right;
+            public double _lowestY;
+            public Vector2 _current;
+
+            public void SetLowest(double value)
+            {
+                if (_lowestY > value)
+                {
+                    _lowestY = value;
+                }
+            }
+
+            public Vector2 ReturningSize { get; init; }
+        }
+
         public BlockLayout()
+            : base(true, false)
         {
 
         }
 
         public BlockLayout(Vector4 margin)
+            : base(true, false)
         {
             _margin = margin;
         }
         public BlockLayout(Vector2 margin)
+            : base(true, false)
         {
             _margin = (margin, margin);
         }
         public BlockLayout(double margin)
+            : base(true, false)
         {
             _margin = (margin, margin, margin, margin);
         }
         public BlockLayout(double marginX, double marginY)
+            : base(true, false)
         {
             _margin = (marginX, marginY, marginX, marginY);
         }
         public BlockLayout(double left, double right, double top, double bottom)
+            : base(true, false)
         {
             _margin = (left, top, right, bottom);
         }
@@ -105,48 +129,43 @@ namespace Zene.GUI
             }
         }
 
-        private double _left;
-        private double _right;
-        private double _lowestY;
-        private Vector2 _current;
-        protected override void SetupManager(LayoutArgs args)
+        public override ILayoutManagerInstance Init(LayoutArgs args)
         {
-            _right = args.Size.X * 0.5;
-            _left = -_right;
-            _lowestY = args.Size.Y * 0.5;
-
-            _current = (_left, _lowestY - _margin.Y);
-        }
-
-        private void SetLowest(double value)
-        {
-            if (_lowestY > value)
+            Instance i = new Instance()
             {
-                _lowestY = value;
-            }
+                ReturningSize = args.Size,
+            };
+
+            i._right = args.Size.X * 0.5;
+            i._left = -i._right;
+            i._lowestY = args.Size.Y * 0.5;
+
+            i._current = (i._left, i._lowestY - _margin.Y);
+
+            return i;
         }
 
-        protected override Box GetBounds(LayoutArgs args, Box layoutResult)
+        protected override Box GetBounds(LayoutArgs args, Box layoutResult, Instance instance)
         {
             Vector2 size = layoutResult.Size;
 
-            bool onLeft = _current.X == _left;
+            bool onLeft = instance._current.X == instance._left;
 
-            _current.X += _margin.X;
-            Vector2 topLeft = _current;
-            _current.X += size.X + _margin.Z;
+            instance._current.X += _margin.X;
+            Vector2 topLeft = instance._current;
+            instance._current.X += size.X + _margin.Z;
 
-            if (!onLeft && _current.X > _right)
+            if (!onLeft && instance._current.X > instance._right)
             {
-                _current.Y = _lowestY - _margin.Y;
+                instance._current.Y = instance._lowestY - _margin.Y;
 
-                topLeft = (_left + _margin.X, _current.Y);
+                topLeft = (instance._left + _margin.X, instance._current.Y);
 
-                _current.X = topLeft.X + size.X + _margin.Z;
+                instance._current.X = topLeft.X + size.X + _margin.Z;
             }
 
             layoutResult.SetTopLeft(topLeft);
-            SetLowest(_current.Y - size.Y - _margin.W);
+            instance.SetLowest(instance._current.Y - size.Y - _margin.W);
 
             return layoutResult;
         }

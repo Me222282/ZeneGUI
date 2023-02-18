@@ -33,6 +33,19 @@ namespace Zene.GUI
             return null;
         }
 
+        public static Type FindType(this IEnumerable<TypeInfo> types, string name, Type assign)
+        {
+            foreach (TypeInfo ti in types)
+            {
+                if (ti.IsAssignableTo(assign) && ti.Name == name)
+                {
+                    return ti.AsType();
+                }
+            }
+
+            return null;
+        }
+
         public static IEnumerable<TypeInfo> GetAllTypes(this AppDomain domain)
         {
             IEnumerable<TypeInfo> types = Enumerable.Empty<TypeInfo>();
@@ -110,7 +123,7 @@ namespace Zene.GUI
             return null;
         }
         
-        public static void Swap<T>(this IList<T> list, int indexA, int indexB)
+        internal static void Swap<T>(this IList<T> list, int indexA, int indexB)
         {
             T tmp = list[indexA];
             list[indexA] = list[indexB];

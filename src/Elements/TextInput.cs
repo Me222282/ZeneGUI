@@ -10,14 +10,14 @@ namespace Zene.GUI
     {
         public TextInput()
         {
+            Graphics = new Renderer(this);
         }
         public TextInput(TextLayout layout)
             : base(layout)
         {
             layout.TextInput = true;
+            Graphics = new Renderer(this);
         }
-
-        private readonly BorderShader _shader = BorderShader.GetInstance();
 
         public double BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
@@ -41,29 +41,31 @@ namespace Zene.GUI
         private double _timeOffset = 0;
         private bool DrawCaret
         {
-            get => (int)((_window.Timer - _timeOffset) * 2) % 2 == 0;
+            get => (int)((Window.Timer - _timeOffset) * 2) % 2 == 0;
         }
 
-        private void ResetCaret() => _timeOffset = _window.Timer;
+        public override GraphicsManager Graphics { get; }
 
-        protected internal override void OnTextInput(TextInputEventArgs e)
+        private void ResetCaret() => _timeOffset = Window.Timer;
+
+        protected override void OnTextInput(TextInputEventArgs e)
         {
             base.OnTextInput(e);
 
             _text.Insert(_caret, e.Character);
-            TriggerLayout();
+            TriggerChange();
             ResetCaret();
             _caret++;
         }
-        protected internal override void OnKeyDown(KeyEventArgs e)
+        protected override void OnKeyDown(KeyEventArgs e)
         {
             base.OnKeyDown(e);
 
             if (e[Keys.V] && e[Mods.Control])
             {
-                string paste = _window.ClipBoard;
+                string paste = Window.ClipBoard;
                 _text.Insert(_caret, paste);
-                TriggerLayout();
+                TriggerChange();
                 ResetCaret();
                 _caret += paste.Length;
                 return;
@@ -75,7 +77,7 @@ namespace Zene.GUI
                 int offset = CaretLeft();
 
                 _text.Remove(_caret + offset, -offset);
-                TriggerLayout();
+                TriggerChange();
                 ResetCaret();
                 _caret += offset;
                 return;
@@ -85,14 +87,14 @@ namespace Zene.GUI
                 if (_caret >= _text.Length) { return; }
 
                 _text.Remove(_caret, 1);
-                TriggerLayout();
+                TriggerChange();
                 ResetCaret();
                 return;
             }
             if (!SingleLine && (e[Keys.Enter] || e[Keys.NumPadEnter]))
             {
                 _text.Insert(_caret, '\n');
-                TriggerLayout();
+                TriggerChange();
                 ResetCaret();
                 _caret++;
                 return;
@@ -197,54 +199,62 @@ namespace Zene.GUI
             return BorderWidth;
         }
 
-        protected override void OnUpdate(FrameEventArgs e)
-        {
-            base.OnUpdate(e);
-
-            _shader.BorderWidth = Math.Max(BorderWidthDraw(), 0d);
-            DrawingBoundOffset = _shader.BorderWidth;
-
-            // No point drawing box
-            if (BackgroundColour.A <= 0f && (BorderColour.A <= 0f || _shader.BorderWidth <= 0))
-            {
-                goto DrawText;
-            }
-
-            e.Context.Shader = _shader;
-
-            _shader.BorderColour = BorderColour;
-            _shader.Radius = CornerRadius;
-
-            _shader.ColourSource = ColourSource.UniformColour;
-            _shader.Colour = BackgroundColour;
-
-            _shader.Matrix3 = Projection;
-            _shader.Size = Size;
-            _shader.Matrix1 = Matrix4.CreateScale(Bounds.Size);
-
-            e.Context.Draw(Shapes.Square);
-
-        DrawText:
-
-            if (Font == null || Text == null) { return; }
-
-            TextRenderer.Model = Matrix4.CreateScale(TextSize);
-            TextRenderer.Colour = TextColour;
-
-            if (_text.Length < 1 && DrawCaret && Focused)
-            {
-                TextRenderer.DrawLeftBound(e.Context, "|", Font, 0, 0, -1, false);
-                return;
-            }
-
-            TextRenderer.DrawLeftBound(e.Context, TextReference, Font, CharSpace, LineSpace, _caret, DrawCaret && Focused);
-        }
-
-        protected internal override void OnFocus(FocusedEventArgs e)
+        protected override void OnFocus(FocusedEventArgs e)
         {
             base.OnFocus(e);
 
             ResetCaret();
+        }
+
+        private class Renderer : GraphicsManager<TextInput>
+        {
+            public Renderer(TextInput source)
+                : base(source)
+            {
+
+            }
+
+            private readonly BorderShader _shader = BorderShader.GetInstance();
+
+            public override void OnRender(DrawManager context)
+            {
+                _shader.BorderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                Size = Source.Size + _shader.BorderWidth;
+
+                // No point drawing box
+                if (Source.BackgroundColour.A <= 0f && (Source.BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+                {
+                    goto DrawText;
+                }
+
+                context.Shader = _shader;
+
+                _shader.BorderColour = Source.BorderColour;
+                _shader.Radius = Source.CornerRadius;
+
+                _shader.ColourSource = ColourSource.UniformColour;
+                _shader.Colour = Source.BackgroundColour;
+
+                _shader.Size = Source.Size;
+
+                context.Model = Matrix4.CreateScale(Bounds.Size);
+                context.Draw(Shapes.Square);
+
+            DrawText:
+
+                if (Source.Font == null || Source.Text == null) { return; }
+
+                TextRenderer.Model = Matrix4.CreateScale(Source.TextSize);
+                TextRenderer.Colour = Source.TextColour;
+
+                if (Source._text.Length < 1 && Source.DrawCaret && Source.Focused)
+                {
+                    TextRenderer.DrawLeftBound(context, "|", Source.Font, 0, 0, -1, false);
+                    return;
+                }
+
+                TextRenderer.DrawLeftBound(context, Source.TextReference, Source.Font, Source.CharSpace, Source.LineSpace, Source._caret, Source.DrawCaret && Source.Focused);
+            }
         }
     }
 }
