@@ -11,6 +11,9 @@ namespace Zene.GUI
 
         }
 
+        public new T this[int index] => (T)base[index];
+        public new T this[Index index] => (T)base[index];
+
         public virtual void Add(T item) => base.Add(item);
         public override void Add(IElement item)
         {
