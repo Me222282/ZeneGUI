@@ -76,6 +76,7 @@ namespace Zene.GUI
                     e.Properties.elementIndex = -1;
                     e.Properties.hover = false;
                     e.Properties.selected = false;
+
                     SetHandle(e, null);
                 }
 
@@ -135,30 +136,7 @@ namespace Zene.GUI
             return null;
         }
 
-        public bool Swap(IElement a, IElement b)
-        {
-            lock (_lockRef)
-            {
-                int indexA = _elements.IndexOf(a);
-                if (indexA < 0)
-                {
-                    return false;
-                }
-
-                int indexB = _elements.IndexOf(b);
-                if (indexB < 0)
-                {
-                    return false;
-                }
-
-                a.Properties.elementIndex = indexB;
-                b.Properties.elementIndex = indexA;
-
-                _elements.Swap(indexA, indexB);
-            }
-
-            return true;
-        }
+        public bool Swap(IElement a, IElement b) => Swap(_elements.IndexOf(a), _elements.IndexOf(b));
         public bool Swap(int indexA, int indexB)
         {
             lock (_lockRef)
@@ -177,6 +155,8 @@ namespace Zene.GUI
 
                 _elements.Swap(indexA, indexB);
             }
+
+            _source.Properties.handle?.LayoutElement(_source);
 
             return true;
         }

@@ -107,5 +107,7 @@ namespace Zene.GUI
                 Source.Graphics.SetView();
             }
         }
+
+        internal void OnLayoutChange(object sender, EventArgs e) => Source.Properties.handle?.LayoutElement(Source);
     }
 }

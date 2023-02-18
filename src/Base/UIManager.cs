@@ -184,11 +184,40 @@ namespace Zene.GUI
                 throw new ArgumentNullException(nameof(element));
             }
 
-            if (!element.HasParent) { return; }
+            if (!element.HasParent)
+            {
+                TriggerChange();
+                return;
+            }
 
-            Box bounds = CalcElementBounds(element, new LayoutArgs(element, element.Properties.parent.Size, element.Properties.parent.Children));
-            element.OnSizeChange(new VectorEventArgs(bounds.Size));
-            element.OnElementMove(new VectorEventArgs(bounds.Location));
+            if (element.Properties.parent.LayoutManager != null &&
+                element.Properties.parent.LayoutManager != LayoutManager.Empty)
+            {
+                IElement parent = element.Properties.parent;
+
+                if (parent.LayoutManager.ChildDependent ||
+                    parent.LayoutManager.SizeDependent)
+                {
+                    LayoutElement(element.Properties.parent);
+                    return;
+                }
+
+                ILayoutManager lm = parent.LayoutManager;
+                ILayoutManagerInstance lmi = lm.Init(new LayoutArgs(element, parent.Bounds.Size, parent.Children));
+
+                LayoutArgs args = new LayoutArgs(element, parent.Size, parent.Children);
+                Box bounds = CalcElementBounds(element, args);
+                bounds = lm.GetBounds(args, bounds, lmi);
+
+                element.OnSizeChange(new VectorEventArgs(bounds.Size));
+                element.OnElementMove(new VectorEventArgs(bounds.Location));
+            }
+            else
+            {
+                Box bounds = CalcElementBounds(element, new LayoutArgs(element, element.Properties.parent.Size, element.Properties.parent.Children));
+                element.OnSizeChange(new VectorEventArgs(bounds.Size));
+                element.OnElementMove(new VectorEventArgs(bounds.Location));
+            }
 
             // Change in layout causes hover to be recalculated
             MouseMove(new MouseEventArgs(Root.Properties.mousePos));
@@ -228,7 +257,8 @@ namespace Zene.GUI
                 Framebuffer.Size = (Vector2I)size;
             });
 
-            CalcElementBounds(Root, new LayoutArgs(Root, size, Elements));
+            Box bounds = CalcElementBounds(Root, new LayoutArgs(Root, size, Elements));
+            Root.Properties.bounds = bounds;
         }
 
         internal IElement renderFocus;

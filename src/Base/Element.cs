@@ -28,7 +28,7 @@ namespace Zene.GUI
         public Element(ILayout layout)
             : this()
         {
-            _layout = layout;
+            Layout = layout;
         }
 
         public UIProperties Properties { get; }
@@ -46,7 +46,14 @@ namespace Zene.GUI
                     value = FixedLayout.Default;
                 }
 
+                if (_layout != null)
+                {
+                    _layout.Change -= Properties.OnLayoutChange;
+                }
+
                 _layout = value;
+
+                _layout.Change += Properties.OnLayoutChange;
 
                 TriggerChange();
             }
@@ -62,7 +69,14 @@ namespace Zene.GUI
                     value = GUI.LayoutManager.Empty;
                 }
 
+                if (_layoutManager != null)
+                {
+                    _layoutManager.Change -= Properties.OnLayoutChange;
+                }
+
                 _layoutManager = value;
+
+                _layoutManager.Change += Properties.OnLayoutChange;
 
                 TriggerChange();
             }

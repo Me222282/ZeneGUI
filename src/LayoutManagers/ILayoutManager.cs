@@ -14,6 +14,8 @@ namespace Zene.GUI
         /// </summary>
         public bool SizeDependent { get; }
 
+        public event EventHandler Change;
+
         public ILayoutManagerInstance Init(LayoutArgs args);
         public Box GetBounds(LayoutArgs args, Box bounds, ILayoutManagerInstance instance);
     }
