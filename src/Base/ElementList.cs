@@ -38,9 +38,12 @@ namespace Zene.GUI
             item.Properties.handle = handle;
             if (!item.HasChildren) { return; }
 
-            foreach (IElement e in item.Children._elements)
+            lock (item.Children._lockRef)
             {
-                SetHandle(e, handle);
+                foreach (IElement e in item.Children._elements)
+                {
+                    SetHandle(e, handle);
+                }
             }
         }
         public virtual void Add(IElement item)
@@ -256,8 +259,8 @@ namespace Zene.GUI
         void ICollection<IElement>.CopyTo(IElement[] array, int arrayIndex) => _elements.CopyTo(array, arrayIndex);
         void IList<IElement>.Insert(int index, IElement item) => throw new NotSupportedException();
 
-        public IEnumerator<IElement> GetEnumerator() => _elements.GetEnumerator();
-        IEnumerator IEnumerable.GetEnumerator() => _elements.GetEnumerator();
+        public IEnumerator<IElement> GetEnumerator() => new Enumerator(_elements);
+        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(_elements);
 
         public int IndexOf(IElement item) => _elements.IndexOf(item);
 
@@ -295,6 +298,47 @@ namespace Zene.GUI
             }
 
             _source.Properties.handle?.LayoutElement(_source);
+        }
+
+        public struct Enumerator : IEnumerator<IElement>, IEnumerator
+        {
+            public Enumerator(List<IElement> source)
+            {
+                _currentIndex = 0;
+                _source = source;
+                _current = null;
+            }
+
+            private int _currentIndex;
+            private readonly List<IElement> _source;
+            private IElement _current;
+
+            public IElement Current => _current;
+            object IEnumerator.Current => _current;
+
+            public void Dispose()
+            {
+
+            }
+
+            public bool MoveNext()
+            {
+                if (_currentIndex < _source.Count)
+                {
+                    _current = _source[_currentIndex];
+                    _currentIndex++;
+                    return true;
+                }
+
+                _current = null;
+                return false;
+            }
+
+            public void Reset()
+            {
+                _currentIndex = 0;
+                _current = null;
+            }
         }
     }
 }

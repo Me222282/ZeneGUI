@@ -8,7 +8,11 @@ namespace Zene.GUI
     {
         private class RootLayout : ILayout
         {
-            public event EventHandler Change;
+            public event EventHandler Change
+            {
+                add => throw new NotSupportedException();
+                remove => throw new NotSupportedException();
+            }
 
             public Box GetBounds(LayoutArgs args) => new Box(0d, args.Size);
         }
@@ -63,7 +67,14 @@ namespace Zene.GUI
                     value = GUI.LayoutManager.Empty;
                 }
 
+                if (_layoutManager != null)
+                {
+                    _layoutManager.Change -= Properties.OnLayoutChange;
+                }
+
                 _layoutManager = value;
+
+                _layoutManager.Change += Properties.OnLayoutChange;
 
                 TriggerChange();
             }
