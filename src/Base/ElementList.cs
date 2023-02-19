@@ -38,12 +38,9 @@ namespace Zene.GUI
             item.Properties.handle = handle;
             if (!item.HasChildren) { return; }
 
-            lock (item.Children._lockRef)
+            foreach (IElement e in item.Children)
             {
-                foreach (IElement e in item.Children._elements)
-                {
-                    SetHandle(e, handle);
-                }
+                SetHandle(e, handle);
             }
         }
         public virtual void Add(IElement item)
@@ -334,7 +331,7 @@ namespace Zene.GUI
                 return false;
             }
 
-            public void Reset()
+            void IEnumerator.Reset()
             {
                 _currentIndex = 0;
                 _current = null;

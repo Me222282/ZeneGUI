@@ -1,5 +1,6 @@
 ﻿using Zene.Graphics;
 using Zene.Structs;
+using Zene.Windowing;
 
 namespace Zene.GUI
 {
@@ -8,11 +9,12 @@ namespace Zene.GUI
         public TextElement()
             : base(new TextLayout(3d, 0d, true))
         {
-            
+            CursorStyle = Cursor.IBeam;
         }
         public TextElement(TextLayout layout)
             : base(layout)
         {
+            CursorStyle = Cursor.IBeam;
         }
 
         protected virtual string TextReference { get; set; } = "TEMP";

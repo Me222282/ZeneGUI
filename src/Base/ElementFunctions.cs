@@ -13,7 +13,16 @@ namespace Zene.GUI
                 return rootLocation;
             }
 
-            return CalculateLocalMouse(e.Properties.Parent, rootLocation) - e.Bounds.Centre;
+            return (CalculateLocalMouse(e.Properties.Parent, rootLocation) - (e.Bounds.Centre + e.Properties.ViewPan)) / e.Properties.ViewScale;
+        }
+        public static Vector2 CalculateLocalMouse(this IElement e, IElement root, Vector2 rootLocation)
+        {
+            if (e == root)
+            {
+                return rootLocation;
+            }
+
+            return (CalculateLocalMouse(e.Properties.Parent, root, rootLocation) - (e.Bounds.Centre + e.Properties.ViewPan)) / e.Properties.ViewScale;
         }
         public static bool IsVisable(this IElement e)
         {

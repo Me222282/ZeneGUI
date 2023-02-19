@@ -244,7 +244,7 @@ namespace Zene.GUI
 
                 if (Source.Font == null || Source.Text == null) { return; }
 
-                TextRenderer.Model = Matrix4.CreateScale(Source.TextSize);
+                context.Model = Matrix4.CreateScale(Source.TextSize);
                 TextRenderer.Colour = Source.TextColour;
 
                 if (Source._text.Length < 1 && Source.DrawCaret && Source.Focused)

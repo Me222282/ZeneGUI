@@ -141,9 +141,14 @@ namespace Zene.GUI
         }
         private void ManageMouseSelect(MouseEventArgs e)
         {
-            Vector2 localMouse = Hover.CalculateLocalMouse(e.Location);
+            IElement parent = Hover.HasParent ? Hover.Properties.parent : Hover;
 
+            Vector2 localMouse = parent.CalculateLocalMouse(e.Location);
             bool mouseOver = Hover.IsMouseHover(localMouse);
+
+            // Calculate local mouse for hover element from parent
+            localMouse = Hover.CalculateLocalMouse(parent, localMouse);
+
             if (mouseOver && !Hover.Properties.hover)
             {
                 Hover.OnMouseEnter();
@@ -290,7 +295,8 @@ namespace Zene.GUI
             dm.View = Matrix4.Identity;
             dm.Model = Matrix4.Identity;
             e.Events.OnUpdate();
-            e.Graphics?.OnRender(dm);
+            dm.Render(e.Graphics);
+            //e.Graphics?.OnRender(dm);
 
             renderFocus = null;
 
