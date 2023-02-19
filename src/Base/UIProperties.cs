@@ -67,6 +67,12 @@ namespace Zene.GUI
 
         public bool Visable { get; set; } = true;
 
+        /// <summary>
+        /// Determines whether this element can become the hover element or focus element.
+        /// Child elements are not affected.
+        /// </summary>
+        public bool Interactable { get; set; } = true;
+
         public bool TabShifting { get; set; } = true;
 
         private Vector2 _viewPan = 0d;

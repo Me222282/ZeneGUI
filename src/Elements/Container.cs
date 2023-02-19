@@ -10,12 +10,14 @@ namespace Zene.GUI
         public Container()
         {
             _g = new BoxColour(this);
+            Properties.Interactable = false;
         }
 
         public Container(ILayout layout)
             : base(layout)
         {
             _g = new BoxColour(this);
+            Properties.Interactable = false;
         }
 
         public ColourF Colour

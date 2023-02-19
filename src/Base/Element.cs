@@ -122,6 +122,16 @@ namespace Zene.GUI
             set => Properties.Visable = value;
         }
 
+        /// <summary>
+        /// Determines whether this element can become the hover element or focus element.
+        /// Child elements are not affected.
+        /// </summary>
+        public bool Ineractable
+        {
+            get => Properties.Interactable;
+            set => Properties.Interactable = value;
+        }
+
         public bool TabShifting
         {
             get => Properties.TabShifting;

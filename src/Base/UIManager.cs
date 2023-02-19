@@ -121,11 +121,17 @@ namespace Zene.GUI
             {
                 IElement nh = ManagerMouseMove(hover.Children, localMouse);
 
+                // Not hovering over any child elements
                 if (nh == null) { break; }
 
                 hover = nh;
                 localMouse -= nh.Properties.bounds.Centre;
                 localMouse = (localMouse - nh.Properties.ViewPan) / nh.Properties.ViewScale;
+            }
+            if (!hover.Properties.Interactable)
+            {
+                // Finds lowest element in hover tree that can be a hover element.
+                hover = FindHoverElement(hover, ref localMouse);
             }
 
             if (Hover != hover)
@@ -175,6 +181,16 @@ namespace Zene.GUI
             }
 
             return null;
+        }
+        private IElement FindHoverElement(IElement lowest, ref Vector2 mousePos)
+        {
+            if (!lowest.HasParent || lowest.Properties.Interactable)
+            {
+                return lowest;
+            }
+
+            mousePos = (mousePos * lowest.Properties.ViewScale) + lowest.Properties.ViewPan + lowest.Properties.bounds.Centre;
+            return FindHoverElement(lowest.Properties.parent, ref mousePos);
         }
 
         protected void TriggerChange()

@@ -38,20 +38,40 @@ namespace Zene.GUI
         {
             if (!e.HasChildren) { return e; }
 
-            return LowestFirstElement(e.Children[0]);
+            IElement lfe = null;
+
+            int length = e.Children.Length;
+            for (int i = 0; i < length; i++)
+            {
+                lfe = LowestFirstElement(e.Children[i]);
+
+                if (lfe.Properties.Interactable) { break; }
+            }
+
+            return lfe;
         }
         public static IElement LowestLastElement(this IElement e)
         {
             if (!e.HasChildren) { return e; }
 
-            return LowestLastElement(e.Children[^1]);
+            IElement lfe = null;
+
+            int length = e.Children.Length;
+            for (int i = length - 1; i >= 0; i--)
+            {
+                lfe = LowestFirstElement(e.Children[i]);
+
+                if (lfe.Properties.Interactable) { break; }
+            }
+
+            return lfe;
         }
         public static IElement NextElement(this IElement e)
         {
             if (!e.HasParent) { return null; }
 
             IElement parent = e.Properties.parent;
-            IElement next;
+            IElement next = null;
 
             // This is last element
             if (e.Properties.elementIndex == (parent.Children.Length - 1))
@@ -63,20 +83,32 @@ namespace Zene.GUI
                 {
                     next = e.Properties.RootElement;
                 }
-            }
-            else
-            {
-                next = parent.Children[e.Properties.elementIndex + 1];
+
+                return next?.LowestFirstElement();
             }
 
-            return next?.LowestFirstElement();
+            int length = parent.Children.Length;
+            for (int i = e.Properties.elementIndex + 1; i < length; i++)
+            {
+                next = parent.Children[i].LowestFirstElement();
+
+                if (next.Properties.Interactable) { break; }
+                
+                // last element
+                if (i == length - 1)
+                {
+                    return NextElement(next);
+                }
+            }
+
+            return next;
         }
         public static IElement PreviousElement(this IElement e)
         {
             if (!e.HasParent) { return null; }
 
             IElement parent = e.Properties.parent;
-            IElement next;
+            IElement next = null;
 
             // This is fisrt element
             if (e.Properties.elementIndex == 0)
@@ -88,13 +120,24 @@ namespace Zene.GUI
                 {
                     next = e.Properties.RootElement;
                 }
-            }
-            else
-            {
-                next = parent.Children[e.Properties.elementIndex - 1];
+
+                return next?.LowestLastElement();
             }
 
-            return next?.LowestLastElement();
+            for (int i = e.Properties.elementIndex - 1; i >= 0; i--)
+            {
+                next = parent.Children[i].LowestLastElement();
+
+                if (next.Properties.Interactable) { break; }
+
+                // first element
+                if (i == 0)
+                {
+                    return PreviousElement(next);
+                }
+            }
+
+            return next;
         }
 
         internal static void OnTextInput(this IElement element, TextInputEventArgs e) => element.Events.OnTextInput(e);
