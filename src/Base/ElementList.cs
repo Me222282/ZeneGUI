@@ -229,7 +229,7 @@ namespace Zene.GUI
         }
 
         public bool Swap(IElement a, IElement b) => Swap(_elements.IndexOf(a), _elements.IndexOf(b));
-        public bool Swap(int indexA, int indexB)
+        public virtual bool Swap(int indexA, int indexB)
         {
             lock (_lockRef)
             {
