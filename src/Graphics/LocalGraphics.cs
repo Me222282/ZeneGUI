@@ -4,7 +4,7 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public delegate void GraphicsHandler(object sender, DrawManager context);
+    public delegate void GraphicsHandler(object sender, RenderArgs context);
 
     public class LocalGraphics : GraphicsManager
     {
@@ -23,7 +23,7 @@ namespace Zene.GUI
         public event VectorEventHandler SizeChange;
         public event VectorEventHandler ElementMove;
 
-        public override void OnRender(DrawManager context) => Render?.Invoke(this, context);
+        public override void OnRender(DrawManager context) => Render?.Invoke(this, new RenderArgs(context, TextRenderer));
 
         protected override void OnSizeChange(VectorEventArgs e)
         {
@@ -37,5 +37,17 @@ namespace Zene.GUI
 
             ElementMove?.Invoke(this, e);
         }
+    }
+
+    public class RenderArgs : EventArgs
+    {
+        public RenderArgs(DrawManager dm, TextRenderer tr)
+        {
+            Context = dm;
+            TextRenderer = tr;
+        }
+
+        public TextRenderer TextRenderer { get; }
+        public DrawManager Context { get; }
     }
 }
