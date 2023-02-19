@@ -2,7 +2,7 @@
 using Zene.Graphics;
 using Zene.Windowing;
 
-namespace Zene.GUI.Graphics
+namespace Zene.GUI
 {
     public delegate void GraphicsHandler(object sender, DrawManager context);
 
