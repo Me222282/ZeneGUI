@@ -309,14 +309,14 @@ namespace Zene.GUI
             // Set some drawing properties
             State.DepthTesting = false;
             TextRenderer.Projection = e.Graphics?.Projection;
-            TextRenderer.View = Matrix4.Identity;
-            TextRenderer.Model = Matrix4.Identity;
+            TextRenderer.View = Matrix.Identity;
+            TextRenderer.Model = Matrix.Identity;
 
             renderFocus = e;
 
             dm.Projection = e.Graphics?.Projection;
-            dm.View = Matrix4.Identity;
-            dm.Model = Matrix4.Identity;
+            dm.View = Matrix.Identity;
+            dm.Model = Matrix.Identity;
             e.Events.OnUpdate();
             dm.Render(e.Graphics);
             //e.Graphics?.OnRender(dm);

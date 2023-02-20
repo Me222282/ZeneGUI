@@ -10,6 +10,7 @@ namespace Zene.GUI
         public GraphicsManager(IElement source)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
+            _refProj = new MultiplyMatrix(Matrix.Identity, _refprojRef);
         }
 
         public IElement Source { get; }
@@ -102,27 +103,24 @@ namespace Zene.GUI
             _bounds.Location = e.Value;
         }
 
-        private readonly Matrix4 _viewRef = Matrix4.CreateIdentity();
         internal void SetView()
         {
-            _viewRef.Set(Matrix4.CreateBox(new Box(Source.Properties.ViewPan, Source.Properties.ViewScale)));
-            CalculateProjMat();
+            _refProj.Left = Matrix4.CreateBox(new Box(Source.Properties.ViewPan, Source.Properties.ViewScale));
         }
         private void SetProjection()
         {
-            _projRef.Set(Matrix4.CreateOrthographic(_bounds.Width, _bounds.Height, 0d, 1d));
-            CalculateProjMat();
+            _refprojRef.Source = Matrix4.CreateOrthographic(_bounds.Width, _bounds.Height, 0d, 1d);
         }
-        private void CalculateProjMat() => Projection.Set(_viewRef * _projRef);
-        private readonly Matrix4 _projRef = Matrix4.CreateIdentity();
+        private readonly MultiplyMatrix _refProj;
         /// <summary>
         /// The projection matrix used to render objects to this element.
         /// </summary>
-        public Matrix4 Projection { get; } = Matrix4.CreateIdentity();
+        public IMatrix Projection => _refProj;
+        private readonly ReferenceMatrix _refprojRef = new ReferenceMatrix(Matrix.Identity);
         /// <summary>
         /// The projection matrix used to render rixed objects to this element,
         /// like borders that shouldn't be affected by zoom and panning.
         /// </summary>
-        public Matrix4 FixedProjection => _projRef;
+        public IMatrix FixedProjection => _refprojRef;
     }
 }
