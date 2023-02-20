@@ -9,24 +9,23 @@ namespace Zene.GUI
     {
         public Container()
         {
-            _g = new BoxColour(this);
+            Graphics = new BoxColour(this);
             Properties.Interactable = false;
         }
 
         public Container(ILayout layout)
             : base(layout)
         {
-            _g = new BoxColour(this);
+            Graphics = new BoxColour(this);
             Properties.Interactable = false;
         }
 
         public ColourF Colour
         {
-            get => _g.Colour;
-            set => _g.Colour = value;
+            get => Graphics.Colour;
+            set => Graphics.Colour = value;
         }
 
-        private readonly BoxColour _g;
-        public override GraphicsManager Graphics => _g;
+        public override BoxColour Graphics { get; }
     }
 }

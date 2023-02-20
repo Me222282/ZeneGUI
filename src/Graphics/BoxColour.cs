@@ -12,7 +12,6 @@ namespace Zene.GUI
 
         }
 
-        private readonly BasicShader _shader = BasicShader.GetInstance();
         public ColourF Colour { get; set; }
 
         public override void OnRender(DrawManager context)
@@ -20,13 +19,7 @@ namespace Zene.GUI
             // No colour
             if (Colour.A <= 0f) { return; }
 
-            context.Shader = _shader;
-
-            _shader.ColourSource = ColourSource.UniformColour;
-            _shader.Colour = Colour;
-
-            context.Model = Matrix4.CreateScale(Bounds.Size);
-            context.Draw(Shapes.Square);
+            context.DrawBox(new Box(Vector2.Zero, Bounds.Size), Colour);
         }
     }
 }

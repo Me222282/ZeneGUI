@@ -257,11 +257,11 @@ namespace Zene.GUI
 
             if (HasParent && Properties.parent.LayoutManager.ChildDependent)
             {
-                Properties.handle.LayoutElement(Properties.parent);
+                Properties.handle?.LayoutElement(Properties.parent);
                 return;
             }
 
-            Properties.handle.LayoutElement(this);
+            Properties.handle?.LayoutElement(this);
         }
 
         protected virtual void OnTextInput(TextInputEventArgs e)

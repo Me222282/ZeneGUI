@@ -25,7 +25,7 @@ namespace Zene.GUI
             _focus = Root;
 
         }
-        public UIManager(Window window)
+        protected UIManager(Window window)
         {
             Window = window ?? throw new ArgumentNullException(nameof(window));
 
@@ -37,6 +37,7 @@ namespace Zene.GUI
             Framebuffer.Scissor = _uiView;
 
             TextRenderer = new TextRenderer();
+            Animator = new Animator();
         }
         protected void Root_(IElement root)
         {
@@ -82,6 +83,10 @@ namespace Zene.GUI
         private readonly UIView _uiView;
         public TextureRenderer Framebuffer { get; }
         public TextRenderer TextRenderer { get; }
+
+        public Animator Animator { get; }
+
+        public void Animate(AnimatorData data) => Animator.Add(data);
 
         public void ShiftFocusRight()
         {
@@ -289,6 +294,8 @@ namespace Zene.GUI
             _uiView.Offset = 0d;
             _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
             _uiView.View = new Box(0d, Framebuffer.Size);
+
+            Animator.Invoke();
 
             Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
             Render(Root, new DrawManager(Framebuffer));
