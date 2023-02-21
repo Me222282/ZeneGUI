@@ -41,17 +41,15 @@ namespace Zene.GUI
         private double _timeOffset = 0;
         private bool DrawCaret
         {
-            get => (int)((Window.Timer - _timeOffset) * 2) % 2 == 0;
+            get => (int)((Core.Time - _timeOffset) * 2) % 2 == 0;
         }
 
         public override GraphicsManager Graphics { get; }
 
-        private void ResetCaret() => _timeOffset = Window.Timer;
+        private void ResetCaret() => _timeOffset = Core.Time;
 
         protected override void OnTextInput(TextInputEventArgs e)
         {
-            base.OnTextInput(e);
-
             _text.Insert(_caret, e.Character);
             TriggerChange();
             ResetCaret();
@@ -59,8 +57,6 @@ namespace Zene.GUI
         }
         protected override void OnKeyDown(KeyEventArgs e)
         {
-            base.OnKeyDown(e);
-
             if (e[Keys.V] && e[Mods.Control])
             {
                 string paste = Window.ClipBoard;
@@ -199,12 +195,7 @@ namespace Zene.GUI
             return BorderWidth;
         }
 
-        protected override void OnFocus(FocusedEventArgs e)
-        {
-            base.OnFocus(e);
-
-            ResetCaret();
-        }
+        protected override void OnFocus(FocusedEventArgs e) => ResetCaret();
 
         private class Renderer : GraphicsManager<TextInput>
         {

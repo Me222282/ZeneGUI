@@ -57,19 +57,23 @@ namespace Zene.GUI
         public RootElement LoadGUI(Window window, string src, object events = null)
         {
             RootElement root = new RootElement(window);
-            LoadGUI(root.Elements, src, events, events?.GetType());
+            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, events, events?.GetType()));
             return root;
         }
         public void LoadGUI(ElementList root, string src, object events = null)
-            => LoadGUI(root, src, events, events?.GetType());
+        {
+            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, events, events?.GetType()));
+        }
         public RootElement LoadGUI(Window window, string src, Type events)
         {
             RootElement root = new RootElement(window);
-            LoadGUI(root.Elements, src, null, events);
+            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, null, events));
             return root;
         }
         public void LoadGUI(ElementList root, string src, Type events)
-            => LoadGUI(root, src, null, events);
+        {
+            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, null, events));
+        }
         private void LoadGUI(ElementList re, string src, object events, Type et)
         {
             XmlDocument root = new XmlDocument();
@@ -108,6 +112,8 @@ namespace Zene.GUI
             _window = null;
             _events = null;
             _eventType = null;
+
+            re.Source.Properties.handle.LayoutElement(re.Source);
         }
 
         private IElement ParseNode(XmlNode node, object parent)

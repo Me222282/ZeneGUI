@@ -86,7 +86,7 @@ namespace Zene.GUI
 
         public Animator Animator { get; }
 
-        public void Animate(AnimatorData data) => Animator.Add(data);
+        public void Animate<T>(AnimatorData<T> data) => Animator.Add(data);
 
         public void ShiftFocusRight()
         {
@@ -337,7 +337,7 @@ namespace Zene.GUI
                 _uiView.Offset = offsetRef;
                 _uiView.ScissorBox = scissor;
 
-                _uiView.View = child.Properties.bounds;
+                _uiView.View = child.Graphics == null ? child.Properties.bounds : child.Graphics.Bounds;
 
                 if (!_uiView.Visable) { continue; }
 

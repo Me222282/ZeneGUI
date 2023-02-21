@@ -1,4 +1,5 @@
 ﻿using System;
+using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
 
@@ -87,6 +88,7 @@ namespace Zene.GUI
         public UIEvents Events { get; }
         public abstract GraphicsManager Graphics { get; }
 
+        protected ActionManager Actions => Properties.handle.Window.GraphicsContext.Actions;
         public Window Window => Properties.handle.Window;
         public UIManager Hande => Properties.handle;
         public IElement RootElement => Properties.handle.Root;

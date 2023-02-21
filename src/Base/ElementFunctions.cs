@@ -45,7 +45,7 @@ namespace Zene.GUI
             {
                 lfe = LowestFirstElement(e.Children[i]);
 
-                if (lfe.Properties.Interactable) { break; }
+                if (lfe.Properties.Selectable) { break; }
             }
 
             return lfe;
@@ -61,7 +61,7 @@ namespace Zene.GUI
             {
                 lfe = LowestFirstElement(e.Children[i]);
 
-                if (lfe.Properties.Interactable) { break; }
+                if (lfe.Properties.Selectable) { break; }
             }
 
             return lfe;
@@ -92,7 +92,7 @@ namespace Zene.GUI
             {
                 next = parent.Children[i].LowestFirstElement();
 
-                if (next.Properties.Interactable) { break; }
+                if (next.Properties.Selectable) { break; }
                 
                 // last element
                 if (i == length - 1)
@@ -128,7 +128,7 @@ namespace Zene.GUI
             {
                 next = parent.Children[i].LowestLastElement();
 
-                if (next.Properties.Interactable) { break; }
+                if (next.Properties.Selectable) { break; }
 
                 // first element
                 if (i == 0)

@@ -11,6 +11,7 @@ namespace Zene.GUI
         {
             Graphics = new BoxColour(this);
             Properties.Interactable = false;
+            Properties.Selectable = false;
         }
 
         public Container(ILayout layout)
@@ -18,6 +19,7 @@ namespace Zene.GUI
         {
             Graphics = new BoxColour(this);
             Properties.Interactable = false;
+            Properties.Selectable = false;
         }
 
         public ColourF Colour

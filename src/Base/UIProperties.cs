@@ -73,6 +73,13 @@ namespace Zene.GUI
         /// </summary>
         public bool Interactable { get; set; } = true;
 
+        private bool _selectable = true;
+        public bool Selectable
+        {
+            get => _selectable && Interactable;
+            set => _selectable = value;
+        }
+
         public bool TabShifting { get; set; } = true;
 
         private Vector2 _viewPan = 0d;
