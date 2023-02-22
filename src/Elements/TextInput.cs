@@ -205,31 +205,18 @@ namespace Zene.GUI
 
             }
 
-            private readonly BorderShader _shader = BorderShader.GetInstance();
-
             public override void OnRender(DrawManager context)
             {
-                _shader.BorderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
-                Size = Source.Size + _shader.BorderWidth;
+                double borderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                Size = Source.Size + borderWidth;
 
                 // No point drawing box
-                if (Source.BackgroundColour.A <= 0f && (Source.BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+                if (Source.BackgroundColour.A <= 0f && (Source.BorderColour.A <= 0f || borderWidth <= 0))
                 {
                     goto DrawText;
                 }
 
-                context.Shader = _shader;
-
-                _shader.BorderColour = Source.BorderColour;
-                _shader.Radius = Source.CornerRadius;
-
-                _shader.ColourSource = ColourSource.UniformColour;
-                _shader.Colour = Source.BackgroundColour;
-
-                _shader.Size = Source.Size;
-
-                context.Model = Matrix4.CreateScale(Bounds.Size);
-                context.Draw(Shapes.Square);
+                context.DrawBorderBox(new Box(Vector2.Zero, Source.Bounds.Size), Source.BackgroundColour, borderWidth, Source.BorderColour, Source.CornerRadius);
 
             DrawText:
 

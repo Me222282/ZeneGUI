@@ -86,6 +86,7 @@ namespace Zene.GUI
         }
 
         public UIEvents Events { get; }
+        EventListener IElement.Events => Events;
         public abstract GraphicsManager Graphics { get; }
 
         protected ActionManager Actions => Properties.handle.Window.GraphicsContext.Actions;

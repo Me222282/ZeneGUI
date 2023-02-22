@@ -3,7 +3,7 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public sealed class UIEvents
+    public sealed class UIEvents : EventListener
     {
         public UIEvents(
             IElement source,
@@ -20,9 +20,8 @@ namespace Zene.GUI
             Action<VectorEventArgs> elementMove,
             Action<EventArgs> update,
             Action<FocusedEventArgs> focus)
+            : base(source)
         {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
-
             _textInput = textInput ?? throw new ArgumentNullException(nameof(textInput));
             _keyDown = keyDown ?? throw new ArgumentNullException(nameof(keyDown));
             _keyUp = keyUp ?? throw new ArgumentNullException(nameof(keyUp));
@@ -56,8 +55,6 @@ namespace Zene.GUI
         public event EventHandler Update;
         public event FocusedEventHandler Focus;
 
-        private readonly IElement _source;
-
         private readonly Action<TextInputEventArgs> _textInput;
         private readonly Action<KeyEventArgs> _keyDown;
         private readonly Action<KeyEventArgs> _keyUp;
@@ -72,102 +69,95 @@ namespace Zene.GUI
         private readonly Action<EventArgs> _update;
         private readonly Action<FocusedEventArgs> _focus;
 
-        internal void OnTextInput(TextInputEventArgs e)
+        protected internal override void OnTextInput(TextInputEventArgs e)
         {
-            TextInput?.Invoke(_source, e);
+            TextInput?.Invoke(source, e);
             _textInput(e);
         }
-        internal void OnKeyDown(KeyEventArgs e)
+        protected internal override void OnKeyDown(KeyEventArgs e)
         {
-            KeyDown?.Invoke(_source, e);
+            KeyDown?.Invoke(source, e);
             _keyDown(e);
         }
-        internal void OnKeyUp(KeyEventArgs e)
+        protected internal override void OnKeyUp(KeyEventArgs e)
         {
-            KeyUp?.Invoke(_source, e);
+            KeyUp?.Invoke(source, e);
             _keyUp(e);
         }
 
-        internal void OnScroll(ScrollEventArgs e)
+        protected internal override void OnScroll(ScrollEventArgs e)
         {
-            Scroll?.Invoke(_source, e);
+            Scroll?.Invoke(source, e);
             _scroll(e);
         }
 
-        internal void OnMouseEnter(EventArgs e)
+        protected internal override void OnMouseEnter(EventArgs e)
         {
-            _source.Properties.hover = true;
+            base.OnMouseEnter(e);
 
-            MouseEnter?.Invoke(_source, e);
+            MouseEnter?.Invoke(source, e);
             _mouseEnter(e);
         }
-        internal void OnMouseLeave(EventArgs e)
+        protected internal override void OnMouseLeave(EventArgs e)
         {
-            _source.Properties.hover = false;
+            base.OnMouseLeave(e);
 
-            MouseLeave?.Invoke(_source, e);
+            MouseLeave?.Invoke(source, e);
             _mouseLeave(e);
         }
-        internal void OnMouseMove(MouseEventArgs e)
+        protected internal override void OnMouseMove(MouseEventArgs e)
         {
-            if (_source.Properties.mousePos == e.Location) { return; }
+            if (source.Properties.mousePos == e.Location) { return; }
 
-            _source.Properties.mousePos = e.Location;
+            base.OnMouseMove(e);
 
-            MouseMove?.Invoke(_source, e);
+            MouseMove?.Invoke(source, e);
             _mouseMove(e);
         }
-        internal void OnMouseDown(MouseEventArgs e)
+        protected internal override void OnMouseDown(MouseEventArgs e)
         {
-            _source.Properties.selected = true;
+            base.OnMouseDown(e);
 
-            MouseDown?.Invoke(_source, e);
+            MouseDown?.Invoke(source, e);
             _mouseDown(e);
         }
-        internal void OnMouseUp(MouseEventArgs e)
+        protected internal override void OnMouseUp(MouseEventArgs e)
         {
-            if (_source.Properties.Window.MouseButton == MouseButton.None)
-            {
-                _source.Properties.selected = false;
-            }
+            base.OnMouseUp(e);
 
-            MouseUp?.Invoke(_source, e);
+            MouseUp?.Invoke(source, e);
             _mouseUp(e);
         }
 
-        internal void OnSizeChange(VectorEventArgs e)
+        protected internal override void OnSizeChange(VectorEventArgs e)
         {
-            if (_source.Properties.bounds.Size == e.Value) { return; }
+            if (source.Properties.bounds.Size == e.Value) { return; }
 
-            _source.Properties.bounds.Size = e.Value;
+            base.OnSizeChange(e);
 
-            SizeChange?.Invoke(_source, e);
+            SizeChange?.Invoke(source, e);
             _sizeChange(e);
-
-            _source.Graphics.ChangeSize(e);
         }
-        internal void OnElementMove(VectorEventArgs e)
+        protected internal override void OnElementMove(VectorEventArgs e)
         {
-            if (_source.Properties.bounds.Centre == e.Value) { return; }
+            if (source.Properties.bounds.Centre == e.Value) { return; }
 
-            _source.Properties.bounds.Centre = e.Value;
+            base.OnElementMove(e);
 
-            ElementMove?.Invoke(_source, e);
+            ElementMove?.Invoke(source, e);
             _elementMove(e);
-
-            _source.Graphics.MoveElement(e);
         }
 
-        internal void OnUpdate()
+        protected internal override void OnUpdate()
         {
-            Update?.Invoke(_source, EventArgs.Empty);
+            Update?.Invoke(source, EventArgs.Empty);
             _update(EventArgs.Empty);
         }
-        internal void OnFocus(FocusedEventArgs e)
+        protected internal override void OnFocus(FocusedEventArgs e)
         {
-            _source.Properties.focus = e.Focus;
+            base.OnFocus(e);
 
-            Focus?.Invoke(_source, e);
+            Focus?.Invoke(source, e);
             _focus(e);
         }
     }

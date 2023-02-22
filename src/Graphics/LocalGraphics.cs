@@ -1,5 +1,6 @@
 ﻿using System;
 using Zene.Graphics;
+using Zene.Structs;
 using Zene.Windowing;
 
 namespace Zene.GUI
@@ -25,17 +26,15 @@ namespace Zene.GUI
 
         public override void OnRender(DrawManager context) => Render?.Invoke(this, new RenderArgs(context, TextRenderer));
 
-        protected override void OnSizeChange(VectorEventArgs e)
+        protected override Vector2 OnSizeChange(VectorEventArgs e)
         {
-            base.OnSizeChange(e);
-
             SizeChange?.Invoke(this, e);
+            return e.Value;
         }
-        protected override void OnElementMove(VectorEventArgs e)
+        protected override Vector2 OnElementMove(VectorEventArgs e)
         {
-            base.OnElementMove(e);
-
             ElementMove?.Invoke(this, e);
+            return e.Value;
         }
     }
 

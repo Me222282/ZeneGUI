@@ -245,16 +245,23 @@ namespace Zene.GUI
                 element.OnElementMove(new VectorEventArgs(bounds.Location));
             }
 
+            if (element.Graphics == null)
+            {
+                element.ViewBoxChange();
+            }
+
             // Change in layout causes hover to be recalculated
             MouseMove(new MouseEventArgs(Root.Properties.mousePos));
         }
         private Box CalcElementBounds(IElement element, LayoutArgs args)
         {
+            element.Properties.scrollViewBox = new Box();
+
             Box bounds = element.Layout.GetBounds(args);
 
             if (!element.HasChildren) { return bounds; }
 
-            ILayoutManager lm = element.LayoutManager ?? throw new ArgumentNullException(nameof(element.LayoutManager));
+            ILayoutManager lm = element.LayoutManager ?? throw new ArgumentNullException(nameof(element));
             ILayoutManagerInstance lmi = lm.Init(new LayoutArgs(element, bounds.Size, element.Children));
 
             foreach (IElement e in element.Children)
@@ -266,8 +273,20 @@ namespace Zene.GUI
                 Box nb = CalcElementBounds(e, ea);
                 nb = lm.GetBounds(ea, nb, lmi);
 
+                // No change in bounds
+                if (e.Properties.bounds == nb)
+                {
+                    e.ViewBoxChange();
+                    continue;
+                }
+
                 e.OnSizeChange(new VectorEventArgs(nb.Size));
                 e.OnElementMove(new VectorEventArgs(nb.Location));
+
+                if (e.Graphics == null)
+                {
+                    e.ViewBoxChange();
+                }
             }
 
             bounds.Size = lmi.ReturningSize;
@@ -337,11 +356,66 @@ namespace Zene.GUI
                 _uiView.Offset = offsetRef;
                 _uiView.ScissorBox = scissor;
 
-                _uiView.View = child.Graphics == null ? child.Properties.bounds : child.Graphics.Bounds;
+                ScrollInfo scroll = child.Properties.GetScrollInfo();
+
+                _uiView.ScissorOffset = new Vector2(
+                    scroll.Y ? child.Properties.ScrollBar.Width : 0d,
+                    scroll.X ? child.Properties.ScrollBar.Width : 0d
+                    );
+
+                Box bounds = child.GetRenderBounds();
+                _uiView.View = bounds;
 
                 if (!_uiView.Visable) { continue; }
 
                 Render(child, dm);
+
+                if (!scroll.CanScroll) { continue; }
+
+                _uiView.Scale = scaleRef;
+                _uiView.Offset = offsetRef;
+                _uiView.ScissorBox = scissor;
+                _uiView.ScissorOffset = Vector2.Zero;
+
+                RenderScrollBars(dm, scroll, bounds, child);
+            }
+        }
+        private void RenderScrollBars(DrawManager dm, ScrollInfo scroll, Box bounds, IElement e)
+        {
+            double width = e.Properties.ScrollBar.Width;
+
+            if (scroll.X)
+            {
+                bounds.Bottom += width;
+            }
+
+            if (scroll.Y)
+            {
+                _uiView.View = new Box(bounds.Right - width, bounds.Right, bounds.Top, bounds.Bottom);
+                dm.Projection = Matrix4.CreateOrthographic(width, bounds.Height, 0d, 1d);
+                dm.View = Matrix.Identity;
+                dm.Model = Matrix.Identity;
+                dm.Render(e.Properties.ScrollBar,
+                    new ScrollBarData(e,
+                        1d - (e.Properties.ViewPan.Y / (scroll.ScrollView.Y - scroll.ViewSize.Y)),
+                        scroll.ViewSize.Y / scroll.ScrollView.Y,
+                        true, bounds.Height));
+
+                bounds.Right -= width;
+            }
+            if (scroll.X)
+            {
+                bounds.Bottom -= width;
+
+                _uiView.View = new Box(bounds.Left, bounds.Right, bounds.Bottom + width, bounds.Bottom);
+                dm.Projection = Matrix4.CreateOrthographic(bounds.Width, width, 0d, 1d);
+                dm.View = Matrix.Identity;
+                dm.Model = Matrix.Identity;
+                dm.Render(e.Properties.ScrollBar,
+                    new ScrollBarData(e,
+                        1d - (e.Properties.ViewPan.X / (scroll.ViewSize.X - scroll.ScrollView.X)),
+                        scroll.ViewSize.X / scroll.ScrollView.X,
+                        false, bounds.Width));
             }
         }
     }

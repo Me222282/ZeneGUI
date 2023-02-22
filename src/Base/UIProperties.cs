@@ -10,6 +10,7 @@ namespace Zene.GUI
         public UIProperties(IElement source)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
+            scrollViewBox = new Box(Vector2.Zero, bounds.Size);
         }
 
         public IElement Source { get; }
@@ -120,6 +121,35 @@ namespace Zene.GUI
                 Source.Graphics.SetView();
             }
         }
+
+        public ScrollInfo GetScrollInfo()
+        {
+            if (!Source.HasChildren) { return new ScrollInfo(); }
+
+            Box vb = viewBounds;
+            Box scrollBox = ScrollBox;
+
+            if (scrollBox.Left < vb.Left || scrollBox.Right > vb.Right)
+            {
+                vb.Bottom += ScrollBox.Width;
+            }
+            if (scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top)
+            {
+                vb.Right -= ScrollBar.Width;
+            }
+
+            return new ScrollInfo(
+                scrollBox.Left < vb.Left || scrollBox.Right > vb.Right,
+                scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top,
+                vb.Size, scrollBox.Combine(vb).Size);
+        }
+
+        internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());
+        internal Box scrollViewBox;
+        public Box ScrollBox => scrollViewBox * _viewScale;
+        public ScrollBar ScrollBar { get; set; } = new ScrollBar();
+
+        internal void PushViewBox(Box bounds) => scrollViewBox = scrollViewBox.Combine(bounds);
 
         internal void OnLayoutChange(object sender, EventArgs e) => Source.Properties.handle?.LayoutElement(Source);
     }

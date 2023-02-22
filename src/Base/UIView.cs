@@ -38,6 +38,7 @@ namespace Zene.GUI
 
         private Box _viewRef;
         public GLBox ScissorBox { get; set; }
+        public Vector2 ScissorOffset { get; set; }
         public Box View
         {
             get => _viewRef;
@@ -51,6 +52,8 @@ namespace Zene.GUI
 
                 _viewport.View = new GLBox(b.Left + _hFrameSize.X, b.Bottom + _hFrameSize.Y, b.Width, b.Height);
                 GLBox c = _viewport.View.Clamp(ScissorBox);
+                c.Right -= (int)ScissorOffset.X;
+                c.Bottom += (int)ScissorOffset.Y;
                 _scissor.View = c;
 
                 Locked = true;

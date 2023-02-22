@@ -55,8 +55,6 @@ namespace Zene.GUI
 
             }
 
-            private readonly BorderShader _shader = BorderShader.GetInstance();
-
             public override void OnRender(DrawManager context)
             {
                 Vector4 c = (Vector4)Source.Colour;
@@ -70,36 +68,23 @@ namespace Zene.GUI
                     c -= new Vector4(0.1, 0.1, 0.1, 0d);
                 }
 
-                context.Shader = _shader;
-
-                _shader.BorderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
-                Size = Source.Size + _shader.BorderWidth;
+                double borderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                Size = Source.Size + borderWidth;
 
                 // No point drawing box
-                if (Source.Colour.A <= 0f && (Source.BorderColour.A <= 0f || _shader.BorderWidth <= 0))
+                if (Source.Colour.A <= 0f && (Source.BorderColour.A <= 0f || borderWidth <= 0))
                 {
                     goto DrawText;
                 }
 
-                _shader.BorderColour = Source.BorderColour;
-                _shader.Radius = Source.CornerRadius;
-
                 if (Source.Texture != null)
                 {
-                    _shader.ColourSource = ColourSource.Texture;
-                    _shader.TextureSlot = 0;
-                    Source.Texture.Bind(0);
+                    context.DrawBorderBox(new Box(Vector2.Zero, Source.Bounds.Size), Source.Texture, borderWidth, Source.BorderColour, Source.CornerRadius);
                 }
                 else
                 {
-                    _shader.ColourSource = ColourSource.UniformColour;
-                    _shader.Colour = (ColourF)c;
+                    context.DrawBorderBox(new Box(Vector2.Zero, Source.Bounds.Size), (ColourF)c, borderWidth, Source.BorderColour, Source.CornerRadius);
                 }
-
-                _shader.Size = Source.Size;
-
-                context.Model = Matrix4.CreateScale(Source.Bounds.Size);
-                context.Draw(Shapes.Square);
 
             DrawText:
 

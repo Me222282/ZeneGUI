@@ -15,21 +15,14 @@ namespace Zene.GUI
 
         public IElement Source { get; }
 
-        private bool _inCallback = false;
         private Box _bounds;
         public Box Bounds
         {
             get => _bounds;
             set
             {
-                if (!_inCallback)
-                {
-                    ChangeSize(new VectorEventArgs(value.Size));
-                    MoveElement(new VectorEventArgs(value.Location));
-                    return;
-                }
-
-                _bounds = value;
+                Size = value.Size;
+                Location = value.Location;
             }
         }
         public Vector2 Size
@@ -37,13 +30,17 @@ namespace Zene.GUI
             get => _bounds.Size;
             set
             {
-                if (!_inCallback)
-                {
-                    ChangeSize(new VectorEventArgs(value));
-                    return;
-                }
+                if (_bounds.Size == value) { return; }
 
                 _bounds.Size = value;
+
+                UIManager uim = Source.Properties.handle;
+                if (uim.renderFocus == Source)
+                {
+                    uim.SetRenderSize(_bounds.Size);
+                }
+                SetProjection();
+                Source.ViewBoxChange();
             }
         }
         public Vector2 Location
@@ -51,13 +48,16 @@ namespace Zene.GUI
             get => _bounds.Location;
             set
             {
-                if (!_inCallback)
-                {
-                    MoveElement(new VectorEventArgs(value));
-                    return;
-                }
+                if (_bounds.Location == value) { return; }
 
                 _bounds.Location = value;
+
+                UIManager uim = Source.Properties.handle;
+                if (uim.renderFocus == Source)
+                {
+                    uim.SetRenderLocation(_bounds.Location);
+                }
+                Source.ViewBoxChange();
             }
         }
 
@@ -65,43 +65,10 @@ namespace Zene.GUI
 
         public abstract void OnRender(DrawManager context);
 
-        internal void ChangeSize(VectorEventArgs e)
-        {
-            _inCallback = true;
-
-            OnSizeChange(e);
-
-            UIManager uim = Source.Properties.handle;
-            if (uim.renderFocus == Source)
-            {
-                uim.SetRenderSize(_bounds.Size);
-            }
-            SetProjection();
-
-            _inCallback = false;
-        }
-        protected virtual void OnSizeChange(VectorEventArgs e)
-        {
-            _bounds.Size = e.Value;
-        }
-        internal void MoveElement(VectorEventArgs e)
-        {
-            _inCallback = true;
-
-            OnElementMove(e);
-
-            UIManager uim = Source.Properties.handle;
-            if (uim.renderFocus == Source)
-            {
-                uim.SetRenderLocation(_bounds.Location);
-            }
-
-            _inCallback = false;
-        }
-        protected virtual void OnElementMove(VectorEventArgs e)
-        {
-            _bounds.Location = e.Value;
-        }
+        internal void ChangeSize(VectorEventArgs e) => Size = OnSizeChange(e);
+        protected virtual Vector2 OnSizeChange(VectorEventArgs e) => e.Value;
+        internal void MoveElement(VectorEventArgs e) => Location = OnElementMove(e);
+        protected virtual Vector2 OnElementMove(VectorEventArgs e) => e.Value;
 
         internal void SetView()
         {

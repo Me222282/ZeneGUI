@@ -22,20 +22,7 @@ namespace Zene.GUI
         {
             Layout = new RootLayout();
             Properties = new UIProperties(this);
-            Events = new UIEvents(this,
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { },
-                (_) => { });
+            Events = new EventListener(this);
 
             // Add events listeners
             window.MouseMove += (_, e) => OnMouseMove(e);
@@ -80,7 +67,7 @@ namespace Zene.GUI
             }
         }
 
-        public UIEvents Events { get; }
+        public EventListener Events { get; }
         public GraphicsManager Graphics => null;
 
         public Vector2 MouseLocation => Properties.mousePos;

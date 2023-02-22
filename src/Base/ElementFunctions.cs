@@ -34,6 +34,9 @@ namespace Zene.GUI
             return e.Properties.Visable && IsVisable(e.Properties.Parent);
         }
 
+        public static Vector2 GetRenderSize(this IElement e) => e.Graphics == null ? e.Properties.bounds.Size : e.Graphics.Bounds.Size;
+        public static Box GetRenderBounds(this IElement e) => e.Graphics == null ? e.Properties.bounds : e.Graphics.Bounds;
+
         public static IElement LowestFirstElement(this IElement e)
         {
             if (!e.HasChildren) { return e; }
@@ -156,5 +159,10 @@ namespace Zene.GUI
         internal static void OnElementMove(this IElement element, VectorEventArgs e) => element.Events.OnElementMove(e);
 
         internal static void OnFocus(this IElement element, bool focused) => element.Events.OnFocus(new FocusedEventArgs(focused));
+
+        internal static void ViewBoxChange(this IElement e)
+        {
+            e.Properties.parent.Properties.PushViewBox(e.GetRenderBounds());
+        }
     }
 }

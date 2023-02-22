@@ -60,7 +60,7 @@ namespace Zene.GUI
         public ILayout Layout { get; }
         public ILayoutManager LayoutManager { get; }
 
-        public UIEvents Events { get; }
+        public EventListener Events { get; }
 
         public GraphicsManager Graphics { get; }
 
