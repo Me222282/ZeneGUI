@@ -397,7 +397,7 @@ namespace Zene.GUI
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
                     new ScrollBarData(e,
-                        1d - (e.Properties.ViewPan.Y / (scroll.ScrollView.Y - scroll.ViewSize.Y)),
+                        1d - (e.Properties.ViewPan.Y / (scroll.ViewSize.Y - scroll.ScrollView.Y)),
                         scroll.ViewSize.Y / scroll.ScrollView.Y,
                         true, bounds.Height));
 

@@ -122,6 +122,9 @@ namespace Zene.GUI
             }
         }
 
+        internal bool scrollX = false;
+        internal bool scrollY = false;
+        internal Box scrollBounds = new Box();
         public ScrollInfo GetScrollInfo()
         {
             if (!Source.HasChildren) { return new ScrollInfo(); }
@@ -131,17 +134,28 @@ namespace Zene.GUI
 
             if (scrollBox.Left < vb.Left || scrollBox.Right > vb.Right)
             {
-                vb.Bottom += ScrollBox.Width;
+                vb.Bottom += ScrollBar.Width;
             }
             if (scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top)
             {
                 vb.Right -= ScrollBar.Width;
             }
 
-            return new ScrollInfo(
-                scrollBox.Left < vb.Left || scrollBox.Right > vb.Right,
-                scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top,
-                vb.Size, scrollBox.Combine(vb).Size);
+            scrollX = scrollBox.Left < vb.Left || scrollBox.Right > vb.Right || _viewPan.X != 0d;
+            scrollY = scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top || _viewPan.Y != 0d;
+            if (!(scrollX || scrollY))
+            {
+                return new ScrollInfo(false, false, 0d, 0d);
+            }
+
+            Box scrollView = scrollBox.Combine(vb);
+            scrollBounds = new Box(
+                Math.Min(scrollView.Left - vb.Left, 0d),
+                Math.Max(scrollView.Right - vb.Right, 0d),
+                Math.Max(scrollView.Top - vb.Top, 0d),
+                Math.Min(scrollView.Bottom - vb.Bottom, 0d));
+
+            return new ScrollInfo(scrollX, scrollY, vb.Size, scrollView.Size);
         }
 
         internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());

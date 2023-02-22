@@ -37,6 +37,7 @@ namespace Zene.GUI
         public IElement Parent => Properties.parent;
 
         public string Id { get; set; }
+        public bool OverrideScroll { get; set; }
 
         private ILayout _layout = FixedLayout.Default;
         public ILayout Layout

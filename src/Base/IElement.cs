@@ -56,6 +56,7 @@ namespace Zene.GUI
         }
 
         public string Id { get; }
+        public bool OverrideScroll { get; }
 
         public ILayout Layout { get; }
         public ILayoutManager LayoutManager { get; }

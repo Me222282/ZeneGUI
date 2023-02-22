@@ -73,6 +73,7 @@ namespace Zene.GUI
         public Vector2 MouseLocation => Properties.mousePos;
 
         public string Id => "@root";
+        public bool OverrideScroll => false;
 
         public bool IsMouseHover(Vector2 mousePos) => true;
 
@@ -116,7 +117,46 @@ namespace Zene.GUI
                 return;
             }
         }
-        private void Scroll(ScrollEventArgs e) => Hover.OnScroll(e);
+        private void Scroll(ScrollEventArgs e)
+        {
+            Hover.OnScroll(e);
+            if (Hover.OverrideScroll) { return; }
+
+            ManageScroll(Hover, e.DeltaY);
+        }
+        private void ManageScroll(IElement e, double delta)
+        {
+            if (e == null) { return; }
+
+            if (!(e.Properties.scrollX || e.Properties.scrollY))
+            {
+                ManageScroll(e.Properties.parent, delta);
+                return;
+            }
+
+            double offset = e.Properties.ScrollBar.ScrollSpeed * delta;
+
+            bool shift = Window[Mods.Shift];
+            if (e.Properties.scrollX && shift)
+            {
+                double panX = e.Properties.ViewPan.X + offset;
+                e.Properties.ViewPan = new Vector2(
+                    Math.Clamp(panX,
+                        -e.Properties.scrollBounds.Right, 
+                        -e.Properties.scrollBounds.Left),
+                    e.Properties.ViewPan.Y);
+                return;
+            }
+
+            if (!e.Properties.scrollY || shift || Window[Mods.Alt] || Window[Mods.Control]) { return; }
+
+            double panY = e.Properties.ViewPan.Y - offset;
+            e.Properties.ViewPan = new Vector2(
+                e.Properties.ViewPan.X,
+                Math.Clamp(panY,
+                    -e.Properties.scrollBounds.Top,
+                    -e.Properties.scrollBounds.Bottom));
+        }
 
         public void AddChild(IElement element) => Elements.Add(element);
         public void RemoveChild(IElement element) => Elements.Remove(element);

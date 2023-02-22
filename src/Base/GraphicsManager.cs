@@ -61,6 +61,36 @@ namespace Zene.GUI
             }
         }
 
+        private bool _rwOffset;
+        /// <summary>
+        /// Determines whether view panning is applied to rendering this object.
+        /// </summary>
+        public bool RendersWithOffset
+        {
+            get => _rwOffset;
+            set
+            {
+                if (_rwOffset == value) { return; }
+
+                _rwOffset = value;
+                SetView();
+            }
+        }
+        private bool _rwScale;
+        /// <summary>
+        /// Determines whether view scaling is applied to rendering this object.
+        /// </summary>
+        public bool RendersWithScale
+        {
+            get => _rwScale;
+            set
+            {
+                if (_rwScale == value) { return; }
+
+                _rwScale = value;
+                SetView();
+            }
+        }
         protected TextRenderer TextRenderer => Source.Properties.handle.TextRenderer;
 
         public abstract void OnRender(DrawManager context);
@@ -72,7 +102,18 @@ namespace Zene.GUI
 
         internal void SetView()
         {
-            _refProj.Left = Matrix4.CreateBox(new Box(Source.Properties.ViewPan, Source.Properties.ViewScale));
+            Vector2 loc = Vector2.Zero;
+            if (_rwOffset)
+            {
+                loc = Source.Properties.ViewPan;
+            }
+            Vector2 pos = Vector2.One;
+            if (_rwScale)
+            {
+                loc = Source.Properties.ViewScale;
+            }
+
+            _refProj.Left = Matrix4.CreateBox(new Box(loc, pos));
         }
         private void SetProjection()
         {
