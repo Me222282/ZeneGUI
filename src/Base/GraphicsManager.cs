@@ -110,7 +110,7 @@ namespace Zene.GUI
             Vector2 pos = Vector2.One;
             if (_rwScale)
             {
-                loc = Source.Properties.ViewScale;
+                pos = Source.Properties.ViewScale;
             }
 
             _refProj.Left = Matrix4.CreateBox(new Box(loc, pos));
