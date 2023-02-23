@@ -68,6 +68,8 @@ namespace Zene.GUI
 
         public bool Visable { get; set; } = true;
 
+        public double Depth { get; set; } = -1d;
+
         /// <summary>
         /// Determines whether this element can become the hover element or focus element.
         /// Child elements are not affected.

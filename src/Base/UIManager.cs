@@ -35,6 +35,7 @@ namespace Zene.GUI
             _uiView = new UIView(Framebuffer.Viewport);
             Framebuffer.Viewport = _uiView;
             Framebuffer.Scissor = _uiView;
+            Framebuffer.DepthState = _uiView;
 
             TextRenderer = new TextRenderer();
             Animator = new Animator();
@@ -180,17 +181,20 @@ namespace Zene.GUI
         {
             if (el == null) { return null; }
 
+            double depth = 0d;
+            IElement hover = null;
             foreach (IElement e in el)
             {
-                if (!e.Properties.Visable) { continue; }
+                if (!e.Properties.Visable || e.Properties.Depth < depth) { continue; }
 
                 if (e.IsMouseHover(mousePos))
                 {
-                    return e;
+                    depth = e.Properties.Depth;
+                    hover = e;
                 }
             }
 
-            return null;
+            return hover;
         }
         private IElement FindHoverElement(IElement lowest, ref Vector2 mousePos)
         {
@@ -336,6 +340,11 @@ namespace Zene.GUI
 
             _uiView.View = new Box(0d, Framebuffer.Size);
 
+            _uiView.DepthRange = new Vector2(0d, 1d);
+            _uiView.DepthDivision = 1;
+            _uiView.ChildDivision = 1;
+            _uiView.SetDepth(0d);
+
             Animator.Invoke();
 
             DrawManager dm = new DrawManager(Framebuffer);
@@ -348,6 +357,10 @@ namespace Zene.GUI
                 _uiView.Offset = 0d;
                 _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
                 _uiView.ScissorOffset = Vector2.Zero;
+
+                _uiView.DepthRange = new Vector2(0d, 1d);
+                _uiView.DepthDivision = 1;
+                _uiView.SetDepth(0d);
 
                 RenderScrollBars(dm, scroll, new Box(0d, Framebuffer.Size), Root);
             }
@@ -363,7 +376,6 @@ namespace Zene.GUI
         private void Render(IElement e, DrawManager dm)
         {
             // Set some drawing properties
-            State.DepthTesting = false;
             TextRenderer.Projection = e.Graphics?.Projection;
             TextRenderer.View = Matrix.Identity;
             TextRenderer.Model = Matrix.Identity;
@@ -385,6 +397,10 @@ namespace Zene.GUI
             Vector2 offsetRef = _uiView.Offset + (e.Properties.bounds.Centre * e.Properties.ViewScale) + e.Properties.ViewPan;
             GLBox scissor = _uiView.PassScissor();
 
+            Vector2 depthRange = _uiView.DepthRange;
+            int depthDiv = _uiView.DepthDivision;
+            int offset = e == Root ? 0 : 1;
+
             foreach (IElement child in e.Children)
             {
                 if (!child.Properties.Visable) { continue; }
@@ -403,6 +419,11 @@ namespace Zene.GUI
                 Box bounds = child.GetRenderBounds();
                 _uiView.View = bounds;
 
+                _uiView.DepthRange = depthRange;
+                _uiView.DepthDivision = depthDiv;
+                _uiView.ChildDivision = child.HasChildren ? child.Children.Length + 1 : 1;
+                _uiView.SetDepth(child.Properties.Depth + offset);
+
                 if (!_uiView.Visable) { continue; }
 
                 Render(child, dm);
@@ -413,6 +434,11 @@ namespace Zene.GUI
                 _uiView.Offset = offsetRef;
                 _uiView.ScissorBox = scissor;
                 _uiView.ScissorOffset = Vector2.Zero;
+
+                _uiView.DepthRange = depthRange;
+                _uiView.DepthDivision = depthDiv;
+                _uiView.ChildDivision = child.HasChildren ? child.Children.Length + 1 : 1;
+                _uiView.SetDepth(child.Properties.Depth + 1);
 
                 RenderScrollBars(dm, scroll, bounds, child);
             }

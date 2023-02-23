@@ -39,6 +39,12 @@ namespace Zene.GUI
         public string Id { get; set; }
         public bool OverrideScroll { get; set; }
 
+        public double Depth
+        {
+            get => Properties.Depth;
+            set => Properties.Depth = value;
+        }
+
         private ILayout _layout = FixedLayout.Default;
         public ILayout Layout
         {

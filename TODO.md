@@ -1,5 +1,3 @@
-- Depth control
-
 - Element that manages zoom and panning
 
 + Resizable elements

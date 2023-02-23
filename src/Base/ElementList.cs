@@ -55,6 +55,11 @@ namespace Zene.GUI
             item.Properties.parent = _source;
             item.Properties.elementIndex = _elements.Count;
 
+            if (item.Properties.Depth < 0d)
+            {
+                item.Properties.Depth = item.Properties.elementIndex;
+            }
+
             lock (_lockRef)
             {
                 _elements.Add(item);
