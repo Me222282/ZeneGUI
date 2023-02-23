@@ -60,6 +60,7 @@ namespace Zene.GUI
 
         public IElement Root { get; private set; }
 
+        protected IElement uninteractHover;
         public IElement Hover { get; private set; }
         private IElement _focus;
         public IElement Focus
@@ -119,6 +120,7 @@ namespace Zene.GUI
             }
 
             IElement hover = Root;
+            uninteractHover = null;
             Vector2 localMouse = (e.Location - Root.Properties.ViewPan) / Root.Properties.ViewScale;
 
             // Find subhover element
@@ -135,6 +137,7 @@ namespace Zene.GUI
             }
             if (!hover.Properties.Interactable)
             {
+                uninteractHover = hover;
                 // Finds lowest element in hover tree that can be a hover element.
                 hover = FindHoverElement(hover, ref localMouse);
             }
@@ -147,6 +150,8 @@ namespace Zene.GUI
                 Hover = hover;
                 Window.CursorStyle = hover.Properties.CursorStyle;
             }
+
+            if (hover == Root) { return; }
 
             hover.OnMouseMove(new MouseEventArgs(localMouse, e.Button, e.Modifier));
         }
@@ -216,6 +221,7 @@ namespace Zene.GUI
                 return;
             }
 
+            Box old = element.Properties.bounds;
             if (element.Properties.parent.LayoutManager != null &&
                 element.Properties.parent.LayoutManager != LayoutManager.Empty)
             {
@@ -247,7 +253,7 @@ namespace Zene.GUI
 
             if (element.Graphics == null)
             {
-                element.ViewBoxChange();
+                element.ViewBoxChange(old);
             }
 
             // Change in layout causes hover to be recalculated
@@ -276,7 +282,7 @@ namespace Zene.GUI
                 // No change in bounds
                 if (e.Properties.bounds == nb)
                 {
-                    e.ViewBoxChange();
+                    element.Properties.PushViewBox(e.GetRenderBounds(), Box.Infinity);
                     continue;
                 }
 
@@ -285,12 +291,22 @@ namespace Zene.GUI
 
                 if (e.Graphics == null)
                 {
-                    e.ViewBoxChange();
+                    element.Properties.PushViewBox(e.Properties.bounds, Box.Infinity);
                 }
             }
 
             bounds.Size = lmi.ReturningSize;
             return bounds;
+        }
+
+        internal static void RecalculateScrollBounds(UIProperties elementProp)
+        {
+            elementProp.scrollViewBox = new Box();
+
+            foreach (IElement e in elementProp.Source.Children)
+            {
+                elementProp.PushViewBox(e.GetRenderBounds(), Box.Infinity);
+            }
         }
 
         protected void SetFrameSize(Vector2 size)
@@ -309,15 +325,36 @@ namespace Zene.GUI
         internal IElement renderFocus;
         public void OnRender(IDrawingContext context)
         {
+            ScrollInfo scroll = Root.Properties.GetScrollInfo();
+
             _uiView.Scale = 1d;
             _uiView.Offset = 0d;
             _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
+            _uiView.ScissorOffset = new Vector2(
+                scroll.Y ? Root.Properties.ScrollBar.Width : 0d,
+                scroll.X ? Root.Properties.ScrollBar.Width : 0d);
+
             _uiView.View = new Box(0d, Framebuffer.Size);
 
             Animator.Invoke();
 
+            DrawManager dm = new DrawManager(Framebuffer);
             Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
-            Render(Root, new DrawManager(Framebuffer));
+            Render(Root, dm);
+
+            if (scroll.CanScroll)
+            {
+                _uiView.Scale = 1d;
+                _uiView.Offset = 0d;
+                _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
+                _uiView.ScissorOffset = Vector2.Zero;
+
+                RenderScrollBars(dm, scroll, new Box(0d, Framebuffer.Size), Root);
+            }
+
+            _uiView.Scale = 1d;
+            _uiView.Offset = 0d;
+            _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
 
             context.WriteFramebuffer(Framebuffer, BufferBit.Colour, TextureSampling.Nearest);
         }
@@ -397,7 +434,7 @@ namespace Zene.GUI
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
                     new ScrollBarData(e,
-                        1d - (e.Properties.ViewPan.Y / (scroll.ViewSize.Y - scroll.ScrollView.Y)),
+                        e.Properties.ViewPan.Y.InvLerp(-e.Properties.scrollBounds.Top, -e.Properties.scrollBounds.Bottom),
                         scroll.ViewSize.Y / scroll.ScrollView.Y,
                         true, bounds.Height));
 
@@ -413,7 +450,7 @@ namespace Zene.GUI
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
                     new ScrollBarData(e,
-                        1d - (e.Properties.ViewPan.X / (scroll.ViewSize.X - scroll.ScrollView.X)),
+                        e.Properties.ViewPan.X.InvLerp(-e.Properties.scrollBounds.Right, -e.Properties.scrollBounds.Left),
                         scroll.ViewSize.X / scroll.ScrollView.X,
                         false, bounds.Width));
             }

@@ -19,6 +19,8 @@ namespace Zene.GUI
 
         }
 
+        public override bool ChildDependent => true;
+
         public override ILayoutManagerInstance Init(LayoutArgs args)
         {
             return new Instance()

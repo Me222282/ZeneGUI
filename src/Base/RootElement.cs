@@ -21,7 +21,10 @@ namespace Zene.GUI
             : base(window)
         {
             Layout = new RootLayout();
-            Properties = new UIProperties(this);
+            Properties = new UIProperties(this)
+            {
+                ScrollBar = new ScrollBar()
+            };
             Events = new EventListener(this);
 
             // Add events listeners
@@ -122,40 +125,61 @@ namespace Zene.GUI
             Hover.OnScroll(e);
             if (Hover.OverrideScroll) { return; }
 
-            ManageScroll(Hover, e.DeltaY);
-        }
-        private void ManageScroll(IElement e, double delta)
-        {
-            if (e == null) { return; }
+            bool success = ManageScrollCon(uninteractHover, e.DeltaY, true);
+            if (success) { return; }
 
-            if (!(e.Properties.scrollX || e.Properties.scrollY))
+            ManageScrollCon(Hover, e.DeltaY, false);
+        }
+        private bool ManageScrollCon(IElement e, double delta, bool uninteract)
+        {
+            if (e == null) { return false; }
+            if (!(e.Properties.scrollX || e.Properties.scrollY) || e.Properties.ScrollBar == null)
             {
-                ManageScroll(e.Properties.parent, delta);
-                return;
+                return ManageScrollCon(e.Properties.parent, delta, uninteract);
             }
 
+            if (uninteract)
+            {
+                return ManageScroll(e, delta);
+            }
+
+            if (!ManageScroll(e, delta))
+            {
+                return ManageScrollCon(e.Properties.parent, delta, false);
+            }
+
+            return true;
+        }
+        private bool ManageScroll(IElement e, double delta)
+        {
             double offset = e.Properties.ScrollBar.ScrollSpeed * delta;
 
             bool shift = Window[Mods.Shift];
             if (e.Properties.scrollX && shift)
             {
                 double panX = e.Properties.ViewPan.X + offset;
-                e.Properties.ViewPan = new Vector2(
-                    Math.Clamp(panX,
-                        -e.Properties.scrollBounds.Right, 
-                        -e.Properties.scrollBounds.Left),
-                    e.Properties.ViewPan.Y);
-                return;
+                panX = Math.Clamp(panX,
+                    -e.Properties.scrollBounds.Right,
+                    -e.Properties.scrollBounds.Left);
+                // No change in pan
+                if (panX == e.Properties.ViewPan.X) { return false; }
+
+                e.Properties.ViewPan = new Vector2(panX, e.Properties.ViewPan.Y);
+                return true;
             }
 
-            if (!e.Properties.scrollY || shift || Window[Mods.Alt] || Window[Mods.Control]) { return; }
+            if (!e.Properties.scrollY || shift || Window[Mods.Alt] || Window[Mods.Control]) { return false; }
 
             double panY = e.Properties.ViewPan.Y - offset;
-            e.Properties.ViewPan = new Vector2(
-                e.Properties.ViewPan.X,
-                Math.Clamp(panY,
-                    -e.Properties.scrollBounds.Top,
-                    -e.Properties.scrollBounds.Bottom));
+            panY = Math.Clamp(panY,
+                -e.Properties.scrollBounds.Top,
+                -e.Properties.scrollBounds.Bottom);
+            // No change in pan
+            if (panY == e.Properties.ViewPan.Y) { return false; }
+
+            e.Properties.ViewPan = new Vector2(e.Properties.ViewPan.X, panY);
+
+            return true;
         }
 
         public void AddChild(IElement element) => Elements.Add(element);

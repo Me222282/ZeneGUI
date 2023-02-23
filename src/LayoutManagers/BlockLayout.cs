@@ -29,6 +29,8 @@ namespace Zene.GUI
 
         }
 
+        public override bool ChildDependent => true;
+
         public BlockLayout(Vector4 margin)
             : base(true, false)
         {

@@ -160,9 +160,7 @@ namespace Zene.GUI
 
         internal static void OnFocus(this IElement element, bool focused) => element.Events.OnFocus(new FocusedEventArgs(focused));
 
-        internal static void ViewBoxChange(this IElement e)
-        {
-            e.Properties.parent.Properties.PushViewBox(e.GetRenderBounds());
-        }
+        internal static void ViewBoxChange(this IElement e, Box oldBounds)
+            => e.Properties.parent.Properties.PushViewBox(e.GetRenderBounds(), oldBounds);
     }
 }

@@ -32,6 +32,7 @@ namespace Zene.GUI
             {
                 if (_bounds.Size == value) { return; }
 
+                Box old = _bounds;
                 _bounds.Size = value;
 
                 UIManager uim = Source.Properties.handle;
@@ -40,7 +41,7 @@ namespace Zene.GUI
                     uim.SetRenderSize(_bounds.Size);
                 }
                 SetProjection();
-                Source.ViewBoxChange();
+                Source.ViewBoxChange(old);
             }
         }
         public Vector2 Location
@@ -50,6 +51,7 @@ namespace Zene.GUI
             {
                 if (_bounds.Location == value) { return; }
 
+                Box old = _bounds;
                 _bounds.Location = value;
 
                 UIManager uim = Source.Properties.handle;
@@ -57,7 +59,7 @@ namespace Zene.GUI
                 {
                     uim.SetRenderLocation(_bounds.Location);
                 }
-                Source.ViewBoxChange();
+                Source.ViewBoxChange(old);
             }
         }
 

@@ -99,7 +99,7 @@ namespace Zene.GUI
                     handle.MouseMove(new MouseEventArgs(handle.Root.Properties.mousePos));
                 });
 
-                Source.Graphics.SetView();
+                Source.Graphics?.SetView();
             }
         }
         private double _viewScale = 1d;
@@ -118,7 +118,7 @@ namespace Zene.GUI
                     handle.MouseMove(new MouseEventArgs(handle.Root.Properties.mousePos));
                 });
 
-                Source.Graphics.SetView();
+                Source.Graphics?.SetView();
             }
         }
 
@@ -127,7 +127,7 @@ namespace Zene.GUI
         internal Box scrollBounds = new Box();
         public ScrollInfo GetScrollInfo()
         {
-            if (!Source.HasChildren) { return new ScrollInfo(); }
+            if (!Source.HasChildren || ScrollBar == null) { return new ScrollInfo(); }
 
             Box vb = viewBounds;
             Box scrollBox = ScrollBox;
@@ -145,7 +145,7 @@ namespace Zene.GUI
             scrollY = scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top || _viewPan.Y != 0d;
             if (!(scrollX || scrollY))
             {
-                return new ScrollInfo(false, false, 0d, 0d);
+                return new ScrollInfo();
             }
 
             Box scrollView = scrollBox.Combine(vb);
@@ -161,9 +161,25 @@ namespace Zene.GUI
         internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());
         internal Box scrollViewBox;
         public Box ScrollBox => scrollViewBox * _viewScale;
-        public ScrollBar ScrollBar { get; set; } = new ScrollBar();
+        public ScrollBar ScrollBar { get; set; } = null;
 
-        internal void PushViewBox(Box bounds) => scrollViewBox = scrollViewBox.Combine(bounds);
+        internal void PushViewBox(Box bounds, Box oldBounds)
+        {
+            if (UnshareBounds(oldBounds, scrollViewBox, bounds))
+            {
+                UIManager.RecalculateScrollBounds(this);
+                return;
+            }
+
+            scrollViewBox = scrollViewBox.Combine(bounds);
+        }
+        private static bool UnshareBounds(Box old, Box bounds, Box newB)
+        {
+            return (old.Left == bounds.Left && newB.Left > old.Left) ||
+                (old.Right == bounds.Right && newB.Right < old.Right) ||
+                (old.Top == bounds.Top && newB.Top < old.Top) ||
+                (old.Bottom == bounds.Bottom && newB.Bottom > old.Bottom);
+        }
 
         internal void OnLayoutChange(object sender, EventArgs e) => Source.Properties.handle?.LayoutElement(Source);
     }

@@ -12,7 +12,7 @@ namespace Zene.GUI
     public class ScrollBar : IRenderable<ScrollBarData>
     {
         public double Width { get; set; } = 10d;
-        public double ScrollSpeed { get; set; } = 10d;
+        public double ScrollSpeed { get; set; } = 20d;
 
         protected internal void OnMouseMove(MouseEventArgs e)
         {

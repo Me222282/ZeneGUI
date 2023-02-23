@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using Zene.Structs;
 
 namespace Zene.GUI
 {
@@ -59,31 +60,43 @@ namespace Zene.GUI
                 _elements.Add(item);
             }
 
-            _source.Properties.handle?.LayoutElement(_source);
+            _source.Properties.handle?.LayoutElement(item);
         }
         public virtual void Clear()
         {
-            lock (_lockRef)
+            _source.Properties.handle.Window.GraphicsContext.Actions.Push(() =>
             {
-                foreach (IElement e in _elements)
+                lock (_lockRef)
                 {
-                    if (e.Properties.focus)
+                    foreach (IElement e in _elements)
                     {
-                        _source.Properties.handle.Focus = null;
+                        if (e.Properties.focus)
+                        {
+                            _source.Properties.handle.Focus = null;
+                        }
+
+                        e.Properties.parent = null;
+                        e.Properties.elementIndex = -1;
+                        e.Properties.hover = false;
+                        e.Properties.selected = false;
+
+                        SetHandle(e, null);
                     }
 
-                    e.Properties.parent = null;
-                    e.Properties.elementIndex = -1;
-                    e.Properties.hover = false;
-                    e.Properties.selected = false;
-
-                    SetHandle(e, null);
+                    _elements.Clear();
                 }
 
-                _elements.Clear();
-            }
-
-            _source.Properties.handle?.LayoutElement(_source);
+                if (_source.LayoutManager != null &&
+                    (_source.LayoutManager.ChildDependent ||
+                    _source.LayoutManager.SizeDependent))
+                {
+                    _source.Properties.handle?.LayoutElement(_source);
+                }
+                else
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
         }
 
         public bool Contains(IElement item) => _elements.Contains(item);
@@ -294,7 +307,19 @@ namespace Zene.GUI
                 }
             }
 
-            _source.Properties.handle?.LayoutElement(_source);
+            if (_source.LayoutManager != null &&
+                (_source.LayoutManager.ChildDependent ||
+                _source.LayoutManager.SizeDependent))
+            {
+                _source.Properties.handle?.LayoutElement(_source);
+            }
+            else
+            {
+                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            }
         }
 
         public struct Enumerator : IEnumerator<IElement>, IEnumerator
