@@ -3,6 +3,7 @@
 + Resizable elements
 + Slider element
 + Drop-down menu element
++ Pop-up element
 
 - Layouts for automatically organising elements
 
@@ -15,3 +16,5 @@
 - Add anti-aliasing
 
 - Follow mouse shaders
+
+- Mouse tooltip
