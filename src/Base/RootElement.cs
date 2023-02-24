@@ -89,6 +89,19 @@ namespace Zene.GUI
         {
             Focus = Hover;
             Hover.OnMouseDown(e);
+
+            UIProperties prop = Hover.Properties;
+            if (prop.scrollBarHover == ScrollBarHover.XAxis)
+            {
+                prop.initScrollPerc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.X, e.Location, false);
+                return;
+            }
+            if (prop.scrollBarHover == ScrollBarHover.YAxis)
+            {
+                prop.initScrollPerc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.Y, e.Location, true);
+            }
+
+            ManageMouseScroll(Hover, e.Location);
         }
         private void MouseUp(MouseEventArgs e)
         {

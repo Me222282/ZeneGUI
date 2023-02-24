@@ -1,4 +1,5 @@
 ﻿using System;
+using Zene.Structs;
 using Zene.Windowing;
 
 namespace Zene.GUI
@@ -43,7 +44,36 @@ namespace Zene.GUI
             source.Graphics.MoveElement(e);
         }
 
-        protected internal virtual void OnUpdate() { }
+        protected internal virtual void OnUpdate()
+        {
+            /*
+            ScrollBarHover sbh = source.Properties.scrollBarHover;
+            if (sbh != ScrollBarHover.None && source.Properties.selected)
+            {
+                if (sbh == ScrollBarHover.XAxis)
+                {
+                    double lerpMX = -source.Properties.scrollBounds.Right;
+                    double lerpIX = -source.Properties.scrollBounds.Left;
+
+                    ScrollBarData sbdX = new ScrollBarData(source,
+                        source.Properties.ViewPan.X.InvLerp(lerpMX, lerpIX),
+                        1d, false, source.GetRenderSize().X);
+                    source.Properties.ScrollBar.ScrollBarPosition(ref sbdX, source.Properties.MouseLocation);
+                    source.Properties.ViewPan = (lerpMX.Lerp(lerpIX, Math.Clamp(sbdX.ScrollPercent, 0d, 1d)), source.Properties.ViewPan.Y);
+                    return;
+                }
+
+                double lerpM = -source.Properties.scrollBounds.Top;
+                double lerpI = -source.Properties.scrollBounds.Bottom;
+
+                ScrollBarData sbd = new ScrollBarData(source,
+                    source.Properties.ViewPan.Y.InvLerp(lerpM, lerpI),
+                    1d, true, source.GetRenderSize().Y);
+                source.Properties.ScrollBar.ScrollBarPosition(ref sbd, source.Properties.MouseLocation);
+                source.Properties.ViewPan = (source.Properties.ViewPan.X, lerpM.Lerp(lerpI, Math.Clamp(sbd.ScrollPercent, 0d, 1d)));
+                return;
+            }*/
+        }
         protected internal virtual void OnFocus(FocusedEventArgs e) => source.Properties.focus = e.Focus;
     }
 }

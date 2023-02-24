@@ -126,7 +126,10 @@ namespace Zene.GUI
 
         internal bool scrollX = false;
         internal bool scrollY = false;
+        internal ScrollBarHover scrollBarHover;
+        internal double initScrollPerc;
         internal Box scrollBounds = new Box();
+        internal Vector2 scrollMoveRange;
         public ScrollInfo GetScrollInfo()
         {
             if (!Source.HasChildren || ScrollBar == null) { return new ScrollInfo(); }
@@ -157,13 +160,31 @@ namespace Zene.GUI
                 Math.Max(scrollView.Top - vb.Top, 0d),
                 Math.Min(scrollView.Bottom - vb.Bottom, 0d));
 
+            scrollMoveRange = vb.Size - ((vb.Size * vb.Size) / scrollView.Size);
+
             return new ScrollInfo(scrollX, scrollY, vb.Size, scrollView.Size);
+        }
+
+        internal Vector2 GetScrollPercent()
+        {
+            return new Vector2(
+                ViewPan.X.InvLerp(-scrollBounds.Right, -scrollBounds.Left),
+                ViewPan.Y.InvLerp(-scrollBounds.Top, -scrollBounds.Bottom));
+        }
+        public void SetXScroll(double percent)
+        {
+            _viewPan.X = (-scrollBounds.Right).Lerp(-scrollBounds.Left, Math.Clamp(percent, 0d, 1d));
+        }
+        public void SetYScroll(double percent)
+        {
+            _viewPan.Y = (-scrollBounds.Top).Lerp(-scrollBounds.Bottom, Math.Clamp(percent, 0d, 1d));
         }
 
         internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());
         internal Box scrollViewBox;
         public Box ScrollBox => scrollViewBox * _viewScale;
         public ScrollBar ScrollBar { get; set; } = null;
+        public bool HoverOnScroll => scrollBarHover != ScrollBarHover.None;
 
         internal void PushViewBox(Box bounds, Box oldBounds)
         {

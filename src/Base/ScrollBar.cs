@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
@@ -14,23 +10,13 @@ namespace Zene.GUI
         public double Width { get; set; } = 10d;
         public double ScrollSpeed { get; set; } = 20d;
 
-        protected internal void OnMouseMove(MouseEventArgs e)
+        public virtual double GetScrollPercentage(double size, Vector2 mousePos, bool latitude)
         {
+            double mouse = latitude ? mousePos.Y : mousePos.X;
 
+            return 0.5 - (mouse / (size - 4d));
         }
-        protected internal void OnMouseDown(MouseEventArgs e)
-        {
-
-        }
-        protected internal void OnMouseUp(MouseEventArgs e)
-        {
-
-        }
-        protected internal void OnKeyDown(MouseEventArgs e)
-        {
-
-        }
-        protected internal void OnKeyUp(MouseEventArgs e)
+        public virtual void OnClick(IElement parent, Vector2 size, Vector2 mousePos)
         {
 
         }
@@ -71,8 +57,8 @@ namespace Zene.GUI
         }
 
         public IElement Parent { get; }
-        public double ScrollPercent { get; }
-        public double BarPercent { get; }
+        public double ScrollPercent { get; set; }
+        public double BarPercent { get; set; }
         public bool Latitude { get; }
         public double Size { get; }
     }

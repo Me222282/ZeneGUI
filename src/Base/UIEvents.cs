@@ -150,6 +150,8 @@ namespace Zene.GUI
 
         protected internal override void OnUpdate()
         {
+            base.OnUpdate();
+
             Update?.Invoke(source, EventArgs.Empty);
             _update(EventArgs.Empty);
         }

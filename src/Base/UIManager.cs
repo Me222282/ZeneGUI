@@ -122,30 +122,47 @@ namespace Zene.GUI
 
             IElement hover = Root;
             uninteractHover = null;
-            Vector2 localMouse = (e.Location - Root.Properties.ViewPan) / Root.Properties.ViewScale;
+            Vector2 localMouse = e.Location;
+
+            // If hover over root scroll bars
+            ScrollBarHover sbh;
+            if ((sbh = hover.InScrollBar(localMouse) ) != ScrollBarHover.None)
+            {
+                hover.Properties.scrollBarHover = sbh;
+                goto SkipChildren;
+            }
 
             // Find subhover element
             while (hover.HasChildren)
             {
-                IElement nh = ManagerMouseMove(hover.Children, localMouse);
+                // Adjust for parents view panning and scale
+                Vector2 viewMouse = (localMouse - hover.Properties.ViewPan) / hover.Properties.ViewScale;
+                IElement nh = ManagerMouseMove(hover.Children, viewMouse);
 
                 // Not hovering over any child elements
                 if (nh == null) { break; }
 
                 hover = nh;
+                localMouse = viewMouse;
                 localMouse -= nh.Properties.bounds.Centre;
-                localMouse = (localMouse - nh.Properties.ViewPan) / nh.Properties.ViewScale;
+                //localMouse = (localMouse - nh.Properties.ViewPan) / nh.Properties.ViewScale;
+
+                // Hover over scroll bar
+                if (nh.Properties.scrollBarHover != ScrollBarHover.None) { break; }
             }
-            if (!hover.Properties.Interactable)
+            if (!hover.Properties.Interactable && hover.Properties.scrollBarHover == ScrollBarHover.None)
             {
                 uninteractHover = hover;
                 // Finds lowest element in hover tree that can be a hover element.
                 hover = FindHoverElement(hover, ref localMouse);
             }
 
+            SkipChildren:
+
             if (Hover != hover)
             {
                 Hover.OnMouseLeave();
+                Hover.Properties.scrollBarHover = ScrollBarHover.None;
                 hover.OnMouseEnter();
 
                 Hover = hover;
@@ -164,7 +181,8 @@ namespace Zene.GUI
             bool mouseOver = Hover.IsMouseHover(localMouse);
 
             // Calculate local mouse for hover element from parent
-            localMouse = Hover.CalculateLocalMouse(parent, localMouse);
+            //localMouse = Hover.CalculateLocalMouse(parent, localMouse);
+            localMouse -= Hover.Properties.bounds.Centre;
 
             if (mouseOver && !Hover.Properties.hover)
             {
@@ -175,7 +193,15 @@ namespace Zene.GUI
                 Hover.OnMouseLeave();
             }
 
-            Hover.OnMouseMove(new MouseEventArgs(localMouse, e.Button, e.Modifier));
+            if (Hover != Root)
+            {
+                Hover.OnMouseMove(new MouseEventArgs(localMouse, e.Button, e.Modifier));
+            }
+
+            if (Hover.Properties.scrollBarHover != ScrollBarHover.None)
+            {
+                ManageMouseScroll(Hover, localMouse);
+            }
         }
         private static IElement ManagerMouseMove(ElementList el, Vector2 mousePos)
         {
@@ -183,17 +209,32 @@ namespace Zene.GUI
 
             double depth = 0d;
             IElement hover = null;
+            ScrollBarHover hoverScroll = ScrollBarHover.None;
             foreach (IElement e in el)
             {
                 if (!e.Properties.Visable || e.Properties.Depth < depth) { continue; }
 
+                ScrollBarHover scroll = e.InScrollBar(mousePos);
+                if (scroll != ScrollBarHover.None)
+                {
+                    hoverScroll = scroll;
+                    depth = e.Properties.Depth;
+                    hover = e;
+                    continue;
+                }
+
                 if (e.IsMouseHover(mousePos))
                 {
+                    hoverScroll = ScrollBarHover.None;
                     depth = e.Properties.Depth;
                     hover = e;
                 }
             }
 
+            if (hover != null)
+            {
+                hover.Properties.scrollBarHover = hoverScroll;
+            }
             return hover;
         }
         private IElement FindHoverElement(IElement lowest, ref Vector2 mousePos)
@@ -203,8 +244,30 @@ namespace Zene.GUI
                 return lowest;
             }
 
-            mousePos = (mousePos * lowest.Properties.ViewScale) + lowest.Properties.ViewPan + lowest.Properties.bounds.Centre;
-            return FindHoverElement(lowest.Properties.parent, ref mousePos);
+            //mousePos = (mousePos * lowest.Properties.ViewScale) + lowest.Properties.ViewPan + lowest.Properties.bounds.Centre;
+            mousePos += lowest.Properties.bounds.Centre;
+            IElement parent = lowest.Properties.parent;
+            mousePos = (mousePos * parent.Properties.ViewScale) + parent.Properties.ViewPan;
+            return FindHoverElement(parent, ref mousePos);
+        }
+        protected static void ManageMouseScroll(IElement e, Vector2 mousePos)
+        {
+            Vector2 scrollPercent = e.Properties.GetScrollPercent();
+            UIProperties prop = e.Properties;
+            double perc;
+
+            if (prop.scrollBarHover == ScrollBarHover.XAxis)
+            {
+                perc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.X, mousePos, false);
+                prop.SetXScroll(perc);
+                prop.initScrollPerc = perc;
+                return;
+            }
+
+            //Console.WriteLine(prop.scrollMoveRange.Y);
+            perc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.Y, mousePos, true);
+            prop.SetYScroll(perc);
+            prop.initScrollPerc = perc;
         }
 
         protected void TriggerChange()
@@ -315,6 +378,8 @@ namespace Zene.GUI
 
         protected void SetFrameSize(Vector2 size)
         {
+            if (size.X <= 0 || size.Y <= 0) { return; }
+
             _uiView.FrameSize = size;
 
             Window.GraphicsContext.Actions.Push(() =>
@@ -360,7 +425,8 @@ namespace Zene.GUI
 
                 _uiView.DepthRange = new Vector2(0d, 1d);
                 _uiView.DepthDivision = 1;
-                _uiView.SetDepth(0d);
+                _uiView.ChildDivision = 1;
+                _uiView.SetDepth(1d);
 
                 RenderScrollBars(dm, scroll, new Box(0d, Framebuffer.Size), Root);
             }
@@ -452,6 +518,8 @@ namespace Zene.GUI
                 bounds.Bottom += width;
             }
 
+            Vector2 scrollPercent = e.Properties.GetScrollPercent();
+
             if (scroll.Y)
             {
                 _uiView.View = new Box(bounds.Right - width, bounds.Right, bounds.Top, bounds.Bottom);
@@ -460,7 +528,7 @@ namespace Zene.GUI
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
                     new ScrollBarData(e,
-                        e.Properties.ViewPan.Y.InvLerp(-e.Properties.scrollBounds.Top, -e.Properties.scrollBounds.Bottom),
+                        scrollPercent.Y,
                         scroll.ViewSize.Y / scroll.ScrollView.Y,
                         true, bounds.Height));
 
@@ -476,7 +544,7 @@ namespace Zene.GUI
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
                     new ScrollBarData(e,
-                        e.Properties.ViewPan.X.InvLerp(-e.Properties.scrollBounds.Right, -e.Properties.scrollBounds.Left),
+                        scrollPercent.X,
                         scroll.ViewSize.X / scroll.ScrollView.X,
                         false, bounds.Width));
             }

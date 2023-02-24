@@ -162,5 +162,63 @@ namespace Zene.GUI
 
         internal static void ViewBoxChange(this IElement e, Box oldBounds)
             => e.Properties.parent.Properties.PushViewBox(e.GetRenderBounds(), oldBounds);
+
+        internal static ScrollBarHover InScrollBar(this IElement e, Vector2 mousePos)
+        {
+            if (e.Properties.ScrollBar == null || !(e.Properties.scrollY || e.Properties.scrollX)) { return ScrollBarHover.None; }
+            Box bounds = e.GetRenderBounds();
+            double width = e.Properties.ScrollBar.Width;
+
+            if (e.Properties.scrollY && !e.Properties.scrollX)
+            {
+                return (mousePos.X <= bounds.Right) &&
+                    (mousePos.X >= bounds.Right - width) &&
+                    (mousePos.Y <= bounds.Top) &&
+                    (mousePos.Y >= bounds.Bottom)
+                        ? ScrollBarHover.YAxis : ScrollBarHover.None;
+            }
+
+            if (!e.Properties.scrollY && e.Properties.scrollX)
+            {
+                return (mousePos.X <= bounds.Right) &&
+                    (mousePos.X >= bounds.Left) &&
+                    (mousePos.Y <= bounds.Bottom + width) &&
+                    (mousePos.Y >= bounds.Bottom)
+                        ? ScrollBarHover.XAxis : ScrollBarHover.None;
+            }
+
+            if ((mousePos.X <= bounds.Right) &&
+                (mousePos.X >= bounds.Right - width) &&
+                (mousePos.Y <= bounds.Top) &&
+                (mousePos.Y >= bounds.Bottom + width))
+            {
+                return ScrollBarHover.YAxis;
+            }
+
+            return (mousePos.X <= bounds.Right - width) &&
+                (mousePos.X >= bounds.Left) &&
+                (mousePos.Y <= bounds.Bottom + width) &&
+                (mousePos.Y >= bounds.Bottom)
+                    ? ScrollBarHover.XAxis : ScrollBarHover.None;
+        }
+        internal static double GetXScrollSize(this UIProperties prop)
+        {
+            double width = GetRenderSize(prop.Source).X;
+
+            return prop.scrollY ? width - prop.ScrollBar.Width : width;
+        }
+        internal static double GetYScrollSize(this UIProperties prop)
+        {
+            double height = GetRenderSize(prop.Source).Y;
+
+            return prop.scrollX ? height - prop.ScrollBar.Width : height;
+        }
+    }
+    
+    internal enum ScrollBarHover
+    {
+        None = 0,
+        XAxis,
+        YAxis
     }
 }
