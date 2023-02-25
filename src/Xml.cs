@@ -21,26 +21,19 @@ namespace Zene.GUI
                 return type.IsAssignableTo(typeof(IElement));
             });
 
-            AddParser(str =>
-            {
-                return str switch
-                {
-                    "Arrow" => Cursor.Arrow,
-                    "CrossHair" => Cursor.CrossHair,
-                    "Default" => Cursor.Default,
-                    "Hand" => Cursor.Hand,
-                    "IBeam" => Cursor.IBeam,
-                    "NotAllowed" => Cursor.NotAllowed,
-                    "ResizeAll" => Cursor.ResizeAll,
-                    "ResizeBottomLeft" => Cursor.ResizeBottomLeft,
-                    "ResizeBottomRight" => Cursor.ResizeBottomRight,
-                    "ResizeHorizontal" => Cursor.ResizeHorizontal,
-                    "ResizeTopLeft" => Cursor.ResizeTopLeft,
-                    "ResizeTopRight" => Cursor.ResizeTopRight,
-                    "ResizeVertical" => Cursor.ResizeVertical,
-                    _ => throw new Exception("Invalid Cursor syntax")
-                };
-            });
+            AddParser(XmlTypeParser.CursorParser);
+
+            AddParser(XmlTypeParser.ColourParser);
+            AddParser(XmlTypeParser.ColourParser3);
+            AddParser(XmlTypeParser.ColourParserF);
+            AddParser(XmlTypeParser.ColourParserF3);
+
+            AddParser(XmlTypeParser.Vector2Parser);
+            AddParser(XmlTypeParser.Vector2IParser);
+            AddParser(XmlTypeParser.Vector3Parser);
+            AddParser(XmlTypeParser.Vector3IParser);
+            AddParser(XmlTypeParser.Vector4Parser);
+            AddParser(XmlTypeParser.Vector4IParser);
         }
 
         private readonly IEnumerable<TypeInfo> _types;
@@ -380,6 +373,8 @@ namespace Zene.GUI
                     inBrakets = true;
                     continue;
                 }
+
+                if (inBrakets) { continue; }
 
                 if (src[i] == ',' || src[i] == ')')
                 {
