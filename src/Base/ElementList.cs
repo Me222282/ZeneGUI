@@ -75,11 +75,12 @@ namespace Zene.GUI
                 {
                     foreach (IElement e in _elements)
                     {
-                        if (e.Properties.focus)
+                        if (e.Properties.focus && _source.Properties.handle != null)
                         {
                             _source.Properties.handle.Focus = null;
                         }
 
+                        e.Properties.focus = false;
                         e.Properties.parent = null;
                         e.Properties.elementIndex = -1;
                         e.Properties.hover = false;
@@ -297,10 +298,11 @@ namespace Zene.GUI
             item.Properties.hover = false;
             item.Properties.selected = false;
 
-            if (item.Properties.focus)
+            if (item.Properties.focus && _source.Properties.handle != null)
             {
                 _source.Properties.handle.Focus = null;
             }
+            item.Properties.focus = false;
 
             lock (_lockRef)
             {

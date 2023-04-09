@@ -91,6 +91,8 @@ namespace Zene.GUI
             Hover.OnMouseDown(e);
 
             UIProperties prop = Hover.Properties;
+            if (prop.scrollBarHover == ScrollBarHover.None) { return; }
+            
             if (prop.scrollBarHover == ScrollBarHover.XAxis)
             {
                 prop.initScrollPerc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.X, e.Location, false);
