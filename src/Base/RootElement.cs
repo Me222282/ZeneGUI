@@ -36,6 +36,7 @@ namespace Zene.GUI
             window.KeyUp += (_, e) => Focus.OnKeyUp(e);
             window.TextInput += (_, e) => Focus.OnTextInput(e);
             window.SizePixelChange += (_, e) => SetFrameSize(e.Value);
+            window.Focus += (_, e) => WindowFocus(e);
 
             window.Start += (_, _) => SetFrameSize(Window.Size);
 
@@ -79,6 +80,8 @@ namespace Zene.GUI
         public bool OverrideScroll => false;
 
         public bool IsMouseHover(Vector2 mousePos) => true;
+
+        private void WindowFocus(FocusedEventArgs e) => Focus.OnFocus(e.Focus);
 
         private void OnMouseMove(MouseEventArgs e)
         {

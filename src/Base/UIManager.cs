@@ -78,6 +78,13 @@ namespace Zene.GUI
 
                 _focus.OnFocus(false);
                 _focus = value;
+
+                if (!Window.Focused)
+                {
+                    Windowing.Base.GLFW.FocusWindow(Window.Handle);
+                    return;
+                }
+
                 _focus.OnFocus(true);
             }
         }

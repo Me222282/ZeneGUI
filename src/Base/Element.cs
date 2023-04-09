@@ -256,6 +256,16 @@ namespace Zene.GUI
             remove => Events.Focus -= value;
         }
 
+        /// <summary>
+        /// Sets input focus to this element.
+        /// </summary>
+        public void SetFocus()
+        {
+            if (Hande == null) { return; }
+
+            Hande.Focus = this;
+        }
+
         public virtual bool IsMouseHover(Vector2 mousePos) => Properties.bounds.Contains(mousePos);
 
         protected void TriggerChange()
