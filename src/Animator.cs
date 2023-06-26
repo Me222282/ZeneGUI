@@ -19,12 +19,6 @@ namespace Zene.GUI
                 throw new ArgumentNullException(nameof(animation.SetValue), "There must be a SetValue function.");
             }
 
-            if (animation.Animating)
-            {
-                animation.startTime = Core.Time;
-                return;
-            }
-
             if (animation.Animating || animation.Duration <= 0 ||
                 animation.StartValue.Equals(animation.EndValue)) { return; }
 
@@ -34,6 +28,7 @@ namespace Zene.GUI
             }
 
             animation.startTime = Core.Time;
+            animation.Handle = this;
             lock (_animations)
             {
                 _animations.Add(animation);
@@ -41,13 +36,7 @@ namespace Zene.GUI
         }
         public void Add(BaseAnimation animation)
         {
-            if (animation.Animating)
-            {
-                animation.startTime = Core.Time;
-                return;
-            }
-
-            if (animation.Duration <= 0) { return; }
+            if (animation.Animating || animation.Duration <= 0) { return; }
 
             if (animation.Type == null)
             {
@@ -55,6 +44,7 @@ namespace Zene.GUI
             }
 
             animation.startTime = Core.Time;
+            animation.Handle = this;
             lock (_animations)
             {
                 _animations.Add(animation);
@@ -62,15 +52,38 @@ namespace Zene.GUI
         }
         public AnimatorData<T> Add<T>(Action<T> setValue, double duration, T start, T end, AnimationType type)
         {
-            AnimatorData<T> ad = new AnimatorData<T>(setValue, duration, start, end, type)
-            {
-                startTime = Core.Time
-            };
+            AnimatorData<T> ad = new AnimatorData<T>(setValue, duration, start, end, type);
             Add(ad);
             return ad;
         }
         public AnimatorData<T> Add<T>(Action<T> setValue, double duration, T start, T end)
             => Add(setValue, duration, start, end, Linear);
+
+        public void Remove(BaseAnimation animation)
+        {
+            bool exisits;
+
+            lock (_animations)
+            {
+                exisits = _animations.Remove(animation);
+            }
+
+            if (!exisits) { return; }
+
+            double scale = 1d;
+
+            if (animation.Looping)
+            {
+                scale = (Core.Time - animation.startTime) / animation.Duration;
+            }
+
+            // Set value to end
+            animation.OnFrame(animation.Type(animation.Reversed ? 1d - scale : scale));
+
+            animation.startTime = -1;
+            animation.Handle = null;
+            animation.InvokeFinish();
+        }
 
         public void Invoke()
         {
@@ -91,12 +104,18 @@ namespace Zene.GUI
                         // Set value to end
                         ad.OnFrame(ad.Type(ad.Reversed ? 0d : 1d));
 
-                        ad.startTime = -1;
-                        ad.InvokeFinish();
+                        if (ad.Looping)
+                        {
+                            ad.startTime = time;
+                            continue;
+                        }
 
                         // Remove animation
                         _animations.RemoveAt(i);
                         i--;
+
+                        ad.startTime = -1;
+                        ad.InvokeFinish();
                         continue;
                     }
 
@@ -147,6 +166,7 @@ namespace Zene.GUI
 
         public bool Reversed { get; set; } = false;
         public bool Animating => startTime > 0d;
+        public bool Looping { get; set; } = false;
 
         private AnimationType _type;
         public AnimationType Type
@@ -155,12 +175,20 @@ namespace Zene.GUI
             set => _type = value ?? Animator.Linear;
         }
 
+        public Animator Handle { get; internal set; }
+
         public event EventHandler Finish;
         internal void InvokeFinish() => Finish?.Invoke(this, EventArgs.Empty);
 
         public abstract void OnFrame(double scale);
 
-        public void Stop() => Duration = 0;
+        public void Stop()
+        {
+            if (Handle != null)
+            {
+                Handle.Remove(this);
+            }
+        }
         public void Reset(Animator handle)
         {
             if (!Animating)
@@ -226,6 +254,12 @@ namespace Zene.GUI
                 case AnimatorData<ColourF3> ad:
                     _onFrame = (s) => FrameColour(ad, s);
                     break;
+                case AnimatorData<Radian> ad:
+                    _onFrame = (s) => FrameDouble(ad, s);
+                    break;
+                case AnimatorData<Degrees> ad:
+                    _onFrame = (s) => FrameDouble(ad, s);
+                    break;
                 default:
                     _onFrame = (_) => throw new NotSupportedException("Type not supported.");
                     break;
@@ -247,8 +281,17 @@ namespace Zene.GUI
 
             handle.Add(this);
         }
+        public void Start(Animator handle) => handle.Add(this);
 
         private static void FrameDouble(AnimatorData<double> ad, double scale)
+        {
+            ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
+        }
+        private static void FrameDouble(AnimatorData<Radian> ad, double scale)
+        {
+            ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
+        }
+        private static void FrameDouble(AnimatorData<Degrees> ad, double scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
