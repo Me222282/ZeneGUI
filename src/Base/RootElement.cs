@@ -91,7 +91,7 @@ namespace Zene.GUI
         private void MouseDown(MouseEventArgs e)
         {
             Focus = Hover;
-            Hover.OnMouseDown(e);
+            Hover.OnMouseDown(new MouseEventArgs(Hover.Properties.mousePos, e.Button, e.Modifier));
 
             UIProperties prop = Hover.Properties;
             if (prop.scrollBarHover == ScrollBarHover.None) { return; }
@@ -110,7 +110,7 @@ namespace Zene.GUI
         }
         private void MouseUp(MouseEventArgs e)
         {
-            Hover.OnMouseUp(e);
+            Hover.OnMouseUp(new MouseEventArgs(Hover.Properties.mousePos, e.Button, e.Modifier));
 
             MouseMove(e);
         }

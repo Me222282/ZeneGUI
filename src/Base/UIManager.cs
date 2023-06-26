@@ -157,6 +157,7 @@ namespace Zene.GUI
                 // Hover over scroll bar
                 if (nh.Properties.scrollBarHover != ScrollBarHover.None) { break; }
             }
+            // Element cannot be hovered element
             if (!hover.Properties.Interactable && hover.Properties.scrollBarHover == ScrollBarHover.None)
             {
                 uninteractHover = hover;
@@ -177,6 +178,12 @@ namespace Zene.GUI
             }
 
             if (hover == Root) { return; }
+
+            // Adjust mouse pos sent according to property
+            if (hover.Properties.ShiftInternalMouse)
+            {
+                localMouse = (localMouse - hover.Properties.ViewPan) / hover.Properties.ViewScale;
+            }
 
             hover.OnMouseMove(new MouseEventArgs(localMouse, e.Button, e.Modifier));
         }
@@ -202,7 +209,14 @@ namespace Zene.GUI
 
             if (Hover != Root)
             {
-                Hover.OnMouseMove(new MouseEventArgs(localMouse, e.Button, e.Modifier));
+                Vector2 adjustmouse = localMouse;
+                // Adjust mouse pos sent according to property
+                if (Hover.Properties.ShiftInternalMouse)
+                {
+                    adjustmouse = (adjustmouse - Hover.Properties.ViewPan) / Hover.Properties.ViewScale;
+                }
+
+                Hover.OnMouseMove(new MouseEventArgs(adjustmouse, e.Button, e.Modifier));
             }
 
             if (Hover.Properties.scrollBarHover != ScrollBarHover.None)

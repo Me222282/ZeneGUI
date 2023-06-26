@@ -41,6 +41,11 @@ namespace Zene.GUI
         internal bool selected = false;
         public bool MouseSelect => selected;
 
+        /// <summary>
+        /// Determines whether the mouse position updated through this element's events are affected by scale and pan.
+        /// </summary>
+        public bool ShiftInternalMouse { get; set; } = false;
+
         internal Vector2 mousePos;
         public Vector2 MouseLocation
         {
