@@ -27,10 +27,23 @@ namespace Zene.GUI
         internal Box bounds;
         public Box Bounds => bounds;
 
+        private Cursor _cursorStyle;
         /// <summary>
         /// The style of the cursor when hovering over this element.
         /// </summary>
-        public Cursor CursorStyle { get; set; }
+        public Cursor CursorStyle
+        {
+            get => _cursorStyle;
+            set
+            {
+                _cursorStyle = value;
+
+                if (hover)
+                {
+                    handle.Window.CursorStyle = value;
+                }
+            }
+        }
 
         internal bool hover = false;
         public bool Hover => hover;
