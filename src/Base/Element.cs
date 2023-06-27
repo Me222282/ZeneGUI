@@ -98,7 +98,7 @@ namespace Zene.GUI
 
         protected ActionManager Actions => Properties.handle.Window.GraphicsContext.Actions;
         public Window Window => Properties.handle.Window;
-        public UIManager Hande => Properties.handle;
+        public UIManager Handle => Properties.handle;
         public IElement RootElement => Properties.handle.Root;
 
         public bool MouseSelect => Properties.selected;
@@ -261,9 +261,9 @@ namespace Zene.GUI
         /// </summary>
         public void SetFocus()
         {
-            if (Hande == null) { return; }
+            if (Handle == null) { return; }
 
-            Hande.Focus = this;
+            Handle.Focus = this;
         }
 
         public virtual bool IsMouseHover(Vector2 mousePos) => Properties.bounds.Contains(mousePos);
