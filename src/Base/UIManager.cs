@@ -74,7 +74,8 @@ namespace Zene.GUI
                     value = Root;
                 }
 
-                if (_focus == value) { return; }
+                if (_focus == value ||
+                    value.Properties.handle != this) { return; }
 
                 _focus.OnFocus(false);
                 _focus = value;
