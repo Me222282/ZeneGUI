@@ -24,7 +24,7 @@ namespace Zene.GUI
         public event VectorEventHandler SizeChange;
         public event VectorEventHandler ElementMove;
 
-        public override void OnRender(DrawManager context) => Render?.Invoke(this, new RenderArgs(context, TextRenderer));
+        public override void OnRender(IDrawingContext context) => Render?.Invoke(this, new RenderArgs(context, TextRenderer));
 
         protected override Vector2 OnSizeChange(VectorEventArgs e)
         {
@@ -40,13 +40,13 @@ namespace Zene.GUI
 
     public class RenderArgs : EventArgs
     {
-        public RenderArgs(DrawManager dm, TextRenderer tr)
+        public RenderArgs(IDrawingContext dm, TextRenderer tr)
         {
             Context = dm;
             TextRenderer = tr;
         }
 
         public TextRenderer TextRenderer { get; }
-        public DrawManager Context { get; }
+        public IDrawingContext Context { get; }
     }
 }

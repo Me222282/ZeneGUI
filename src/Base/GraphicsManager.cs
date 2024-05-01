@@ -5,7 +5,7 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public abstract class GraphicsManager : IBasicRenderer
+    public abstract class GraphicsManager : IRenderable
     {
         public GraphicsManager(IElement source)
         {
@@ -95,7 +95,7 @@ namespace Zene.GUI
         }
         protected TextRenderer TextRenderer => Source.Properties.handle.TextRenderer;
 
-        public abstract void OnRender(DrawManager context);
+        public abstract void OnRender(IDrawingContext context);
 
         internal void ChangeSize(VectorEventArgs e) => Size = OnSizeChange(e);
         protected virtual Vector2 OnSizeChange(VectorEventArgs e) => e.Value;

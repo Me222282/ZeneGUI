@@ -14,7 +14,7 @@ namespace Zene.GUI
 
         public ColourF Colour { get; set; }
 
-        public override void OnRender(DrawManager context)
+        public override void OnRender(IDrawingContext context)
         {
             // No colour
             if (Colour.A <= 0f) { return; }

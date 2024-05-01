@@ -55,7 +55,7 @@ namespace Zene.GUI
 
             }
 
-            public override void OnRender(DrawManager context)
+            public override void OnRender(IDrawingContext context)
             {
                 Vector4 c = (Vector4)Source.Colour;
 

@@ -35,7 +35,6 @@ namespace Zene.GUI
             _uiView = new UIView(Framebuffer.Viewport);
             Framebuffer.Viewport = _uiView;
             Framebuffer.Scissor = _uiView;
-            Framebuffer.DepthState = _uiView;
 
             TextRenderer = new TextRenderer();
             Animator = new Animator();
@@ -434,7 +433,11 @@ namespace Zene.GUI
 
             Animator.Invoke();
 
-            DrawManager dm = new DrawManager(Framebuffer);
+            DrawContext dm = new DrawContext(Framebuffer)
+            {
+                DepthState = _uiView,
+                RenderState = new RenderState()
+            };
             Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
             Render(Root, dm);
 
@@ -461,7 +464,7 @@ namespace Zene.GUI
         }
         internal void SetRenderSize(Vector2 size) => _uiView.Size = size;
         internal void SetRenderLocation(Vector2 pos) => _uiView.Location = pos;
-        private void Render(IElement e, DrawManager dm)
+        private void Render(IElement e, IDrawingContext dm)
         {
             // Set some drawing properties
             TextRenderer.Projection = e.Graphics?.Projection;
@@ -531,7 +534,7 @@ namespace Zene.GUI
                 RenderScrollBars(dm, scroll, bounds, child);
             }
         }
-        private void RenderScrollBars(DrawManager dm, ScrollInfo scroll, Box bounds, IElement e)
+        private void RenderScrollBars(IDrawingContext dm, ScrollInfo scroll, Box bounds, IElement e)
         {
             double width = e.Properties.ScrollBar.Width;
 

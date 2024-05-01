@@ -44,7 +44,7 @@ namespace Zene.GUI
 
             }
 
-            public override void OnRender(DrawManager context)
+            public override void OnRender(IDrawingContext context)
             {
                 double borderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
                 Size = Source.Size + borderWidth;

@@ -69,7 +69,7 @@ namespace Zene.GUI
 
             BaseFramebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
 
-            DrawManager.Render(RootElement);
+            DrawContext.Render(RootElement);
         }
     }
 }
