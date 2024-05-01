@@ -65,7 +65,7 @@ namespace Zene.GUI
                 _elements.Add(item);
             }
 
-            _source.Properties.handle?.LayoutElement(item);
+            _source.Properties.handle?.LayoutElement(_source);
         }
         public virtual void Clear()
         {
@@ -314,19 +314,12 @@ namespace Zene.GUI
                 }
             }
 
-            if (_source.LayoutManager != null &&
-                (_source.LayoutManager.ChildDependent ||
-                _source.LayoutManager.SizeDependent))
+            if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
             {
-                _source.Properties.handle?.LayoutElement(_source);
+                UIManager.RecalculateScrollBounds(_source.Properties);
             }
-            else
-            {
-                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
-                {
-                    UIManager.RecalculateScrollBounds(_source.Properties);
-                }
-            }
+            
+            _source.Properties.handle?.LayoutElement(_source);
         }
 
         public struct Enumerator : IEnumerator<IElement>, IEnumerator
