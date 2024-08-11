@@ -99,22 +99,22 @@ namespace Zene.GUI
 
         public void ShiftFocusRight()
         {
-            if (!Focus.HasParent)
+            if (!_focus.HasParent)
             {
-                Focus = Focus.LowestFirstElement();
+                Focus = _focus.LowestFirstElement();
                 return;
             }
 
-            Focus = Focus.NextElement();
+            Focus = _focus.NextElement();
         }
         public void ShiftFocusLeft()
         {
-            if (!Focus.HasParent)
+            if (!_focus.HasParent)
             {
-                Focus = Focus.LowestLastElement();
+                Focus = _focus.LowestLastElement();
             }
 
-            Focus = Focus.PreviousElement();
+            Focus = _focus.PreviousElement();
         }
 
         public void MouseMove(MouseEventArgs e)
@@ -133,7 +133,7 @@ namespace Zene.GUI
 
             // If hover over root scroll bars
             ScrollBarHover sbh;
-            if ((sbh = hover.InScrollBar(localMouse) ) != ScrollBarHover.None)
+            if ((sbh = hover.InScrollBar(localMouse)) != ScrollBarHover.None)
             {
                 hover.Properties.scrollBarHover = sbh;
                 goto SkipChildren;
@@ -165,7 +165,7 @@ namespace Zene.GUI
                 hover = FindHoverElement(hover, ref localMouse);
             }
 
-            SkipChildren:
+        SkipChildren:
 
             if (Hover != hover)
             {

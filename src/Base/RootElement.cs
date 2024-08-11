@@ -91,11 +91,14 @@ namespace Zene.GUI
         private void MouseDown(MouseEventArgs e)
         {
             Focus = Hover;
-            Hover.OnMouseDown(new MouseEventArgs(Hover.Properties.mousePos, e.Button, e.Modifier));
+            IElement h = Hover;
+            h.OnMouseDown(new MouseEventArgs(h.Properties.mousePos, e.Button, e.Modifier));
+            // Element was removed in event
+            if (Hover != h) { return; }
 
-            UIProperties prop = Hover.Properties;
+            UIProperties prop = h.Properties;
             if (prop.scrollBarHover == ScrollBarHover.None) { return; }
-            
+
             if (prop.scrollBarHover == ScrollBarHover.XAxis)
             {
                 prop.initScrollPerc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.X, e.Location, false);
@@ -106,12 +109,12 @@ namespace Zene.GUI
                 prop.initScrollPerc = prop.ScrollBar.GetScrollPercentage(prop.scrollMoveRange.Y, e.Location, true);
             }
 
-            ManageMouseScroll(Hover, e.Location);
+            ManageMouseScroll(h, e.Location);
         }
         private void MouseUp(MouseEventArgs e)
         {
             Hover.OnMouseUp(new MouseEventArgs(Hover.Properties.mousePos, e.Button, e.Modifier));
-
+            // MouseMove is not calculated whilst mouse is held down
             MouseMove(e);
         }
         private void KeyDown(KeyEventArgs e)
@@ -129,24 +132,29 @@ namespace Zene.GUI
                 return;
             }
 
-            Focus.OnKeyDown(e);
+            IElement f = Focus;
+            f.OnKeyDown(e);
+            // Element was removed in event
+            if (Focus != f) { return; }
 
             if (e[Keys.Enter])
             {
-                Focus.OnMouseDown(new MouseEventArgs(MouseButton.Left, e.Modifier));
-                Focus.OnMouseUp(new MouseEventArgs(MouseButton.Left, e.Modifier));
+                f.OnMouseDown(new MouseEventArgs(MouseButton.Left, e.Modifier));
+                f.OnMouseUp(new MouseEventArgs(MouseButton.Left, e.Modifier));
                 return;
             }
         }
         private void Scroll(ScrollEventArgs e)
         {
-            Hover.OnScroll(e);
-            if (Hover.OverrideScroll) { return; }
+            IElement h = Hover;
+            h.OnScroll(e);
+            // Element was removed in event
+            if (Hover != h || h.OverrideScroll) { return; }
 
             bool success = ManageScrollCon(uninteractHover, e.DeltaY, true);
             if (success) { return; }
 
-            ManageScrollCon(Hover, e.DeltaY, false);
+            ManageScrollCon(h, e.DeltaY, false);
         }
         private bool ManageScrollCon(IElement e, double delta, bool uninteract)
         {

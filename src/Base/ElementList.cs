@@ -36,6 +36,12 @@ namespace Zene.GUI
         {
             if (item.Properties.handle == handle) { return; }
 
+            if (item.Properties.focus && item.Properties.handle != handle)
+            {
+                item.Properties.handle.Focus = null;
+                item.Properties.focus = false;
+            }
+
             item.Properties.handle = handle;
             if (!item.HasChildren) { return; }
 
@@ -69,40 +75,35 @@ namespace Zene.GUI
         }
         public virtual void Clear()
         {
-            _source.Properties.handle.Window.GraphicsContext.Actions.Push(() =>
+            // _source.Properties.handle.Window.GraphicsContext.Actions.Push(() =>
+            // {
+            lock (_lockRef)
             {
-                lock (_lockRef)
+                foreach (IElement e in _elements)
                 {
-                    foreach (IElement e in _elements)
-                    {
-                        if (e.Properties.focus && _source.Properties.handle != null)
-                        {
-                            _source.Properties.handle.Focus = null;
-                        }
+                    // e.Properties.focus = false;
+                    e.Properties.parent = null;
+                    e.Properties.elementIndex = -1;
+                    e.Properties.hover = false;
+                    e.Properties.selected = false;
 
-                        e.Properties.focus = false;
-                        e.Properties.parent = null;
-                        e.Properties.elementIndex = -1;
-                        e.Properties.hover = false;
-                        e.Properties.selected = false;
-
-                        SetHandle(e, null);
-                    }
-
-                    _elements.Clear();
+                    SetHandle(e, null);
                 }
 
-                if (_source.LayoutManager != null &&
-                    (_source.LayoutManager.ChildDependent ||
-                    _source.LayoutManager.SizeDependent))
-                {
-                    _source.Properties.handle?.LayoutElement(_source);
-                }
-                else
-                {
-                    UIManager.RecalculateScrollBounds(_source.Properties);
-                }
-            });
+                _elements.Clear();
+            }
+
+            if (_source.LayoutManager != null &&
+                (_source.LayoutManager.ChildDependent ||
+                _source.LayoutManager.SizeDependent))
+            {
+                _source.Properties.handle?.LayoutElement(_source);
+            }
+            else
+            {
+                UIManager.RecalculateScrollBounds(_source.Properties);
+            }
+            // });
         }
 
         public bool Contains(IElement item) => _elements.Contains(item);
@@ -298,12 +299,6 @@ namespace Zene.GUI
             item.Properties.hover = false;
             item.Properties.selected = false;
 
-            if (item.Properties.focus && _source.Properties.handle != null)
-            {
-                _source.Properties.handle.Focus = null;
-            }
-            item.Properties.focus = false;
-
             lock (_lockRef)
             {
                 _elements.RemoveAt(index);
@@ -318,7 +313,7 @@ namespace Zene.GUI
             {
                 UIManager.RecalculateScrollBounds(_source.Properties);
             }
-            
+
             _source.Properties.handle?.LayoutElement(_source);
         }
 
