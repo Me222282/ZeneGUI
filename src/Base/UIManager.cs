@@ -476,6 +476,9 @@ namespace Zene.GUI
             dm.Projection = e.Graphics?.Projection;
             dm.View = Matrix.Identity;
             dm.Model = Matrix.Identity;
+            dm.RenderState.Blending = true;
+            dm.RenderState.SourceScaleBlending = BlendFunction.SourceAlpha;
+            dm.RenderState.DestinationScaleBlending = BlendFunction.OneMinusSourceAlpha;
             e.Events.OnUpdate();
             dm.Render(e.Graphics);
             //e.Graphics?.OnRender(dm);
