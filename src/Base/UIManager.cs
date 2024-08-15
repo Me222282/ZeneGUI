@@ -104,7 +104,7 @@ namespace Zene.GUI
 
         public void ShiftFocusRight()
         {
-            if (!_focus.HasParent)
+            if (!_focus.HasParent || _focus.HasChildren)
             {
                 Focus = _focus.LowestFirstElement();
                 return;
