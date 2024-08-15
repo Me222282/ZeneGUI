@@ -38,7 +38,9 @@ namespace Zene.GUI
 
             if (item.Properties.focus && item.Properties.handle != handle)
             {
-                item.Properties.handle.Focus = null;
+                //item.Properties.handle.Focus = null;
+                // Very specific bug fixed with this
+                item.Properties.handle.ResetFocusNoEvent();
                 item.Properties.focus = false;
             }
 

@@ -88,6 +88,11 @@ namespace Zene.GUI
                 _focus.OnFocus(true);
             }
         }
+        internal void ResetFocusNoEvent()
+        {
+            _focus = Root;
+            _focus.OnFocus(true);
+        }
 
         private readonly UIView _uiView;
         public TextureRenderer Framebuffer { get; }
