@@ -36,7 +36,9 @@ namespace Zene.GUI
         {
             if (item.Properties.handle == handle) { return; }
 
-            if (item.Properties.focus && item.Properties.handle != handle)
+            if (item.Properties.handle != null &&
+                item.Properties.handle.Focus == item &&
+                item.Properties.handle != handle)
             {
                 //item.Properties.handle.Focus = null;
                 // Very specific bug fixed with this
