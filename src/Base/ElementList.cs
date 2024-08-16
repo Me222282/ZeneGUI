@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Zene.Structs;
 
 namespace Zene.GUI
@@ -318,6 +319,40 @@ namespace Zene.GUI
                 UIManager.RecalculateScrollBounds(_source.Properties);
             }
 
+            _source.Properties.handle?.LayoutElement(_source);
+        }
+        
+        public void Sort(Comparison<IElement> comparison)
+        {
+            lock (_lockRef)
+            {
+                _elements.Sort(comparison);
+                
+                // May be way of doing this at the same time as sorting?
+                Span<IElement> span = CollectionsMarshal.AsSpan(_elements);
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i].Properties.elementIndex = i;
+                }
+            }
+            
+            _source.Properties.handle?.LayoutElement(_source);
+        }
+        public void SortDepth(Comparison<IElement> comparison)
+        {
+            lock (_lockRef)
+            {
+                _elements.Sort(comparison);
+                
+                // May be way of doing this at the same time as sorting?
+                Span<IElement> span = CollectionsMarshal.AsSpan(_elements);
+                for (int i = 0; i < span.Length; i++)
+                {
+                    span[i].Properties.elementIndex = i;
+                    span[i].Properties.Depth = i;
+                }
+            }
+            
             _source.Properties.handle?.LayoutElement(_source);
         }
 
