@@ -10,19 +10,7 @@ namespace Zene.GUI
         public UIManager(IElement root, Window window)
             : this(window)
         {
-            if (root.Properties.elementIndex >= 0)
-            {
-                throw new ArgumentException("The given root is a child of another element.", nameof(root));
-            }
-
-            Root = root ?? throw new ArgumentNullException(nameof(root));
-            Elements = new ElementList(root);
-
-            Root.Properties.handle = this;
-            Root.Properties.parent = null;
-
-            Hover = Root;
-            _focus = Root;
+            Root_(root);
 
         }
         protected UIManager(Window window)
@@ -46,13 +34,19 @@ namespace Zene.GUI
                 throw new Exception();
             }
 
+            if (root.Properties.elementIndex >= 0)
+            {
+                throw new ArgumentException("The given root is a child of another element.", nameof(root));
+            }
+
             Root = root ?? throw new ArgumentNullException(nameof(root));
             Elements = new ElementList(root);
             Root.Properties.handle = this;
             Root.Properties.parent = null;
 
-            Hover = Root;
-            _focus = Root;
+            Hover = root;
+            _focus = root;
+            _fallBackFocus = root;
         }
 
         public ElementList Elements { get; private set; }
@@ -88,9 +82,24 @@ namespace Zene.GUI
                 _focus.OnFocus(true);
             }
         }
+        private IElement _fallBackFocus;
+        public IElement FallBackFocus
+        {
+            get => _fallBackFocus;
+            set
+            {
+                if (value == null || value.Properties.handle != this)
+                {
+                    _fallBackFocus = Root;
+                    return;
+                }
+
+                _fallBackFocus = value;
+            }
+        }
         internal void ResetFocusNoEvent()
         {
-            _focus = Root;
+            _focus = _fallBackFocus;
             _focus.OnFocus(true);
         }
 

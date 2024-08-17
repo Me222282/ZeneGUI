@@ -1,400 +1,355 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public class ElementList : IList<IElement>
+    public class ElementList : ElementListManage
     {
-        public ElementList(IElement source)
+        public enum ActionType : byte
         {
-            _source = source ?? throw new ArgumentNullException(nameof(source));
+            Add,
+            Clear,
+            Remove,
+            RemoveAt,
+            Sort,
+            SortDepth,
+            Swap,
+            SwapAt
         }
-
-        private readonly IElement _source;
-        public IElement Source => _source;
-
-        private readonly List<IElement> _elements = new List<IElement>();
-        private readonly object _lockRef = new object();
-
-        public int Length => _elements.Count;
-
-        public IElement this[int index] => _elements[index];
-        public IElement this[Index index] => _elements[index];
-
-        IElement IList<IElement>.this[int index]
+        public struct Action
         {
-            get => _elements[index];
-            set => throw new NotSupportedException();
-        }
-        int ICollection<IElement>.Count => _elements.Count;
-
-        public bool IsReadOnly => false;
-
-        private static void SetHandle(IElement item, UIManager handle)
-        {
-            if (item.Properties.handle == handle) { return; }
-
-            if (item.Properties.handle != null &&
-                item.Properties.handle.Focus == item &&
-                item.Properties.handle != handle)
+            public Action(ActionType at, IElement ea, IElement eb)
             {
-                //item.Properties.handle.Focus = null;
-                // Very specific bug fixed with this
-                item.Properties.handle.ResetFocusNoEvent();
-                item.Properties.focus = false;
+                AT = at;
+                EA = ea;
+                EB = eb;
+                IA = 0;
+                IB = 0;
+                Comp = null;
             }
-
-            item.Properties.handle = handle;
-            if (!item.HasChildren) { return; }
-
-            foreach (IElement e in item.Children)
+            public Action(ActionType at, int ia, int ib)
             {
-                SetHandle(e, handle);
+                AT = at;
+                EA = null;
+                EB = null;
+                IA = ia;
+                IB = ib;
+                Comp = null;
             }
-        }
-        public virtual void Add(IElement item)
-        {
-            if (item.Properties.elementIndex >= 0)
+            public Action(ActionType at, Comparison<IElement> comp)
             {
-                throw new ArgumentException("The given element is already the child of another element.", nameof(item));
+                AT = at;
+                EA = null;
+                EB = null;
+                IA = 0;
+                IB = 0;
+                Comp = comp;
             }
-
-            SetHandle(item, _source.Properties.handle);
-            item.Properties.parent = _source;
-            item.Properties.elementIndex = _elements.Count;
-
-            if (item.Properties.Depth < 0d)
-            {
-                item.Properties.Depth = item.Properties.elementIndex;
-            }
-
-            lock (_lockRef)
-            {
-                _elements.Add(item);
-            }
-
-            _source.Properties.handle?.LayoutElement(_source);
-        }
-        public virtual void Clear()
-        {
-            // _source.Properties.handle.Window.GraphicsContext.Actions.Push(() =>
-            // {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    // e.Properties.focus = false;
-                    e.Properties.parent = null;
-                    e.Properties.elementIndex = -1;
-                    e.Properties.hover = false;
-                    e.Properties.selected = false;
-
-                    SetHandle(e, null);
-                }
-
-                _elements.Clear();
-            }
-
-            if (_source.LayoutManager != null &&
-                (_source.LayoutManager.ChildDependent ||
-                _source.LayoutManager.SizeDependent))
-            {
-                _source.Properties.handle?.LayoutElement(_source);
-            }
-            else
-            {
-                UIManager.RecalculateScrollBounds(_source.Properties);
-            }
-            // });
-        }
-
-        public bool Contains(IElement item) => _elements.Contains(item);
-
-        /// <summary>
-        /// Finds the first element of a certain type. Searches child elements as well.
-        /// </summary>
-        /// <typeparam name="T">The type of element to search for.</typeparam>
-        /// <returns></returns>
-        public T RecursiveFind<T>()
-            where T : class, IElement
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e is T t) { return t; }
-
-                    if (e.HasChildren)
-                    {
-                        T test = e.Children.RecursiveFind<T>();
-
-                        if (test == null) { continue; }
-
-                        return test;
-                    }
-                }
-            }
-
-            return null;
-        }
-        /// <summary>
-        /// Finds the first element of a certain type.
-        /// </summary>
-        /// <typeparam name="T">The type of element to search for.</typeparam>
-        /// <returns></returns>
-        public T Find<T>()
-            where T : class, IElement
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e is not T t) { continue; }
-
-                    return t;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Finds the first element of a certain type with a given id. Searches child elements as well.
-        /// </summary>
-        /// <typeparam name="T">The type of element to search for.</typeparam>
-        /// <returns></returns>
-        public T RecursiveFind<T>(string id)
-            where T : class, IElement
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e is T t && e.Id == id) { return t; }
-
-                    if (e.HasChildren)
-                    {
-                        T test = e.Children.RecursiveFind<T>(id);
-
-                        if (test == null) { continue; }
-
-                        return test;
-                    }
-                }
-            }
-
-            return null;
-        }
-        /// <summary>
-        /// Finds the first element of a certain type with a given id.
-        /// </summary>
-        /// <typeparam name="T">The type of element to search for.</typeparam>
-        /// <returns></returns>
-        public T Find<T>(string id)
-            where T : class, IElement
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e is not T t || e.Id != id) { continue; }
-
-                    return t;
-                }
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Finds the first element with a given id. Searches child elements as well.
-        /// </summary>
-        /// <returns></returns>
-        public IElement RecursiveFind(string id)
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e.Id == id) { return e; }
-
-                    if (e.HasChildren)
-                    {
-                        IElement test = e.Children.RecursiveFind(id);
-
-                        if (test == null) { continue; }
-
-                        return test;
-                    }
-                }
-            }
-
-            return null;
-        }
-        /// <summary>
-        /// Finds the first element with a given id.
-        /// </summary>
-        /// <returns></returns>
-        public IElement Find(string id)
-        {
-            lock (_lockRef)
-            {
-                foreach (IElement e in _elements)
-                {
-                    if (e.Id != id) { continue; }
-
-                    return e;
-                }
-            }
-
-            return null;
-        }
-
-        public bool Swap(IElement a, IElement b) => Swap(_elements.IndexOf(a), _elements.IndexOf(b));
-        public virtual bool Swap(int indexA, int indexB)
-        {
-            lock (_lockRef)
-            {
-                if (indexA < 0 || indexA >= _elements.Count)
-                {
-                    return false;
-                }
-                if (indexB < 0 || indexB >= _elements.Count)
-                {
-                    return false;
-                }
-
-                _elements[indexA].Properties.elementIndex = indexB;
-                _elements[indexB].Properties.elementIndex = indexA;
-
-                _elements.Swap(indexA, indexB);
-            }
-
-            _source.Properties.handle?.LayoutElement(_source);
-
-            return true;
-        }
-
-        void ICollection<IElement>.CopyTo(IElement[] array, int arrayIndex) => _elements.CopyTo(array, arrayIndex);
-        void IList<IElement>.Insert(int index, IElement item) => throw new NotSupportedException();
-
-        public IEnumerator<IElement> GetEnumerator() => new Enumerator(_elements);
-        IEnumerator IEnumerable.GetEnumerator() => new Enumerator(_elements);
-
-        public int IndexOf(IElement item) => _elements.IndexOf(item);
-
-        public bool Remove(IElement item)
-        {
-            int index = _elements.IndexOf(item);
-
-            if (index < 0) { return false; }
-
-            RemoveAt(index);
-            return true;
-        }
-        public virtual void RemoveAt(int index)
-        {
-            IElement item = _elements[index];
-            SetHandle(item, null);
-            item.Properties.parent = null;
-            item.Properties.elementIndex = -1;
-            item.Properties.hover = false;
-            item.Properties.selected = false;
-
-            lock (_lockRef)
-            {
-                _elements.RemoveAt(index);
-
-                for (int i = index; i < _elements.Count; i++)
-                {
-                    _elements[i].Properties.elementIndex = i;
-                }
-            }
-
-            if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
-            {
-                UIManager.RecalculateScrollBounds(_source.Properties);
-            }
-
-            _source.Properties.handle?.LayoutElement(_source);
+            
+            public ActionType AT;
+            public IElement EA;
+            public IElement EB;
+            public int IA;
+            public int IB;
+            public Comparison<IElement> Comp;
         }
         
-        public void Sort(Comparison<IElement> comparison)
+        public ElementList(IElement source)
+            : base(source)
         {
-            lock (_lockRef)
+            
+        }
+        
+        private List<Action> _actions = new List<Action>();
+        private bool _inGroupAction = false;
+        
+        internal List<Action> InitGroupAction()
+        {
+            _actions.Clear();
+            _inGroupAction = true;
+            return _actions;
+        }
+        internal void ImplementActions(IElement fbf = null)
+        {
+            _inGroupAction = false;
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
             {
-                _elements.Sort(comparison);
-                
-                // May be way of doing this at the same time as sorting?
-                Span<IElement> span = CollectionsMarshal.AsSpan(_elements);
-                for (int i = 0; i < span.Length; i++)
-                {
-                    span[i].Properties.elementIndex = i;
-                }
+                IA();
+                return;
             }
             
-            _source.Properties.handle?.LayoutElement(_source);
-        }
-        public void SortDepth(Comparison<IElement> comparison)
-        {
-            lock (_lockRef)
+            h.Window.GraphicsContext.Actions.Push(() => 
             {
-                _elements.Sort(comparison);
-                
-                // May be way of doing this at the same time as sorting?
-                Span<IElement> span = CollectionsMarshal.AsSpan(_elements);
-                for (int i = 0; i < span.Length; i++)
+                if (fbf != null)
                 {
-                    span[i].Properties.elementIndex = i;
-                    span[i].Properties.Depth = i;
+                    _source.Properties.handle.FallBackFocus = fbf;
                 }
+                IA();
+                _source.Properties.handle.LayoutElement(_source);
+                // Don't know if this is needed
+                UIManager.RecalculateScrollBounds(_source.Properties);
+            });
+        }
+        private void IA()
+        {
+            Span<Action> span = CollectionsMarshal.AsSpan(_actions);
+            for (int i = 0; i < span.Length; i++)
+            {
+                Action a = span[i];
+                switch (a.AT)
+                {
+                    case ActionType.Add:
+                        BaseAdd(a.EA);
+                        continue;
+                    case ActionType.Clear:
+                        BaseClear();
+                        continue;
+                    case ActionType.Remove:
+                        BaseRemove(a.EA);
+                        continue;
+                    case ActionType.RemoveAt:
+                        BaseRemoveAt(a.IA);
+                        continue;
+                    case ActionType.Sort:
+                        BaseSort(a.Comp);
+                        continue;
+                    case ActionType.SortDepth:
+                        BaseSort(a.Comp);
+                        continue;
+                    case ActionType.Swap:
+                        BaseSwap(a.EA, a.EB);
+                        continue;
+                    case ActionType.SwapAt:
+                        BaseSwap(a.IA, a.IB);
+                        continue;
+                }
+            }
+        }
+        
+        public override void Add(IElement item)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Add, item, null));
+                }
+                return;
             }
             
-            _source.Properties.handle?.LayoutElement(_source);
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseAdd(item);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() => 
+            {
+                BaseAdd(item);
+                _source.Properties.handle.LayoutElement(_source);
+            });
         }
 
-        public struct Enumerator : IEnumerator<IElement>, IEnumerator
+        public override void Clear()
         {
-            public Enumerator(List<IElement> source)
+            if (_inGroupAction)
             {
-                _currentIndex = 0;
-                _source = source;
-                _current = null;
-            }
-
-            private int _currentIndex;
-            private readonly List<IElement> _source;
-            private IElement _current;
-
-            public IElement Current => _current;
-            object IEnumerator.Current => _current;
-
-            public void Dispose()
-            {
-
-            }
-
-            public bool MoveNext()
-            {
-                if (_currentIndex < _source.Count)
+                lock (_actions)
                 {
-                    _current = _source[_currentIndex];
-                    _currentIndex++;
-                    return true;
+                    _actions.Add(new Action(ActionType.Clear, null, null));
                 }
-
-                _current = null;
-                return false;
+                return;
             }
-
-            void IEnumerator.Reset()
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
             {
-                _currentIndex = 0;
-                _current = null;
+                BaseClear();
+                return;
             }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                BaseClear();
+                if (_source.LayoutManager != null &&
+                (_source.LayoutManager.ChildDependent ||
+                _source.LayoutManager.SizeDependent))
+                {
+                    _source.Properties.handle.LayoutElement(_source);
+                }
+                else
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
+        }
+
+        public override bool Remove(IElement item)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Remove, item, null));
+                }
+                return true;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                return BaseRemove(item);
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                BaseRemove(item);
+                _source.Properties.handle.LayoutElement(_source);
+                
+                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
+            // ?
+            return true;
+        }
+        public override void RemoveAt(int index)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.RemoveAt, index, 0));
+                }
+                return;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseRemoveAt(index);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                IElement e = this[index];
+                BaseRemoveAt(index);
+                _source.Properties.handle.LayoutElement(_source);
+                
+                if (e.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
+        }
+
+        public override void Sort(Comparison<IElement> comparison)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Sort, comparison));
+                }
+                return;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseSort(comparison);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                BaseSort(comparison);
+                _source.Properties.handle.LayoutElement(_source);
+            });
+        }
+
+        public override void SortDepth(Comparison<IElement> comparison)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.SortDepth, comparison));
+                }
+                return;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseSortDepth(comparison);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                BaseSortDepth(comparison);
+                _source.Properties.handle.LayoutElement(_source);
+            });
+        }
+
+        public override bool Swap(IElement a, IElement b)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Swap, a, b));
+                }
+                return true;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                return BaseSwap(a, b);
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() => 
+            {
+                BaseSwap(a, b);
+                _source.Properties.handle.LayoutElement(_source);
+            });
+            // ?
+            return true;
+        }
+
+        public override bool Swap(int indexA, int indexB)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.SwapAt, indexA, indexB));
+                }
+                return true;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                return BaseSwap(indexA, indexB);
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() => 
+            {
+                BaseSwap(indexA, indexB);
+                _source.Properties.handle.LayoutElement(_source);
+            });
+            // ?
+            return true;
         }
     }
 }
