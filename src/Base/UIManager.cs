@@ -46,7 +46,6 @@ namespace Zene.GUI
 
             Hover = root;
             _focus = root;
-            _fallBackFocus = root;
         }
 
         public ElementList Elements { get; private set; }
@@ -82,24 +81,9 @@ namespace Zene.GUI
                 _focus.OnFocus(true);
             }
         }
-        private IElement _fallBackFocus;
-        public IElement FallBackFocus
-        {
-            get => _fallBackFocus;
-            set
-            {
-                if (value == null || value.Properties.handle != this)
-                {
-                    _fallBackFocus = Root;
-                    return;
-                }
-
-                _fallBackFocus = value;
-            }
-        }
         internal void ResetFocusNoEvent()
         {
-            _focus = _fallBackFocus;
+            _focus = Root;
             _focus.OnFocus(true);
         }
 

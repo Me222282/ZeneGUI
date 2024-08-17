@@ -62,16 +62,17 @@ namespace Zene.GUI
             
         }
         
-        private List<Action> _actions = new List<Action>();
+        private readonly List<Action> _actions = new List<Action>();
         private bool _inGroupAction = false;
-        
+
+        public ListActions StartGroupAction() => new ListActions(this);
         internal List<Action> InitGroupAction()
         {
             _actions.Clear();
             _inGroupAction = true;
             return _actions;
         }
-        internal void ImplementActions(IElement fbf = null)
+        internal void ImplementActions(IElement ef = null)
         {
             _inGroupAction = false;
             
@@ -84,14 +85,14 @@ namespace Zene.GUI
             
             h.Window.GraphicsContext.Actions.Push(() => 
             {
-                if (fbf != null)
-                {
-                    _source.Properties.handle.FallBackFocus = fbf;
-                }
                 IA();
                 _source.Properties.handle.LayoutElement(_source);
                 // Don't know if this is needed
                 UIManager.RecalculateScrollBounds(_source.Properties);
+                if (ef != null)
+                {
+                    _source.Properties.handle.Focus = ef;
+                }
             });
         }
         private void IA()

@@ -19,7 +19,7 @@ namespace Zene.GUI
         private readonly ElementList _source;
         private List<ElementList.Action> _actions;
 
-        public IElement FallBackFocus { get; set; } = null;
+        public IElement EndingFocus { get; set; } = null;
 
         private bool _disposed = false;
         public void Dispose()
@@ -28,7 +28,7 @@ namespace Zene.GUI
             
             _disposed = true;
             _actions = null;
-            _source.ImplementActions(FallBackFocus);
+            _source.ImplementActions(EndingFocus);
 
             GC.SuppressFinalize(this);
         }

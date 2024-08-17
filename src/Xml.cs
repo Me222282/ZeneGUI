@@ -93,18 +93,14 @@ namespace Zene.GUI
                 xnl = root.ChildNodes[1].ChildNodes;
             }
 
-            ListActions la = new ListActions(re);
-
             foreach (XmlNode node in xnl)
             {
                 IElement e = ParseNode(node, re.Source);
                 // Property node
                 if (e == null) { continue; }
 
-                la.Add(e);
+                re.Add(e);
             }
-
-            la.Apply();
 
             _window = null;
             _events = null;
@@ -144,8 +140,6 @@ namespace Zene.GUI
                 ParseAttribute(a.Name, a.Value, t, element);
             }
 
-            ListActions la = element.Children == null ? null : new ListActions(element);
-
             foreach (XmlNode child in node.ChildNodes)
             {
                 // Set text
@@ -172,10 +166,8 @@ namespace Zene.GUI
                     throw new Exception($"{node.Name} cannot have child elements.");
                 }
 
-                la.Add(e);
+                element.Children.Add(e);
             }
-
-            la?.Apply();
 
             return element;
         }
