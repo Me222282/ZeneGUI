@@ -464,11 +464,6 @@ namespace Zene.GUI
         internal void SetRenderLocation(Vector2 pos) => _uiView.Location = pos;
         private void Render(IElement e, IDrawingContext dm)
         {
-            // Set some drawing properties
-            TextRenderer.Projection = e.Graphics?.Projection;
-            TextRenderer.View = Matrix.Identity;
-            TextRenderer.Model = Matrix.Identity;
-
             renderFocus = e;
 
             dm.Projection = e.Graphics?.Projection;
