@@ -62,6 +62,8 @@ namespace Zene.GUI
 
         public T Find<T>() where T : class, IElement
             => RootElement.Elements.Find<T>();
+        public T RecursiveFind<T>() where T : class, IElement
+            => RootElement.Elements.RecursiveFind<T>();
 
         protected override void OnUpdate(FrameEventArgs e)
         {
