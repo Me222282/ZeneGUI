@@ -86,6 +86,11 @@ namespace Zene.GUI
             _focus = Root;
             _focus.OnFocus(true);
         }
+        internal void ResetHoverNoEvent()
+        {
+            Hover = Root;
+            Hover.OnMouseEnter();
+        }
 
         private readonly UIView _uiView;
         public TextureRenderer Framebuffer { get; }
@@ -292,6 +297,9 @@ namespace Zene.GUI
         protected void TriggerChange()
         {
             CalcElementBounds(Root, new LayoutArgs(Root, Root.Properties.bounds.Size, Elements));
+            
+            // Change in layout causes hover to be recalculated
+            MouseMove(new MouseEventArgs(Root.Properties.mousePos));
         }
 
         public void LayoutElement(IElement element)

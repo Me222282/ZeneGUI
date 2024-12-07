@@ -36,15 +36,21 @@ namespace Zene.GUI
         private static void SetHandle(IElement item, UIManager handle)
         {
             if (item.Properties.handle == handle) { return; }
-
+            
+            // Very specific bug fixed with this
             if (item.Properties.handle != null &&
-                item.Properties.handle.Focus == item &&
                 item.Properties.handle != handle)
             {
-                //item.Properties.handle.Focus = null;
-                // Very specific bug fixed with this
-                item.Properties.handle.ResetFocusNoEvent();
-                item.Properties.focus = false;
+                if (item.Properties.handle.Focus == item)
+                {
+                    item.Properties.handle.ResetFocusNoEvent();
+                    item.Properties.focus = false;
+                }
+                if (item.Properties.handle.Hover == item)
+                {
+                    item.Properties.handle.ResetHoverNoEvent();
+                    item.Properties.hover = false;
+                }
             }
 
             item.Properties.handle = handle;
@@ -88,7 +94,7 @@ namespace Zene.GUI
                     // e.Properties.focus = false;
                     e.Properties.parent = null;
                     e.Properties.elementIndex = -1;
-                    e.Properties.hover = false;
+                    // e.Properties.hover = false;
                     e.Properties.selected = false;
 
                     SetHandle(e, null);
@@ -290,7 +296,7 @@ namespace Zene.GUI
             SetHandle(item, null);
             item.Properties.parent = null;
             item.Properties.elementIndex = -1;
-            item.Properties.hover = false;
+            // item.Properties.hover = false;
             item.Properties.selected = false;
 
             lock (_lockRef)
