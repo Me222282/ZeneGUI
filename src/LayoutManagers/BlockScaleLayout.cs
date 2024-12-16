@@ -1,59 +1,55 @@
-﻿using System;
+using System;
 using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public class BlockLayout : LayoutManagerI<BlockLayout.Instance>
+    public class BlockScaleLayout : LayoutManagerI<BlockScaleLayout.Instance>
     {
         public class Instance : ILayoutManagerInstance
         {
-            public double _left;
-            public double _right;
-            public double _lowestY;
-            public Vector2 _current;
-
-            public void SetLowest(double value)
+            public double _current;
+            private double _height;
+            
+            public void Height(double h)
             {
-                if (_lowestY > value)
-                {
-                    _lowestY = value;
-                }
+                if (_height >= h) { return; }
+                _height = h;
             }
-
-            public Vector2 ReturningSize { get; init; }
-            public Vector2 ChildOffset => 0d;
+            
+            public Vector2 ReturningSize => (_current, _height);
+            public Vector2 ChildOffset => (ReturningSize.X / -2d, 0d);
         }
 
-        public BlockLayout()
-            : base(true, false)
+        public BlockScaleLayout()
+            : base(true, true)
         {
 
         }
 
         public override bool ChildDependent => true;
 
-        public BlockLayout(Vector4 margin)
-            : base(true, false)
+        public BlockScaleLayout(Vector4 margin)
+            : base(true, true)
         {
             _margin = margin;
         }
-        public BlockLayout(Vector2 margin)
-            : base(true, false)
+        public BlockScaleLayout(Vector2 margin)
+            : base(true, true)
         {
             _margin = (margin, margin);
         }
-        public BlockLayout(double margin)
-            : base(true, false)
+        public BlockScaleLayout(double margin)
+            : base(true, true)
         {
             _margin = (margin, margin, margin, margin);
         }
-        public BlockLayout(double marginX, double marginY)
-            : base(true, false)
+        public BlockScaleLayout(double marginX, double marginY)
+            : base(true, true)
         {
             _margin = (marginX, marginY, marginX, marginY);
         }
-        public BlockLayout(double left, double right, double top, double bottom)
-            : base(true, false)
+        public BlockScaleLayout(double left, double right, double top, double bottom)
+            : base(true, true)
         {
             _margin = (left, top, right, bottom);
         }
@@ -133,42 +129,19 @@ namespace Zene.GUI
         }
 
         public override ILayoutManagerInstance Init(LayoutArgs args)
-        {
-            Instance i = new Instance()
-            {
-                ReturningSize = args.Size,
-            };
-
-            i._right = args.Size.X * 0.5;
-            i._left = -i._right;
-            i._lowestY = args.Size.Y * 0.5;
-
-            i._current = (i._left, i._lowestY - _margin.Y);
-
-            return i;
-        }
+            => new Instance();
 
         protected override Box GetBounds(LayoutArgs args, Box layoutResult, Instance instance)
         {
             Vector2 size = layoutResult.Size;
+            
+            instance._current += _margin.X;
+            double x = instance._current;
+            instance._current += size.X + _margin.Z;
 
-            bool onLeft = instance._current.X == instance._left;
-
-            instance._current.X += _margin.X;
-            Vector2 topLeft = instance._current;
-            instance._current.X += size.X + _margin.Z;
-
-            if (!onLeft && instance._current.X > instance._right)
-            {
-                instance._current.Y = instance._lowestY - _margin.Y;
-
-                topLeft = (instance._left + _margin.X, instance._current.Y);
-
-                instance._current.X = topLeft.X + size.X + _margin.Z;
-            }
-
-            layoutResult.SetTopLeft(topLeft);
-            instance.SetLowest(instance._current.Y - size.Y - _margin.W);
+            layoutResult.Centre = 0d;
+            layoutResult.Shift((x + (size.X / 2d), 0d));
+            instance.Height(size.Y + _margin.Y + _margin.W);
 
             return layoutResult;
         }

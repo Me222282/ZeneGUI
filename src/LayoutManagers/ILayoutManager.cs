@@ -23,5 +23,6 @@ namespace Zene.GUI
     public interface ILayoutManagerInstance
     {
         public Vector2 ReturningSize { get; }
+        public Vector2 ChildOffset { get; }
     }
 }

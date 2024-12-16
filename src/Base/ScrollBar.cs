@@ -18,7 +18,7 @@ namespace Zene.GUI
         }
         public virtual void OnClick(IElement parent, Vector2 size, Vector2 mousePos)
         {
-
+            
         }
 
         public virtual void OnRender(IDrawingContext context, ScrollBarData param)

@@ -363,16 +363,31 @@ namespace Zene.GUI
 
             ILayoutManager lm = element.LayoutManager ?? throw new ArgumentNullException(nameof(element));
             ILayoutManagerInstance lmi = lm.Init(new LayoutArgs(element, bounds.Size, element.Children));
-
+            
+            Box[] boxes = new Box[element.Children.Length];
+            
+            int i = -1;
             foreach (IElement e in element.Children)
             {
+                i++;
                 if (!e.Properties.Visable) { continue; }
 
                 LayoutArgs ea = new LayoutArgs(e, bounds.Size, element.Children);
 
                 Box nb = CalcElementBounds(e, ea);
                 nb = lm.GetBounds(ea, nb, lmi);
-
+                
+                boxes[i] = nb;
+            }
+            // better solution coming later
+            i = -1;
+            foreach (IElement e in element.Children)
+            {
+                i++;
+                if (!e.Properties.Visable) { continue; }
+                
+                Box nb = boxes[i].Shifted(lmi.ChildOffset);
+                
                 // No change in bounds
                 if (e.Properties.bounds == nb)
                 {

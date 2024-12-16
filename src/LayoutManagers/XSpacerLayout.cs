@@ -11,6 +11,7 @@ namespace Zene.GUI
             public double _offset;
 
             public Vector2 ReturningSize { get; init; }
+            public Vector2 ChildOffset => 0d;
         }
 
         public XSpacerLayout()
