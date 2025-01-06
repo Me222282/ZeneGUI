@@ -156,7 +156,7 @@ namespace Zene.GUI
 
             ManageScrollCon(h, e.DeltaY, false);
         }
-        private bool ManageScrollCon(IElement e, double delta, bool uninteract)
+        private bool ManageScrollCon(IElement e, floatv delta, bool uninteract)
         {
             if (e == null) { return false; }
             if (!(e.Properties.scrollX || e.Properties.scrollY) || e.Properties.ScrollBar == null)
@@ -176,14 +176,14 @@ namespace Zene.GUI
 
             return true;
         }
-        private bool ManageScroll(IElement e, double delta)
+        private bool ManageScroll(IElement e, floatv delta)
         {
-            double offset = e.Properties.ScrollBar.ScrollSpeed * delta;
+            floatv offset = e.Properties.ScrollBar.ScrollSpeed * delta;
 
             bool shift = Window[Mods.Shift];
             if (e.Properties.scrollX && shift)
             {
-                double panX = e.Properties.ViewPan.X + offset;
+                floatv panX = e.Properties.ViewPan.X + offset;
                 panX = Math.Clamp(panX,
                     -e.Properties.scrollBounds.Right,
                     -e.Properties.scrollBounds.Left);
@@ -196,7 +196,7 @@ namespace Zene.GUI
 
             if (!e.Properties.scrollY || shift || Window[Mods.Alt] || Window[Mods.Control]) { return false; }
 
-            double panY = e.Properties.ViewPan.Y - offset;
+            floatv panY = e.Properties.ViewPan.Y - offset;
             panY = Math.Clamp(panY,
                 -e.Properties.scrollBounds.Top,
                 -e.Properties.scrollBounds.Bottom);

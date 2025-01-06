@@ -5,13 +5,13 @@ namespace Zene.GUI
 {
     public class MenuLayout : ILayout
     {
-        public MenuLayout(double height)
+        public MenuLayout(floatv height)
         {
             _height = height;
         }
 
-        private double _height;
-        public double Height
+        private floatv _height;
+        public floatv Height
         {
             get => _height;
             set
@@ -27,11 +27,11 @@ namespace Zene.GUI
 
         public Box GetBounds(LayoutArgs args)
         {
-            double top = args.Size.Y * 0.5;
+            floatv top = args.Size.Y * 0.5f;
 
             return new Box(
-                args.Size.X * -0.5,
-                args.Size.X * 0.5,
+                args.Size.X * -0.5f,
+                args.Size.X * 0.5f,
                 top,
                 top - _height);
         }

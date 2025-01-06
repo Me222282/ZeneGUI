@@ -7,11 +7,11 @@ namespace Zene.GUI
     {
         public class Instance : ILayoutManagerInstance
         {
-            public double _multipler;
-            public double _offset;
+            public floatv _multipler;
+            public floatv _offset;
 
             public Vector2 ReturningSize { get; init; }
-            public Vector2 ChildOffset => 0d;
+            public Vector2 ChildOffset => 0;
         }
 
         public XSpacerLayout()
@@ -28,13 +28,13 @@ namespace Zene.GUI
             {
                 ReturningSize = args.Size,
                 _multipler = args.Size.X / args.Neighbours.Length,
-                _offset = args.Size.X * -0.5
+                _offset = args.Size.X * -0.5f
             };
         }
 
         protected override Box GetBounds(LayoutArgs args, Box layoutResult, Instance instance)
         {
-            layoutResult.Location = (instance._offset + (instance._multipler * (args.Index + 0.5)), 0d);
+            layoutResult.Location = (instance._offset + (instance._multipler * (args.Index + 0.5f)), 0);
 
             return layoutResult;
         }

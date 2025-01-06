@@ -7,14 +7,14 @@ namespace Zene.GUI
 {
     public class ScrollBar : IRenderable<ScrollBarData>
     {
-        public double Width { get; set; } = 10d;
-        public double ScrollSpeed { get; set; } = 20d;
+        public floatv Width { get; set; } = 10;
+        public floatv ScrollSpeed { get; set; } = 20;
 
-        public virtual double GetScrollPercentage(double size, Vector2 mousePos, bool latitude)
+        public virtual floatv GetScrollPercentage(floatv size, Vector2 mousePos, bool latitude)
         {
-            double mouse = latitude ? mousePos.Y : mousePos.X;
+            floatv mouse = latitude ? mousePos.Y : mousePos.X;
 
-            return 0.5 - (mouse / (size - 4d));
+            return 0.5f - (mouse / (size - 4));
         }
         public virtual void OnClick(IElement parent, Vector2 size, Vector2 mousePos)
         {
@@ -26,7 +26,7 @@ namespace Zene.GUI
             context.Framebuffer.Clear(Colour.DarkSalmon);
 
             Box barBounds;
-            double range = param.Size - (param.Size * param.BarPercent);
+            floatv range = param.Size - (param.Size * param.BarPercent);
 
             if (param.Latitude)
             {
@@ -41,13 +41,13 @@ namespace Zene.GUI
                     (param.Size * param.BarPercent - 4d, Width - 4d));
             }
 
-            context.DrawRoundedBox(barBounds, ColourF.Azure, 0.5);
+            context.DrawRoundedBox(barBounds, ColourF.Azure, 0.5f);
         }
     }
 
     public struct ScrollBarData
     {
-        public ScrollBarData(IElement e, double scroll, double bar, bool latitude, double size)
+        public ScrollBarData(IElement e, floatv scroll, floatv bar, bool latitude, floatv size)
         {
             Parent = e;
             ScrollPercent = scroll;
@@ -57,10 +57,10 @@ namespace Zene.GUI
         }
 
         public IElement Parent { get; }
-        public double ScrollPercent { get; set; }
-        public double BarPercent { get; set; }
+        public floatv ScrollPercent { get; set; }
+        public floatv BarPercent { get; set; }
         public bool Latitude { get; }
-        public double Size { get; }
+        public floatv Size { get; }
     }
 
     public struct ScrollInfo

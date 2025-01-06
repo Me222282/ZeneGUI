@@ -671,8 +671,8 @@ namespace Zene.GUI
 
             str = str[1..^1];
 
-            double x = double.Parse(str.Remove(str.IndexOf(',')));
-            double y = double.Parse(str.Remove(0, str.IndexOf(',') + 1));
+            floatv x = floatv.Parse(str.Remove(str.IndexOf(',')));
+            floatv y = floatv.Parse(str.Remove(0, str.IndexOf(',') + 1));
 
             return new Vector2(x, y);
         }
@@ -703,10 +703,10 @@ namespace Zene.GUI
 
             str = str[1..^1];
 
-            double x = double.Parse(str.Remove(str.IndexOf(',')));
+            floatv x = floatv.Parse(str.Remove(str.IndexOf(',')));
             str = str.Remove(0, str.IndexOf(',') + 1);
-            double y = double.Parse(str.Remove(str.IndexOf(',')));
-            double z = double.Parse(str.Remove(0, str.IndexOf(',') + 1));
+            floatv y = floatv.Parse(str.Remove(str.IndexOf(',')));
+            floatv z = floatv.Parse(str.Remove(0, str.IndexOf(',') + 1));
 
             return new Vector3(x, y, z);
         }
@@ -739,12 +739,12 @@ namespace Zene.GUI
 
             str = str[1..^1];
 
-            double x = double.Parse(str.Remove(str.IndexOf(',')));
+            floatv x = floatv.Parse(str.Remove(str.IndexOf(',')));
             str = str.Remove(0, str.IndexOf(',') + 1);
-            double y = double.Parse(str.Remove(str.IndexOf(',')));
+            floatv y = floatv.Parse(str.Remove(str.IndexOf(',')));
             str = str.Remove(0, str.IndexOf(',') + 1);
-            double z = double.Parse(str.Remove(str.IndexOf(',')));
-            double w = double.Parse(str.Remove(0, str.IndexOf(',') + 1));
+            floatv z = floatv.Parse(str.Remove(str.IndexOf(',')));
+            floatv w = floatv.Parse(str.Remove(0, str.IndexOf(',') + 1));
 
             return new Vector4(x, y, z, w);
         }

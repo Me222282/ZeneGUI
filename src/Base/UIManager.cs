@@ -231,7 +231,7 @@ namespace Zene.GUI
         {
             if (el == null) { return null; }
 
-            double depth = 0d;
+            floatv depth = 0;
             IElement hover = null;
             ScrollBarHover hoverScroll = ScrollBarHover.None;
             foreach (IElement e in el)
@@ -278,7 +278,7 @@ namespace Zene.GUI
         {
             Vector2 scrollPercent = e.Properties.GetScrollPercent();
             UIProperties prop = e.Properties;
-            double perc;
+            floatv perc;
 
             if (prop.scrollBarHover == ScrollBarHover.XAxis)
             {
@@ -438,48 +438,48 @@ namespace Zene.GUI
         {
             ScrollInfo scroll = Root.Properties.GetScrollInfo();
 
-            _uiView.Scale = 1d;
-            _uiView.Offset = 0d;
-            _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
+            _uiView.Scale = 1;
+            _uiView.Offset = 0;
+            _uiView.ScissorBox = new GLBox(0, Framebuffer.Size);
             _uiView.ScissorOffset = new Vector2(
-                scroll.Y ? Root.Properties.ScrollBar.Width : 0d,
-                scroll.X ? Root.Properties.ScrollBar.Width : 0d);
+                scroll.Y ? Root.Properties.ScrollBar.Width : 0,
+                scroll.X ? Root.Properties.ScrollBar.Width : 0);
 
             _uiView.View = new Box(0d, Framebuffer.Size);
 
-            _uiView.DepthRange = new Vector2(0d, 1d);
+            _uiView.DepthRange = new Vector2(0, 1);
             _uiView.DepthDivision = 1;
             _uiView.ChildDivision = 1;
-            _uiView.SetDepth(0d);
+            _uiView.SetDepth(0);
 
             Animator.Invoke();
 
             DrawContext dm = new DrawContext(Framebuffer)
             {
                 DepthState = _uiView,
-                RenderState = new RenderState()
+                RenderState = RenderState.BlendReady
             };
             Framebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
             Render(Root, dm);
 
             if (scroll.CanScroll)
             {
-                _uiView.Scale = 1d;
-                _uiView.Offset = 0d;
-                _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
+                _uiView.Scale = 1;
+                _uiView.Offset = 0;
+                _uiView.ScissorBox = new GLBox(0, Framebuffer.Size);
                 _uiView.ScissorOffset = Vector2.Zero;
 
-                _uiView.DepthRange = new Vector2(0d, 1d);
+                _uiView.DepthRange = new Vector2(0, 1);
                 _uiView.DepthDivision = 1;
                 _uiView.ChildDivision = 1;
-                _uiView.SetDepth(1d);
+                _uiView.SetDepth(1);
 
-                RenderScrollBars(dm, scroll, new Box(0d, Framebuffer.Size), Root);
+                RenderScrollBars(dm, scroll, new Box(0, Framebuffer.Size), Root);
             }
 
-            _uiView.Scale = 1d;
-            _uiView.Offset = 0d;
-            _uiView.ScissorBox = new GLBox(0d, Framebuffer.Size);
+            _uiView.Scale = 1;
+            _uiView.Offset = 0;
+            _uiView.ScissorBox = new GLBox(0, Framebuffer.Size);
 
             context.WriteFramebuffer(Framebuffer, BufferBit.Colour, TextureSampling.Nearest);
         }
@@ -492,9 +492,6 @@ namespace Zene.GUI
             dm.Projection = e.Graphics?.Projection;
             dm.View = Matrix.Identity;
             dm.Model = Matrix.Identity;
-            dm.RenderState.Blending = true;
-            dm.RenderState.SourceScaleBlending = BlendFunction.SourceAlpha;
-            dm.RenderState.DestinationScaleBlending = BlendFunction.OneMinusSourceAlpha;
             e.Events.OnUpdate();
             dm.Render(e.Graphics);
             //e.Graphics?.OnRender(dm);
@@ -503,7 +500,7 @@ namespace Zene.GUI
 
             if (!e.HasChildren) { return; }
 
-            double scaleRef = _uiView.Scale * e.Properties.ViewScale;
+            floatv scaleRef = _uiView.Scale * e.Properties.ViewScale;
             Vector2 offsetRef = _uiView.Offset + (e.Properties.bounds.Centre * e.Properties.ViewScale) + e.Properties.ViewPan;
             GLBox scissor = _uiView.PassScissor();
 
@@ -555,7 +552,7 @@ namespace Zene.GUI
         }
         private void RenderScrollBars(IDrawingContext dm, ScrollInfo scroll, Box bounds, IElement e)
         {
-            double width = e.Properties.ScrollBar.Width;
+            floatv width = e.Properties.ScrollBar.Width;
 
             if (scroll.X)
             {
@@ -567,7 +564,7 @@ namespace Zene.GUI
             if (scroll.Y)
             {
                 _uiView.View = new Box(bounds.Right - width, bounds.Right, bounds.Top, bounds.Bottom);
-                dm.Projection = Matrix4.CreateOrthographic(width, bounds.Height, 0d, 1d);
+                dm.Projection = Matrix4.CreateOrthographic(width, bounds.Height, 0, 1);
                 dm.View = Matrix.Identity;
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,
@@ -583,7 +580,7 @@ namespace Zene.GUI
                 bounds.Bottom -= width;
 
                 _uiView.View = new Box(bounds.Left, bounds.Right, bounds.Bottom + width, bounds.Bottom);
-                dm.Projection = Matrix4.CreateOrthographic(bounds.Width, width, 0d, 1d);
+                dm.Projection = Matrix4.CreateOrthographic(bounds.Width, width, 0, 1);
                 dm.View = Matrix.Identity;
                 dm.Model = Matrix.Identity;
                 dm.Render(e.Properties.ScrollBar,

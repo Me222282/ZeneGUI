@@ -50,8 +50,8 @@ namespace Zene.GUI
                 TriggerChange();
             }
         }
-        private double _textSize = 10d;
-        public double TextSize
+        private floatv _textSize = 10;
+        public floatv TextSize
         {
             get => _textSize;
             set

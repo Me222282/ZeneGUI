@@ -39,12 +39,12 @@ namespace Zene.GUI
         private Vector2 _hFrameSize;
         public Vector2 FrameSize
         {
-            get => _hFrameSize * 2d;
-            set => _hFrameSize = value * 0.5;
+            get => _hFrameSize * 2;
+            set => _hFrameSize = value * 0.5f;
         }
 
         public Vector2 Offset { get; set; }
-        public double Scale { get; set; }
+        public floatv Scale { get; set; }
 
         private Box _viewRef;
         public GLBox ScissorBox { get; set; }
@@ -80,7 +80,7 @@ namespace Zene.GUI
                 View = _viewRef;
             }
         }
-        public double X
+        public floatv X
         {
             get => _viewRef.X;
             set
@@ -89,7 +89,7 @@ namespace Zene.GUI
                 View = _viewRef;
             }
         }
-        public double Y
+        public floatv Y
         {
             get => _viewRef.Y;
             set
@@ -108,7 +108,7 @@ namespace Zene.GUI
                 View = _viewRef;
             }
         }
-        public double Width
+        public floatv Width
         {
             get => _viewRef.Width;
             set
@@ -117,7 +117,7 @@ namespace Zene.GUI
                 View = _viewRef;
             }
         }
-        public double Height
+        public floatv Height
         {
             get => _viewRef.Height;
             set
@@ -130,7 +130,7 @@ namespace Zene.GUI
         public Vector2 DepthRange { get; set; } = new Vector2(0d, 1d);
         public int DepthDivision { get; set; }
         public int ChildDivision { get; set; }
-        public void SetDepth(double depth)
+        public void SetDepth(floatv depth)
         {
             Vector2 halfRange = GetRange(depth, DepthRange, DepthDivision);
             Vector2 mainRange = GetRange(0, halfRange, ChildDivision);
@@ -142,11 +142,11 @@ namespace Zene.GUI
 
             DepthRange = halfRange;
         }
-        private static Vector2 GetRange(double depth, Vector2 range, double div)
+        private static Vector2 GetRange(floatv depth, Vector2 range, floatv div)
         {
-            depth = Math.Max(depth, 0d);
+            depth = Math.Max(depth, 0);
 
-            double rangeV = range.Y - range.X;
+            floatv rangeV = range.Y - range.X;
             rangeV /= div;
 
             Vector2 nDRange = new Vector2(

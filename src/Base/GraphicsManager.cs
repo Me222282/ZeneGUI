@@ -10,7 +10,7 @@ namespace Zene.GUI
         public GraphicsManager(IElement source)
         {
             Source = source ?? throw new ArgumentNullException(nameof(source));
-            _refProj = new MultiplyMatrix(Matrix.Identity, _refprojRef);
+            _refProj = new MultiplyMatrix(Matrix.Identity, Matrix.Identity);
         }
 
         public IElement Source { get; }
@@ -119,18 +119,17 @@ namespace Zene.GUI
         }
         private void SetProjection()
         {
-            _refprojRef.Source = Matrix4.CreateOrthographic(_bounds.Width, _bounds.Height, 0d, 1d);
+            _refProj.Right = Matrix4.CreateOrthographic(_bounds.Width, _bounds.Height, 0, 1);
         }
-        private readonly MultiplyMatrix _refProj;
+        private MultiplyMatrix _refProj;
         /// <summary>
         /// The projection matrix used to render objects to this element.
         /// </summary>
         public IMatrix Projection => _refProj;
-        private readonly ReferenceMatrix _refprojRef = new ReferenceMatrix(Matrix.Identity);
         /// <summary>
-        /// The projection matrix used to render rixed objects to this element,
+        /// The projection matrix used to render fixed objects to this element,
         /// like borders that shouldn't be affected by zoom and panning.
         /// </summary>
-        public IMatrix FixedProjection => _refprojRef;
+        public IMatrix FixedProjection => _refProj.Right;
     }
 }

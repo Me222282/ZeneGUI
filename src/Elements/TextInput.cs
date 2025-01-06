@@ -19,10 +19,10 @@ namespace Zene.GUI
             Graphics = new Renderer(this);
         }
 
-        public double BorderWidth { get; set; } = 1;
+        public floatv BorderWidth { get; set; } = 1;
         public ColourF BorderColour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BackgroundColour { get; set; }
-        public double CornerRadius { get; set; } = 0.01;
+        public floatv CornerRadius { get; set; } = 0.01f;
         public bool SingleLine { get; set; } = false;
 
         private int _caret = 0;
@@ -185,11 +185,11 @@ namespace Zene.GUI
             return false;
         }
 
-        private double BorderWidthDraw()
+        private floatv BorderWidthDraw()
         {
             if (Focused)
             {
-                return BorderWidth + 1d;
+                return BorderWidth + 1;
             }
 
             return BorderWidth;
@@ -207,7 +207,7 @@ namespace Zene.GUI
 
             public override void OnRender(IDrawingContext context)
             {
-                double borderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                floatv borderWidth = Math.Max(Source.BorderWidthDraw(), 0);
                 Size = Source.Size + borderWidth;
 
                 // No point drawing box

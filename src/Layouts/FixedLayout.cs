@@ -10,7 +10,7 @@ namespace Zene.GUI
             _bounds = new Box(bounds);
         }
 
-        public FixedLayout(double x, double y, double w, double h)
+        public FixedLayout(floatv x, floatv y, floatv w, floatv h)
         {
             _bounds = new Box((x, y), (w, h));
         }
@@ -32,7 +32,7 @@ namespace Zene.GUI
             }
         }
 
-        public double Left
+        public floatv Left
         {
             get => _bounds.Left;
             set
@@ -43,7 +43,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Right
+        public floatv Right
         {
             get => _bounds.Right;
             set
@@ -54,7 +54,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Bottom
+        public floatv Bottom
         {
             get => _bounds.Bottom;
             set
@@ -65,7 +65,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Top
+        public floatv Top
         {
             get => _bounds.Top;
             set
@@ -118,7 +118,7 @@ namespace Zene.GUI
             }
         }
 
-        public double X
+        public floatv X
         {
             get => _bounds.X;
             set
@@ -129,7 +129,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Y
+        public floatv Y
         {
             get => _bounds.Y;
             set
@@ -140,7 +140,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Width
+        public floatv Width
         {
             get => _bounds.Width;
             set
@@ -151,7 +151,7 @@ namespace Zene.GUI
                 Change?.Invoke(this, EventArgs.Empty);
             }
         }
-        public double Height
+        public floatv Height
         {
             get => _bounds.Height;
             set
@@ -168,7 +168,7 @@ namespace Zene.GUI
         public Box GetBounds(LayoutArgs args)
             => _bounds;
 
-        public static readonly FixedLayout Default = new FixedLayout(0d, 0d, 1d, 1d);
+        public static readonly FixedLayout Default = new FixedLayout(0, 0, 1, 1);
 
         public static implicit operator FixedLayout(Box bounds) => new FixedLayout(bounds);
         public static implicit operator FixedLayout(Rectangle bounds) => new FixedLayout(bounds);

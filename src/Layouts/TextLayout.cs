@@ -20,14 +20,14 @@ namespace Zene.GUI
 
             _relative = relative;
         }
-        public TextLayout(double extraWidth, double extraHeight, double x, double y, bool relative = true)
+        public TextLayout(floatv extraWidth, floatv extraHeight, floatv x, floatv y, bool relative = true)
         {
             _padding = (extraWidth, extraHeight);
             _centre = (x, y);
 
             _relative = relative;
         }
-        public TextLayout(double extraWidth, double extraHeight, double x, double y, double minX, double minY, bool relative = true)
+        public TextLayout(floatv extraWidth, floatv extraHeight, floatv x, floatv y, floatv minX, floatv minY, bool relative = true)
         {
             _padding = (extraWidth, extraHeight);
             _minSize = (minX, minY);

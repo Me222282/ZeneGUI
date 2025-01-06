@@ -7,25 +7,21 @@ namespace Zene.GUI
     public class GUIWindow : Window
     {
         public GUIWindow(int width, int height, string title, WindowInitProperties properties = null)
-            : this(width, height, title, 4.5, true, properties)
+            : this(width, height, title, 4.5f, true, properties)
         {
         }
-        public GUIWindow(int width, int height, string title, double version, WindowInitProperties properties = null)
+        public GUIWindow(int width, int height, string title, floatv version, WindowInitProperties properties = null)
             : this(width, height, title, version, true, properties)
         {
         }
         protected GUIWindow(int width, int height, string title, bool multithreading, WindowInitProperties properties = null)
-            : this(width, height, title, 4.5, multithreading, properties)
+            : this(width, height, title, 4.5f, multithreading, properties)
         {
         }
-        protected GUIWindow(int width, int height, string title, double version, bool multithreading, WindowInitProperties properties = null)
+        protected GUIWindow(int width, int height, string title, floatv version, bool multithreading, WindowInitProperties properties = null)
             : base(width, height, title, version, multithreading, properties)
         {
             RootElement = new RootElement(this);
-
-            State.Blending = true;
-            State.SourceScaleBlending = BlendFunction.SourceAlpha;
-            State.DestinationScaleBlending = BlendFunction.OneMinusSourceAlpha;
         }
 
         /// <summary>
@@ -71,7 +67,7 @@ namespace Zene.GUI
 
             BaseFramebuffer.Clear(BufferBit.Colour | BufferBit.Depth);
 
-            DrawContext.Render(RootElement);
+            e.Context.Render(RootElement);
         }
     }
 }

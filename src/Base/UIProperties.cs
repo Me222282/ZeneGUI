@@ -86,7 +86,7 @@ namespace Zene.GUI
 
         public bool Visable { get; set; } = true;
 
-        public double Depth { get; set; } = -1d;
+        public floatv Depth { get; set; } = -1;
 
         /// <summary>
         /// Determines whether this element can become the hover element or focus element.
@@ -103,7 +103,7 @@ namespace Zene.GUI
 
         public bool TabShifting { get; set; } = true;
 
-        private Vector2 _viewPan = 0d;
+        private Vector2 _viewPan = 0;
         /// <summary>
         /// The view panning of the element - applies to child elements.
         /// </summary>
@@ -122,11 +122,11 @@ namespace Zene.GUI
                 Source.Graphics?.SetView();
             }
         }
-        private double _viewScale = 1d;
+        private floatv _viewScale = 1;
         /// <summary>
         /// The view scale of the element - applies to child elements.
         /// </summary>
-        public double ViewScale
+        public floatv ViewScale
         {
             get => _viewScale;
             set
@@ -145,7 +145,7 @@ namespace Zene.GUI
         internal bool scrollX = false;
         internal bool scrollY = false;
         internal ScrollBarHover scrollBarHover;
-        internal double initScrollPerc;
+        internal floatv initScrollPerc;
         internal Box scrollBounds = new Box();
         internal Vector2 scrollMoveRange;
         public ScrollInfo GetScrollInfo()
@@ -164,8 +164,8 @@ namespace Zene.GUI
                 vb.Right -= ScrollBar.Width;
             }
 
-            scrollX = scrollBox.Left < vb.Left || scrollBox.Right > vb.Right || _viewPan.X != 0d;
-            scrollY = scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top || _viewPan.Y != 0d;
+            scrollX = scrollBox.Left < vb.Left || scrollBox.Right > vb.Right || _viewPan.X != 0;
+            scrollY = scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top || _viewPan.Y != 0;
             if (!(scrollX || scrollY))
             {
                 return new ScrollInfo();
@@ -173,10 +173,10 @@ namespace Zene.GUI
 
             Box scrollView = scrollBox.Combine(vb);
             scrollBounds = new Box(
-                Math.Min(scrollView.Left - vb.Left, 0d),
-                Math.Max(scrollView.Right - vb.Right, 0d),
-                Math.Max(scrollView.Top - vb.Top, 0d),
-                Math.Min(scrollView.Bottom - vb.Bottom, 0d));
+                Math.Min(scrollView.Left - vb.Left, 0),
+                Math.Max(scrollView.Right - vb.Right, 0),
+                Math.Max(scrollView.Top - vb.Top, 0),
+                Math.Min(scrollView.Bottom - vb.Bottom, 0));
 
             scrollMoveRange = vb.Size - ((vb.Size * vb.Size) / scrollView.Size);
 
@@ -189,13 +189,13 @@ namespace Zene.GUI
                 ViewPan.X.InvLerp(-scrollBounds.Right, -scrollBounds.Left),
                 ViewPan.Y.InvLerp(-scrollBounds.Top, -scrollBounds.Bottom));
         }
-        public void SetXScroll(double percent)
+        public void SetXScroll(floatv percent)
         {
-            _viewPan.X = (-scrollBounds.Right).Lerp(-scrollBounds.Left, Math.Clamp(percent, 0d, 1d));
+            _viewPan.X = (-scrollBounds.Right).Lerp(-scrollBounds.Left, Math.Clamp(percent, 0, 1));
         }
-        public void SetYScroll(double percent)
+        public void SetYScroll(floatv percent)
         {
-            _viewPan.Y = (-scrollBounds.Top).Lerp(-scrollBounds.Bottom, Math.Clamp(percent, 0d, 1d));
+            _viewPan.Y = (-scrollBounds.Top).Lerp(-scrollBounds.Bottom, Math.Clamp(percent, 0, 1));
         }
 
         internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());

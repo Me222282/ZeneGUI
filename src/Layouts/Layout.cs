@@ -9,7 +9,7 @@ namespace Zene.GUI
         {
             _relative = new Box(box);
         }
-        public Layout(double x, double y, double width, double height)
+        public Layout(floatv x, floatv y, floatv width, floatv height)
         {
             _relative = new Box((x, y), (width, height));
         }
@@ -31,7 +31,7 @@ namespace Zene.GUI
 
         public Box GetBounds(LayoutArgs args)
         {
-            Vector2 multiplier = args.Size * 0.5;
+            Vector2 multiplier = args.Size * 0.5f;
 
             return new Box(
                 _relative.Location * multiplier,

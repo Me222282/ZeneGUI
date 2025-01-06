@@ -39,7 +39,7 @@ namespace Zene.GUI
         public string Id { get; set; }
         public bool OverrideScroll { get; set; }
 
-        public double Depth
+        public floatv Depth
         {
             get => Properties.Depth;
             set => Properties.Depth = value;
@@ -176,7 +176,7 @@ namespace Zene.GUI
             get => Properties.ViewPan;
             set => Properties.ViewPan = value;
         }
-        public double ViewScale
+        public floatv ViewScale
         {
             get => Properties.ViewScale;
             set => Properties.ViewScale = value;

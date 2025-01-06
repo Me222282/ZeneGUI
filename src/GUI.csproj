@@ -1,8 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Zene.GUI</RootNamespace>
+	<Configurations>Debug;Release;Debug64;Release64</Configurations>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -20,4 +21,22 @@
     <ProjectReference Include="..\..\Windowing\src\Windowing.csproj" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug64|AnyCPU'">
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<NoWarn>1701;1702;IDE0090</NoWarn>
+	<DefineConstants>$(DefineConstans);DEBUG;DOUBLE</DefineConstants>
+	<Optimize>false</Optimize>
+	<DebugType>full</DebugType>
+	<ErrorReport>prompt</ErrorReport>
+	<DebugSymbols>true</DebugSymbols>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release64|AnyCPU'">
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<DefineConstants>$(DefineConstans);RELEASE;DOUBLE</DefineConstants>
+	<DebugType>portable</DebugType>
+	<Optimize>true</Optimize>
+	<DebugSymbols>false</DebugSymbols>
+  </PropertyGroup>
+	
 </Project>

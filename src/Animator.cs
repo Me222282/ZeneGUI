@@ -6,7 +6,7 @@ using Zene.Windowing;
 
 namespace Zene.GUI
 {
-    public delegate double AnimationType(double input);
+    public delegate floatv AnimationType(floatv input);
 
     public class Animator
     {
@@ -50,13 +50,13 @@ namespace Zene.GUI
                 _animations.Add(animation);
             }
         }
-        public AnimatorData<T> Add<T>(Action<T> setValue, double duration, T start, T end, AnimationType type)
+        public AnimatorData<T> Add<T>(Action<T> setValue, floatv duration, T start, T end, AnimationType type)
         {
             AnimatorData<T> ad = new AnimatorData<T>(setValue, duration, start, end, type);
             Add(ad);
             return ad;
         }
-        public AnimatorData<T> Add<T>(Action<T> setValue, double duration, T start, T end)
+        public AnimatorData<T> Add<T>(Action<T> setValue, floatv duration, T start, T end)
             => Add(setValue, duration, start, end, Linear);
 
         public void Remove(BaseAnimation animation)
@@ -70,15 +70,15 @@ namespace Zene.GUI
 
             if (!exisits) { return; }
 
-            double scale = 1d;
+            floatv scale = 1;
 
             if (animation.Looping)
             {
-                scale = (Core.Time - animation.startTime) / animation.Duration;
+                scale = (floatv)(Core.Time - animation.startTime) / animation.Duration;
             }
 
             // Set value to end
-            animation.OnFrame(animation.Type(animation.Reversed ? 1d - scale : scale));
+            animation.OnFrame(animation.Type(animation.Reversed ? 1 - scale : scale));
 
             animation.startTime = -1;
             animation.Handle = null;
@@ -102,7 +102,7 @@ namespace Zene.GUI
                     if (t >= ad.Duration)
                     {
                         // Set value to end
-                        ad.OnFrame(ad.Type(ad.Reversed ? 0d : 1d));
+                        ad.OnFrame(ad.Type(ad.Reversed ? 0 : 1));
 
                         if (ad.Looping)
                         {
@@ -119,50 +119,50 @@ namespace Zene.GUI
                         continue;
                     }
 
-                    double scale = ad.Type(t / ad.Duration);
-                    ad.OnFrame(ad.Reversed ? 1d - scale : scale);
+                    floatv scale = ad.Type((floatv)t / ad.Duration);
+                    ad.OnFrame(ad.Reversed ? 1 - scale : scale);
                 }
             }
         }
 
-        private static double LinearType(double input) => input;
-        private static double LogarithmicType(double input) => Math.Log((input * (Math.E - 1)) + 1);
-        private static double ExponentialType(double input) => (Math.Exp(input) - 1) / (Math.E - 1);
+        private static floatv LinearType(floatv input) => input;
+        private static floatv LogarithmicType(floatv input) => Maths.Log((input * (Maths.E - 1)) + 1);
+        private static floatv ExponentialType(floatv input) => (Maths.Exp(input) - 1) / (Maths.E - 1);
 
         public static AnimationType Linear => LinearType;
         public static AnimationType Logarithmic => LogarithmicType;
         public static AnimationType Exponential => ExponentialType;
 
-        public static AnimationType CreateLogarithmic(double exp)
+        public static AnimationType CreateLogarithmic(floatv exp)
         {
-            double v = Math.Pow(2, exp);
+            floatv v = Maths.Pow(2, exp);
 
             return (input) =>
             {
-                return Math.Log((input * (v - 1)) + 1, v);
+                return Maths.Log((input * (v - 1)) + 1, v);
             };
         }
-        public static AnimationType CreateExponential(double exp)
+        public static AnimationType CreateExponential(floatv exp)
         {
-            double v = Math.Pow(2, exp);
+            floatv v = Maths.Pow(2, exp);
 
             return (input) =>
             {
-                return (Math.Pow(v, input) - 1) / (v - 1);
+                return (Maths.Pow(v, input) - 1) / (v - 1);
             };
         }
     }
 
     public abstract class BaseAnimation
     {
-        public BaseAnimation(double duration, AnimationType type)
+        public BaseAnimation(floatv duration, AnimationType type)
         {
             Duration = duration;
             _type = type ?? Animator.Linear;
         }
 
         internal double startTime = -1;
-        public double Duration { get; set; }
+        public floatv Duration { get; set; }
 
         public bool Reversed { get; set; } = false;
         public bool Animating => startTime > 0d;
@@ -180,7 +180,7 @@ namespace Zene.GUI
         public event EventHandler Finish;
         internal void InvokeFinish() => Finish?.Invoke(this, EventArgs.Empty);
 
-        public abstract void OnFrame(double scale);
+        public abstract void OnFrame(floatv scale);
 
         public void Stop()
         {
@@ -203,7 +203,7 @@ namespace Zene.GUI
 
     public class AnimatorData<T> : BaseAnimation
     {
-        public AnimatorData(Action<T> setValue, double duration, T start, T end, AnimationType type = null)
+        public AnimatorData(Action<T> setValue, floatv duration, T start, T end, AnimationType type = null)
             : base(duration, type)
         {
             SetValue = setValue;
@@ -255,10 +255,10 @@ namespace Zene.GUI
                     _onFrame = (s) => FrameColour(ad, s);
                     break;
                 case AnimatorData<Radian> ad:
-                    _onFrame = (s) => FrameDouble(ad, s);
+                    _onFrame = (s) => FrameFloatV(ad, s);
                     break;
                 case AnimatorData<Degrees> ad:
-                    _onFrame = (s) => FrameDouble(ad, s);
+                    _onFrame = (s) => FrameFloatV(ad, s);
                     break;
                 default:
                     _onFrame = (_) => throw new NotSupportedException("Type not supported.");
@@ -270,9 +270,9 @@ namespace Zene.GUI
         public T EndValue { get; set; }
 
         public Action<T> SetValue { get; }
-        private readonly Action<double> _onFrame;
+        private readonly Action<floatv> _onFrame;
 
-        public override void OnFrame(double scale) => _onFrame(scale);
+        public override void OnFrame(floatv scale) => _onFrame(scale);
 
         public void Start(T start, T end, Animator handle)
         {
@@ -283,67 +283,67 @@ namespace Zene.GUI
         }
         public void Start(Animator handle) => handle.Add(this);
 
-        private static void FrameDouble(AnimatorData<double> ad, double scale)
+        private static void FrameDouble(AnimatorData<double> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameDouble(AnimatorData<Radian> ad, double scale)
+        private static void FrameFloatV(AnimatorData<Radian> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameDouble(AnimatorData<Degrees> ad, double scale)
+        private static void FrameFloatV(AnimatorData<Degrees> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameFloat(AnimatorData<float> ad, double scale)
+        private static void FrameFloat(AnimatorData<float> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, (float)scale));
         }
-        private static void FrameInt(AnimatorData<int> ad, double scale)
+        private static void FrameInt(AnimatorData<int> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameLong(AnimatorData<long> ad, double scale)
+        private static void FrameLong(AnimatorData<long> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec2(AnimatorData<Vector2> ad, double scale)
+        private static void FrameVec2(AnimatorData<Vector2> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec3(AnimatorData<Vector3> ad, double scale)
+        private static void FrameVec3(AnimatorData<Vector3> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec4(AnimatorData<Vector4> ad, double scale)
+        private static void FrameVec4(AnimatorData<Vector4> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec2(AnimatorData<Vector2I> ad, double scale)
+        private static void FrameVec2(AnimatorData<Vector2I> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec3(AnimatorData<Vector3I> ad, double scale)
+        private static void FrameVec3(AnimatorData<Vector3I> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameVec4(AnimatorData<Vector4I> ad, double scale)
+        private static void FrameVec4(AnimatorData<Vector4I> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameColour(AnimatorData<Colour> ad, double scale)
+        private static void FrameColour(AnimatorData<Colour> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameColour(AnimatorData<Colour3> ad, double scale)
+        private static void FrameColour(AnimatorData<Colour3> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, scale));
         }
-        private static void FrameColour(AnimatorData<ColourF> ad, double scale)
+        private static void FrameColour(AnimatorData<ColourF> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, (float)scale));
         }
-        private static void FrameColour(AnimatorData<ColourF3> ad, double scale)
+        private static void FrameColour(AnimatorData<ColourF3> ad, floatv scale)
         {
             ad.SetValue(ad.StartValue.Lerp(ad.EndValue, (float)scale));
         }

@@ -167,7 +167,7 @@ namespace Zene.GUI
         {
             if (e.Properties.ScrollBar == null || !(e.Properties.scrollY || e.Properties.scrollX)) { return ScrollBarHover.None; }
             Box bounds = e.GetRenderBounds();
-            double width = e.Properties.ScrollBar.Width;
+            floatv width = e.Properties.ScrollBar.Width;
 
             if (e.Properties.scrollY && !e.Properties.scrollX)
             {
@@ -201,15 +201,15 @@ namespace Zene.GUI
                 (mousePos.Y >= bounds.Bottom)
                     ? ScrollBarHover.XAxis : ScrollBarHover.None;
         }
-        internal static double GetXScrollSize(this UIProperties prop)
+        internal static floatv GetXScrollSize(this UIProperties prop)
         {
-            double width = GetRenderSize(prop.Source).X;
+            floatv width = GetRenderSize(prop.Source).X;
 
             return prop.scrollY ? width - prop.ScrollBar.Width : width;
         }
-        internal static double GetYScrollSize(this UIProperties prop)
+        internal static floatv GetYScrollSize(this UIProperties prop)
         {
-            double height = GetRenderSize(prop.Source).Y;
+            floatv height = GetRenderSize(prop.Source).Y;
 
             return prop.scrollX ? height - prop.ScrollBar.Width : height;
         }

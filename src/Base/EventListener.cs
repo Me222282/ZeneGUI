@@ -52,8 +52,8 @@ namespace Zene.GUI
             {
                 if (sbh == ScrollBarHover.XAxis)
                 {
-                    double lerpMX = -source.Properties.scrollBounds.Right;
-                    double lerpIX = -source.Properties.scrollBounds.Left;
+                    floatv lerpMX = -source.Properties.scrollBounds.Right;
+                    floatv lerpIX = -source.Properties.scrollBounds.Left;
 
                     ScrollBarData sbdX = new ScrollBarData(source,
                         source.Properties.ViewPan.X.InvLerp(lerpMX, lerpIX),
@@ -63,8 +63,8 @@ namespace Zene.GUI
                     return;
                 }
 
-                double lerpM = -source.Properties.scrollBounds.Top;
-                double lerpI = -source.Properties.scrollBounds.Bottom;
+                floatv lerpM = -source.Properties.scrollBounds.Top;
+                floatv lerpI = -source.Properties.scrollBounds.Bottom;
 
                 ScrollBarData sbd = new ScrollBarData(source,
                     source.Properties.ViewPan.Y.InvLerp(lerpM, lerpI),

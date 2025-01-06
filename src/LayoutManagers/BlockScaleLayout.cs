@@ -7,17 +7,17 @@ namespace Zene.GUI
     {
         public class Instance : ILayoutManagerInstance
         {
-            public double _current;
-            private double _height;
+            public floatv _current;
+            private floatv _height;
             
-            public void Height(double h)
+            public void Height(floatv h)
             {
                 if (_height >= h) { return; }
                 _height = h;
             }
             
             public Vector2 ReturningSize => (_current, _height);
-            public Vector2 ChildOffset => (ReturningSize.X / -2d, 0d);
+            public Vector2 ChildOffset => (ReturningSize.X * -0.5f, 0);
         }
 
         public BlockScaleLayout()
@@ -38,17 +38,17 @@ namespace Zene.GUI
         {
             _margin = (margin, margin);
         }
-        public BlockScaleLayout(double margin)
+        public BlockScaleLayout(floatv margin)
             : base(true, true)
         {
             _margin = (margin, margin, margin, margin);
         }
-        public BlockScaleLayout(double marginX, double marginY)
+        public BlockScaleLayout(floatv marginX, floatv marginY)
             : base(true, true)
         {
             _margin = (marginX, marginY, marginX, marginY);
         }
-        public BlockScaleLayout(double left, double right, double top, double bottom)
+        public BlockScaleLayout(floatv left, floatv right, floatv top, floatv bottom)
             : base(true, true)
         {
             _margin = (left, top, right, bottom);
@@ -74,7 +74,7 @@ namespace Zene.GUI
         /// <summary>
         /// The margin on the left side.
         /// </summary>
-        public double Left
+        public floatv Left
         {
             get => _margin.X;
             set
@@ -88,7 +88,7 @@ namespace Zene.GUI
         /// <summary>
         /// The margin on the right side.
         /// </summary>
-        public double Right
+        public floatv Right
         {
             get => _margin.Z;
             set
@@ -102,7 +102,7 @@ namespace Zene.GUI
         /// <summary>
         /// The margin on the top side.
         /// </summary>
-        public double Top
+        public floatv Top
         {
             get => _margin.Y;
             set
@@ -116,7 +116,7 @@ namespace Zene.GUI
         /// <summary>
         /// The margin on the bottom side.
         /// </summary>
-        public double Bottom
+        public floatv Bottom
         {
             get => _margin.W;
             set
@@ -136,11 +136,11 @@ namespace Zene.GUI
             Vector2 size = layoutResult.Size;
             
             instance._current += _margin.X;
-            double x = instance._current;
+            floatv x = instance._current;
             instance._current += size.X + _margin.Z;
 
-            layoutResult.Centre = 0d;
-            layoutResult.Shift((x + (size.X / 2d), 0d));
+            layoutResult.Centre = 0;
+            layoutResult.Shift((x + (size.X * 0.5f), 0));
             instance.Height(size.Y + _margin.Y + _margin.W);
 
             return layoutResult;

@@ -26,14 +26,14 @@ namespace Zene.GUI
         public ColourF Colour { get; set; } = new ColourF(1f, 1f, 1f);
         public ColourF BorderColour { get; set; } = new ColourF(0.6f, 0.6f, 0.6f);
 
-        public double BorderWidth { get; set; } = 3d;
-        public double CornerRadius { get; set; } = 0.1;
+        public floatv BorderWidth { get; set; } = 3;
+        public floatv CornerRadius { get; set; } = 0.1f;
 
         public ITexture Texture { get; set; } = null;
 
         public override GraphicsManager Graphics { get; }
 
-        private double BorderWidthDraw()
+        private floatv BorderWidthDraw()
         {
             if (MouseSelect | MouseHover)
             {
@@ -61,14 +61,14 @@ namespace Zene.GUI
 
                 if (Source.MouseSelect)
                 {
-                    c -= new Vector4(0.2, 0.2, 0.2, 0d);
+                    c -= new Vector4(0.2f, 0.2f, 0.2f, 0);
                 }
                 else if (Source.MouseHover)
                 {
-                    c -= new Vector4(0.1, 0.1, 0.1, 0d);
+                    c -= new Vector4(0.1f, 0.1f, 0.1f, 0);
                 }
 
-                double borderWidth = Math.Max(Source.BorderWidthDraw(), 0d);
+                floatv borderWidth = Math.Max(Source.BorderWidthDraw(), 0);
                 Size = Source.Size + borderWidth;
 
                 // No point drawing box
