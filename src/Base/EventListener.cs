@@ -39,7 +39,7 @@ namespace Zene.GUI
         }
         protected internal virtual void OnElementMove(VectorEventArgs e)
         {
-            source.Properties.bounds.Centre = e.Value;
+            source.Properties.bounds.Location = e.Value;
 
             source.Graphics.MoveElement(e);
         }

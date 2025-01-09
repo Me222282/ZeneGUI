@@ -5,9 +5,9 @@ namespace Zene.GUI
 {
     public class Layout : ILayout
     {
-        public Layout(IBox box)
+        public Layout(Box box)
         {
-            _relative = new Box(box);
+            _relative = box;
         }
         public Layout(floatv x, floatv y, floatv width, floatv height)
         {

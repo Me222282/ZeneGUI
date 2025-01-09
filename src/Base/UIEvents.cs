@@ -140,7 +140,7 @@ namespace Zene.GUI
         }
         protected internal override void OnElementMove(VectorEventArgs e)
         {
-            if (source.Properties.bounds.Centre == e.Value) { return; }
+            if (source.Properties.bounds.Location == e.Value) { return; }
 
             base.OnElementMove(e);
 

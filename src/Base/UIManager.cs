@@ -154,7 +154,7 @@ namespace Zene.GUI
 
                 hover = nh;
                 localMouse = viewMouse;
-                localMouse -= nh.Properties.bounds.Centre;
+                localMouse -= nh.Properties.bounds.Location;
                 //localMouse = (localMouse - nh.Properties.ViewPan) / nh.Properties.ViewScale;
 
                 // Hover over scroll bar
@@ -199,7 +199,7 @@ namespace Zene.GUI
 
             // Calculate local mouse for hover element from parent
             //localMouse = Hover.CalculateLocalMouse(parent, localMouse);
-            localMouse -= Hover.Properties.bounds.Centre;
+            localMouse -= Hover.Properties.bounds.Location;
 
             if (mouseOver && !Hover.Properties.hover)
             {
@@ -269,7 +269,7 @@ namespace Zene.GUI
             }
 
             //mousePos = (mousePos * lowest.Properties.ViewScale) + lowest.Properties.ViewPan + lowest.Properties.bounds.Centre;
-            mousePos += lowest.Properties.bounds.Centre;
+            mousePos += lowest.Properties.bounds.Location;
             IElement parent = lowest.Properties.parent;
             mousePos = (mousePos * parent.Properties.ViewScale) + parent.Properties.ViewPan;
             return FindHoverElement(parent, ref mousePos);
@@ -386,7 +386,7 @@ namespace Zene.GUI
                 i++;
                 if (!e.Properties.Visable) { continue; }
                 
-                Box nb = boxes[i].Shifted(lmi.ChildOffset);
+                Box nb = boxes[i] + lmi.ChildOffset;
                 
                 // No change in bounds
                 if (e.Properties.bounds == nb)
@@ -501,7 +501,7 @@ namespace Zene.GUI
             if (!e.HasChildren) { return; }
 
             floatv scaleRef = _uiView.Scale * e.Properties.ViewScale;
-            Vector2 offsetRef = _uiView.Offset + (e.Properties.bounds.Centre * e.Properties.ViewScale) + e.Properties.ViewPan;
+            Vector2 offsetRef = _uiView.Offset + (e.Properties.bounds.Location * e.Properties.ViewScale) + e.Properties.ViewPan;
             GLBox scissor = _uiView.PassScissor();
 
             Vector2 depthRange = _uiView.DepthRange;

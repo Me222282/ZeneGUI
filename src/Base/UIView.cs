@@ -58,13 +58,13 @@ namespace Zene.GUI
 
                 _viewRef = value;
 
-                Box b = new Box((value.Centre * Scale) + Offset, value.Size * Scale);
+                Box b = new Box((value.Location * Scale) + Offset, value.Size * Scale);
 
                 _viewport.View = new GLBox(b.Left + _hFrameSize.X, b.Bottom + _hFrameSize.Y, b.Width, b.Height);
                 GLBox c = _viewport.View;
                 c.Right -= (int)ScissorOffset.X;
                 c.Bottom += (int)ScissorOffset.Y;
-                c = c.Clamp(ScissorBox);
+                c = ((RectangleI)c).Clamped(ScissorBox);
                 _scissor.View = c;
 
                 Locked = true;

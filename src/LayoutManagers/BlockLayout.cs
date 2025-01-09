@@ -167,7 +167,7 @@ namespace Zene.GUI
                 instance._current.X = topLeft.X + size.X + _margin.Z;
             }
 
-            layoutResult.SetTopLeft(topLeft);
+            layoutResult.TopLeft = topLeft;
             instance.SetLowest(instance._current.Y - size.Y - _margin.W);
 
             return layoutResult;

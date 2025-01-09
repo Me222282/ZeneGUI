@@ -67,7 +67,7 @@ namespace Zene.GUI
                 // Mouse pos already calculated
                 if (hover || parent == null) { return mousePos; }
 
-                return ((parent.Properties.MouseLocation - parent.Properties.ViewPan) / parent.Properties.ViewScale) - bounds.Centre;
+                return ((parent.Properties.MouseLocation - parent.Properties.ViewPan) / parent.Properties.ViewScale) - bounds.Location;
             }
             set
             {
@@ -77,7 +77,7 @@ namespace Zene.GUI
                     return;
                 }
 
-                parent.Properties.MouseLocation = ((value + bounds.Centre) * parent.Properties.ViewScale) + parent.Properties.ViewPan;
+                parent.Properties.MouseLocation = ((value + bounds.Location) * parent.Properties.ViewScale) + parent.Properties.ViewPan;
             }
         }
 
@@ -171,7 +171,7 @@ namespace Zene.GUI
                 return new ScrollInfo();
             }
 
-            Box scrollView = scrollBox.Combine(vb);
+            Box scrollView = scrollBox.Add(vb);
             scrollBounds = new Box(
                 Math.Min(scrollView.Left - vb.Left, 0),
                 Math.Max(scrollView.Right - vb.Right, 0),
@@ -212,7 +212,7 @@ namespace Zene.GUI
                 return;
             }
 
-            scrollViewBox = scrollViewBox.Combine(bounds);
+            scrollViewBox = scrollViewBox.Add(bounds);
         }
         private static bool UnshareBounds(Box old, Box bounds, Box newB)
         {

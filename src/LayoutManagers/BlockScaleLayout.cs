@@ -139,8 +139,8 @@ namespace Zene.GUI
             floatv x = instance._current;
             instance._current += size.X + _margin.Z;
 
-            layoutResult.Centre = 0;
-            layoutResult.Shift((x + (size.X * 0.5f), 0));
+            layoutResult.Location = 0;
+            layoutResult += (x + (size.X * 0.5f), 0);
             instance.Height(size.Y + _margin.Y + _margin.W);
 
             return layoutResult;

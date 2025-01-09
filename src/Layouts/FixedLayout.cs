@@ -3,11 +3,11 @@ using Zene.Structs;
 
 namespace Zene.GUI
 {
-    public class FixedLayout : ILayout, IBox
+    public class FixedLayout : ILayout
     {
-        public FixedLayout(IBox bounds)
+        public FixedLayout(Box bounds)
         {
-            _bounds = new Box(bounds);
+            _bounds = bounds;
         }
 
         public FixedLayout(floatv x, floatv y, floatv w, floatv h)
