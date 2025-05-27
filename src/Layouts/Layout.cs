@@ -11,7 +11,7 @@ namespace Zene.GUI
         }
         public Layout(floatv x, floatv y, floatv width, floatv height)
         {
-            _relative = new Box((x, y), (width, height));
+            _relative = new Box(x, y, width, height);
         }
 
         private Box _relative;

@@ -34,7 +34,7 @@ namespace Zene.GUI
             }
         }
 
-        public bool Visable => _scissor.Width > 0 && _scissor.Height > 0;
+        public bool Visable { get; private set; } = true;
 
         private Vector2 _hFrameSize;
         public Vector2 FrameSize
@@ -64,8 +64,15 @@ namespace Zene.GUI
                 GLBox c = _viewport.View;
                 c.Right -= (int)ScissorOffset.X;
                 c.Bottom += (int)ScissorOffset.Y;
-                c = ((RectangleI)c).Clamped(ScissorBox);
+                c = c.Clamped(ScissorBox);
+                if (c.Width <= 0 || c.Height <= 0)
+                {
+                    Visable = false;
+                    Locked = true;
+                    return;
+                }
                 _scissor.View = c;
+                Visable = true;
 
                 Locked = true;
             }

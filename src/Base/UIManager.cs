@@ -526,12 +526,12 @@ namespace Zene.GUI
                 Box bounds = child.GetRenderBounds();
                 _uiView.View = bounds;
 
+                if (!_uiView.Visable) { continue; }
+
                 _uiView.DepthRange = depthRange;
                 _uiView.DepthDivision = depthDiv;
                 _uiView.ChildDivision = child.HasChildren ? child.Children.Length + 1 : 1;
                 _uiView.SetDepth(child.Properties.Depth + offset);
-
-                if (!_uiView.Visable) { continue; }
 
                 Render(child, dm);
 
@@ -563,23 +563,34 @@ namespace Zene.GUI
 
             if (scroll.Y)
             {
-                _uiView.View = new Box(bounds.Right - width, bounds.Right, bounds.Top, bounds.Bottom);
-                dm.Projection = Matrix4.CreateOrthographic(width, bounds.Height, 0, 1);
-                dm.View = Matrix.Identity;
-                dm.Model = Matrix.Identity;
-                dm.Render(e.Properties.ScrollBar,
-                    new ScrollBarData(e,
-                        scrollPercent.Y,
-                        scroll.ViewSize.Y / scroll.ScrollView.Y,
-                        true, bounds.Height));
+                Box v = bounds;
+                v.Left = v.Right - width;
+                _uiView.View = v;
+
+                if (_uiView.Visable)
+                {
+                    dm.Projection = Matrix4.CreateOrthographic(width, bounds.Height, 0, 1);
+                    dm.View = Matrix.Identity;
+                    dm.Model = Matrix.Identity;
+                    dm.Render(e.Properties.ScrollBar,
+                        new ScrollBarData(e,
+                            scrollPercent.Y,
+                            scroll.ViewSize.Y / scroll.ScrollView.Y,
+                            true, bounds.Height));
+                }
 
                 bounds.Right -= width;
             }
             if (scroll.X)
             {
                 bounds.Bottom -= width;
+                
+                Box v = bounds;
+                v.Top = v.Bottom + width;
+                _uiView.View = v;
 
-                _uiView.View = new Box(bounds.Left, bounds.Right, bounds.Bottom + width, bounds.Bottom);
+                if (!_uiView.Visable) { return; }
+
                 dm.Projection = Matrix4.CreateOrthographic(bounds.Width, width, 0, 1);
                 dm.View = Matrix.Identity;
                 dm.Model = Matrix.Identity;

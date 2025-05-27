@@ -172,7 +172,7 @@ namespace Zene.GUI
             }
 
             Box scrollView = scrollBox.Add(vb);
-            scrollBounds = new Box(
+            scrollBounds = Box.FromBounds(
                 Math.Min(scrollView.Left - vb.Left, 0),
                 Math.Max(scrollView.Right - vb.Right, 0),
                 Math.Max(scrollView.Top - vb.Top, 0),
@@ -200,7 +200,7 @@ namespace Zene.GUI
 
         internal Box viewBounds => new Box(Vector2.Zero, Source.GetRenderSize());
         internal Box scrollViewBox;
-        public Box ScrollBox => scrollViewBox * _viewScale;
+        public Box ScrollBox => scrollViewBox * _viewScale;//((Bounds)scrollViewBox) * _viewScale;
         public ScrollBar ScrollBar { get; set; } = null;
         public bool HoverOnScroll => scrollBarHover != ScrollBarHover.None;
 
@@ -212,7 +212,7 @@ namespace Zene.GUI
                 return;
             }
 
-            scrollViewBox = scrollViewBox.Add(bounds);
+            scrollViewBox = scrollViewBox + bounds;
         }
         private static bool UnshareBounds(Box old, Box bounds, Box newB)
         {

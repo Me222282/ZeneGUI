@@ -31,14 +31,14 @@ namespace Zene.GUI
             if (param.Latitude)
             {
                 barBounds = new Box(
-                    (0d, range * -(param.ScrollPercent - 0.5)),
-                    (Width - 4d, param.Size * param.BarPercent - 4d));
+                    0f, range * -(param.ScrollPercent - 0.5f),
+                    Width - 4f, param.Size * param.BarPercent - 4f);
             }
             else
             {
                 barBounds = new Box(
-                    (range * -(param.ScrollPercent - 0.5), 0d),
-                    (param.Size * param.BarPercent - 4d, Width - 4d));
+                    range * -(param.ScrollPercent - 0.5f), 0f,
+                    param.Size * param.BarPercent - 4f, Width - 4f);
             }
 
             context.DrawRoundedBox(barBounds, ColourF.Azure, 0.5f);

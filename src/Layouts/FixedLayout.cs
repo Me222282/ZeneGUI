@@ -12,7 +12,7 @@ namespace Zene.GUI
 
         public FixedLayout(floatv x, floatv y, floatv w, floatv h)
         {
-            _bounds = new Box((x, y), (w, h));
+            _bounds = new Box(x, y, w, h);
         }
         public FixedLayout(Vector2 location, Vector2 size)
         {

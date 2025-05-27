@@ -27,13 +27,13 @@ namespace Zene.GUI
 
         public Box GetBounds(LayoutArgs args)
         {
-            floatv top = args.Size.Y * 0.5f;
+            floatv y = (args.Size.Y - _height) * 0.5f;
 
             return new Box(
-                args.Size.X * -0.5f,
-                args.Size.X * 0.5f,
-                top,
-                top - _height);
+                0,
+                y,
+                args.Size.X,
+                _height);
         }
     }
 }
