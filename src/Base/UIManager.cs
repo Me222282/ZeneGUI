@@ -276,7 +276,7 @@ namespace Zene.GUI
         }
         protected static void ManageMouseScroll(IElement e, Vector2 mousePos)
         {
-            Vector2 scrollPercent = e.Properties.GetScrollPercent();
+            // Vector2 scrollPercent = e.Properties.GetScrollPercent();
             UIProperties prop = e.Properties;
             floatv perc;
 

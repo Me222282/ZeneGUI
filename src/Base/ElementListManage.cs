@@ -83,6 +83,38 @@ namespace Zene.GUI
                 _elements.Add(item);
             }
         }
+        public abstract void Insert(int index, IElement item);
+        protected void BaseInsert(int index, IElement item)
+        {
+            if (item.Properties.elementIndex >= 0)
+            {
+                throw new ArgumentException("The given element is already the child of another element.", nameof(item));
+            }
+            // invalid index
+            if (index < 0 || index > _elements.Count)
+            {
+                throw new IndexOutOfRangeException();
+            }
+
+            SetHandle(item, _source.Properties.handle);
+            item.Properties.parent = _source;
+            item.Properties.elementIndex = index;
+
+            if (item.Properties.Depth < 0d)
+            {
+                item.Properties.Depth = item.Properties.elementIndex;
+            }
+
+            lock (_lockRef)
+            {
+                _elements.Insert(index, item);
+                
+                for (int i = index + 1; i < _elements.Count; i++)
+                {
+                    _elements[i].Properties.elementIndex = i;
+                }
+            }
+        }
         public abstract void Clear();
         protected void BaseClear()
         {
@@ -307,6 +339,55 @@ namespace Zene.GUI
                 {
                     _elements[i].Properties.elementIndex = i;
                 }
+            }
+        }
+        
+        public abstract bool Replace(IElement item, IElement replacement);
+        public abstract void ReplaceAt(int index, IElement replacement);
+        protected bool BaseReplace(IElement item, IElement replacement)
+        {
+            int index = _elements.IndexOf(item);
+
+            if (index < 0) { return false; }
+            
+            BaseReplaceAt(index, replacement);
+            return true;
+        }
+        protected void BaseReplaceAt(int index, IElement replacement)
+        {
+            // replace null == remove
+            if (replacement == null)
+            {
+                BaseRemoveAt(index);
+                return;
+            }
+            
+            if (replacement.Properties.elementIndex >= 0)
+            {
+                throw new ArgumentException("The given element is already the child of another element.", nameof(replacement));
+            }
+            
+            // remove old
+            IElement item = _elements[index];
+            SetHandle(item, null);
+            item.Properties.parent = null;
+            item.Properties.elementIndex = -1;
+            // item.Properties.hover = false;
+            item.Properties.selected = false;
+            
+            // add new
+            SetHandle(replacement, _source.Properties.handle);
+            replacement.Properties.parent = _source;
+            replacement.Properties.elementIndex = index;
+
+            if (replacement.Properties.Depth < 0d)
+            {
+                replacement.Properties.Depth = replacement.Properties.elementIndex;
+            }
+            
+            lock (_lockRef)
+            {
+                _elements[index] = replacement;
             }
         }
         

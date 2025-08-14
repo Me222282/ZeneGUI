@@ -45,6 +45,13 @@ namespace Zene.GUI
                 _actions.Add(new ElementList.Action(ElementList.ActionType.Add, item, null));
             }
         }
+        public void Insert(int index, IElement item)
+        {
+            lock (_actions)
+            {
+                _actions.Add(new ElementList.Action(ElementList.ActionType.Insert, index, item));
+            }
+        }
         public void Clear()
         {
             lock (_actions)
@@ -92,6 +99,20 @@ namespace Zene.GUI
             lock (_actions)
             {
                 _actions.Add(new ElementList.Action(ElementList.ActionType.SwapAt, indexA, indexB));
+            }
+        }
+        public void Replace(IElement item, IElement replacement)
+        {
+            lock (_actions)
+            {
+                _actions.Add(new ElementList.Action(ElementList.ActionType.Replace, item, replacement));
+            }
+        }
+        public void RemoveAt(int index, IElement replacement)
+        {
+            lock (_actions)
+            {
+                _actions.Add(new ElementList.Action(ElementList.ActionType.ReplaceAt, index, replacement));
             }
         }
     }

@@ -10,13 +10,16 @@ namespace Zene.GUI
         public enum ActionType : byte
         {
             Add,
+            Insert,
             Clear,
             Remove,
             RemoveAt,
             Sort,
             SortDepth,
             Swap,
-            SwapAt
+            SwapAt,
+            Replace,
+            ReplaceAt
         }
         public struct Action
         {
@@ -36,6 +39,15 @@ namespace Zene.GUI
                 EB = null;
                 IA = ia;
                 IB = ib;
+                Comp = null;
+            }
+            public Action(ActionType at, int ia, IElement eb)
+            {
+                AT = at;
+                EA = null;
+                EB = eb;
+                IA = ia;
+                IB = 0;
                 Comp = null;
             }
             public Action(ActionType at, Comparison<IElement> comp)
@@ -80,6 +92,10 @@ namespace Zene.GUI
             if (h == null)
             {
                 IA();
+                if (ef != null)
+                {
+                    _source.Properties.handle.Focus = ef;
+                }
                 return;
             }
             
@@ -106,6 +122,9 @@ namespace Zene.GUI
                     case ActionType.Add:
                         BaseAdd(a.EA);
                         continue;
+                    case ActionType.Insert:
+                        BaseInsert(a.IA, a.EB);
+                        continue;
                     case ActionType.Clear:
                         BaseClear();
                         continue;
@@ -126,6 +145,12 @@ namespace Zene.GUI
                         continue;
                     case ActionType.SwapAt:
                         BaseSwap(a.IA, a.IB);
+                        continue;
+                    case ActionType.Replace:
+                        BaseReplace(a.EA, a.EB);
+                        continue;
+                    case ActionType.ReplaceAt:
+                        BaseReplaceAt(a.IA, a.EB);
                         continue;
                 }
             }
@@ -152,6 +177,30 @@ namespace Zene.GUI
             h.Window.GraphicsContext.Actions.Push(() => 
             {
                 BaseAdd(item);
+                _source.Properties.handle.LayoutElement(_source);
+            });
+        }
+        public override void Insert(int index, IElement item)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Insert, index, item));
+                }
+                return;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseInsert(index, item);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() => 
+            {
+                BaseInsert(index, item);
                 _source.Properties.handle.LayoutElement(_source);
             });
         }
@@ -242,6 +291,66 @@ namespace Zene.GUI
             {
                 IElement e = this[index];
                 BaseRemoveAt(index);
+                _source.Properties.handle.LayoutElement(_source);
+                
+                if (e.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
+        }
+        public override bool Replace(IElement item, IElement replacement)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.Replace, item, replacement));
+                }
+                return true;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                return BaseReplace(item, replacement);
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                BaseReplace(item, replacement);
+                _source.Properties.handle.LayoutElement(_source);
+                
+                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                {
+                    UIManager.RecalculateScrollBounds(_source.Properties);
+                }
+            });
+            // ?
+            return true;
+        }
+        public override void ReplaceAt(int index, IElement replacement)
+        {
+            if (_inGroupAction)
+            {
+                lock (_actions)
+                {
+                    _actions.Add(new Action(ActionType.ReplaceAt, index, replacement));
+                }
+                return;
+            }
+            
+            UIManager h = _source.Properties.handle;
+            if (h == null)
+            {
+                BaseReplaceAt(index, replacement);
+                return;
+            }
+            
+            h.Window.GraphicsContext.Actions.Push(() =>
+            {
+                IElement e = this[index];
+                BaseReplaceAt(index, replacement);
                 _source.Properties.handle.LayoutElement(_source);
                 
                 if (e.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
