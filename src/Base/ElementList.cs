@@ -80,6 +80,11 @@ namespace Zene.GUI
         public ListActions StartGroupAction() => new ListActions(this);
         internal List<Action> InitGroupAction()
         {
+            if (_inGroupAction)
+            {
+                throw new Exception("Group action already started.");
+            }
+            
             _actions.Clear();
             _inGroupAction = true;
             return _actions;
