@@ -76,7 +76,8 @@ namespace Zene.GUI
         
         private readonly List<Action> _actions = new List<Action>();
         private bool _inGroupAction = false;
-
+        
+        public bool InGroupAction => _inGroupAction;
         public ListActions StartGroupAction() => new ListActions(this);
         internal List<Action> InitGroupAction()
         {

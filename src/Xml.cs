@@ -48,25 +48,53 @@ namespace Zene.GUI
         private Type _eventType;
         private List<IElement> _returns;
         
-        public RootElement LoadGUI(Window window, string src, object events = null, List<IElement> returns = null)
+        public RootElement LoadGUI(Window window, string src, object events = null, bool actioned = true, List<IElement> returns = null)
         {
             RootElement root = new RootElement(window);
-            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, events, events?.GetType(), returns));
+            if (actioned)
+            {
+                root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, events, events?.GetType(), returns));
+            }
+            else
+            {
+                LoadGUI(root.Elements, src, events, events?.GetType(), returns);
+            }
             return root;
         }
-        public void LoadGUI(ElementList root, string src, object events = null, List<IElement> returns = null)
+        public void LoadGUI(ElementList root, string src, object events = null, bool actioned = true, List<IElement> returns = null)
         {
-            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, events, events?.GetType(), returns));
+            if (actioned)
+            {
+                root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, events, events?.GetType(), returns));
+            }
+            else
+            {
+                LoadGUI(root, src, events, events?.GetType(), returns);
+            }
         }
-        public RootElement LoadGUI(Window window, string src, Type events, List<IElement> returns = null)
+        public RootElement LoadGUI(Window window, string src, Type events, bool actioned = true, List<IElement> returns = null)
         {
             RootElement root = new RootElement(window);
-            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, null, events, returns));
+            if (actioned)
+            {
+                root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, null, events, returns));
+            }
+            else
+            {
+                LoadGUI(root.Elements, src, null, events, returns);
+            }
             return root;
         }
-        public void LoadGUI(ElementList root, string src, Type events, List<IElement> returns = null)
+        public void LoadGUI(ElementList root, string src, Type events, bool actioned = true, List<IElement> returns = null)
         {
-            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, null, events, returns));
+            if (actioned)
+            {
+                root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, null, events, returns));
+            }
+            else
+            {
+                LoadGUI(root, src, null, events, returns);
+            }
         }
         private void LoadGUI(ElementList re, string src, object events, Type et, List<IElement> returns)
         {
