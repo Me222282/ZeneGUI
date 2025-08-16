@@ -46,28 +46,29 @@ namespace Zene.GUI
         private Window _window;
         private object _events;
         private Type _eventType;
-
-        public RootElement LoadGUI(Window window, string src, object events = null)
+        private List<IElement> _returns;
+        
+        public RootElement LoadGUI(Window window, string src, object events = null, List<IElement> returns = null)
         {
             RootElement root = new RootElement(window);
-            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, events, events?.GetType()));
+            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, events, events?.GetType(), returns));
             return root;
         }
-        public void LoadGUI(ElementList root, string src, object events = null)
+        public void LoadGUI(ElementList root, string src, object events = null, List<IElement> returns = null)
         {
-            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, events, events?.GetType()));
+            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, events, events?.GetType(), returns));
         }
-        public RootElement LoadGUI(Window window, string src, Type events)
+        public RootElement LoadGUI(Window window, string src, Type events, List<IElement> returns = null)
         {
             RootElement root = new RootElement(window);
-            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, null, events));
+            root.Window.GraphicsContext.Actions.Push(() => LoadGUI(root.Elements, src, null, events, returns));
             return root;
         }
-        public void LoadGUI(ElementList root, string src, Type events)
+        public void LoadGUI(ElementList root, string src, Type events, List<IElement> returns = null)
         {
-            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, null, events));
+            root.Source.Properties.handle.Window.GraphicsContext.Actions.Push(() => LoadGUI(root, src, null, events, returns));
         }
-        private void LoadGUI(ElementList re, string src, object events, Type et)
+        private void LoadGUI(ElementList re, string src, object events, Type et, List<IElement> returns)
         {
             XmlDocument root = new XmlDocument();
             root.LoadXml(src);
@@ -75,6 +76,7 @@ namespace Zene.GUI
             _events = events;
             _eventType = et;
             _window = re.Source.Properties.handle.Window;
+            _returns = returns ?? new List<IElement>();
 
             if (root.ChildNodes.Count == 0)
             {
@@ -111,6 +113,16 @@ namespace Zene.GUI
 
         private IElement ParseNode(XmlNode node, object parent)
         {
+            if (node.Name == "Return")
+            {
+                IElement e = parent as IElement;
+                if (e is null)
+                {
+                    throw new Exception("Cannot have Return element on nont element property");
+                }
+                _returns.Add(e);
+                return null;
+            }
             if (node.Name == "Property")
             {
                 ParseProperty(node, parent);
