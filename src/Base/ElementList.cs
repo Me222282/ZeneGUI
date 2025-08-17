@@ -74,30 +74,30 @@ namespace Zene.GUI
             
         }
         
-        private readonly List<Action> _actions = new List<Action>();
+        private ListActions _actions;
         private bool _inGroupAction = false;
         
         public bool InGroupAction => _inGroupAction;
         public ListActions StartGroupAction() => new ListActions(this);
-        internal List<Action> InitGroupAction()
+        internal void InitGroupAction(ListActions current)
         {
             if (_inGroupAction)
             {
                 throw new Exception("Group action already started.");
             }
             
-            _actions.Clear();
             _inGroupAction = true;
-            return _actions;
+            _actions = current;
         }
-        internal void ImplementActions(IElement ef = null)
+        internal void ImplementActions(List<Action> actions, IElement ef = null)
         {
             _inGroupAction = false;
+            _actions = null;
             
             UIManager h = _source.Properties.handle;
             if (h == null)
             {
-                IA();
+                IA(actions);
                 if (ef != null)
                 {
                     _source.Properties.handle.Focus = ef;
@@ -107,7 +107,7 @@ namespace Zene.GUI
             
             h.Window.GraphicsContext.Actions.Push(() => 
             {
-                IA();
+                IA(actions);
                 _source.Properties.handle.LayoutElement(_source);
                 // Don't know if this is needed
                 UIManager.RecalculateScrollBounds(_source.Properties);
@@ -117,9 +117,9 @@ namespace Zene.GUI
                 }
             });
         }
-        private void IA()
+        private void IA(List<Action> actions)
         {
-            Span<Action> span = CollectionsMarshal.AsSpan(_actions);
+            Span<Action> span = CollectionsMarshal.AsSpan(actions);
             for (int i = 0; i < span.Length; i++)
             {
                 Action a = span[i];
@@ -166,10 +166,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Add, item, null));
-                }
+                _actions.Add(item);
                 return;
             }
             
@@ -190,10 +187,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Insert, index, item));
-                }
+                _actions.Insert(index, item);
                 return;
             }
             
@@ -215,10 +209,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Clear, null, null));
-                }
+                _actions.Clear();
                 return;
             }
             
@@ -249,10 +240,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Remove, item, null));
-                }
+                _actions.Remove(item);
                 return true;
             }
             
@@ -279,10 +267,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.RemoveAt, index, 0));
-                }
+                _actions.RemoveAt(index);
                 return;
             }
             
@@ -309,10 +294,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Replace, item, replacement));
-                }
+                _actions.Replace(item, replacement);
                 return true;
             }
             
@@ -339,10 +321,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.ReplaceAt, index, replacement));
-                }
+                _actions.ReplaceAt(index, replacement);
                 return;
             }
             
@@ -370,10 +349,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Sort, comparison));
-                }
+                _actions.Sort(comparison);
                 return;
             }
             
@@ -395,10 +371,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.SortDepth, comparison));
-                }
+                _actions.SortDepth(comparison);
                 return;
             }
             
@@ -420,10 +393,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.Swap, a, b));
-                }
+                _actions.Swap(a, b);
                 return true;
             }
             
@@ -446,10 +416,7 @@ namespace Zene.GUI
         {
             if (_inGroupAction)
             {
-                lock (_actions)
-                {
-                    _actions.Add(new Action(ActionType.SwapAt, indexA, indexB));
-                }
+                _actions.Swap(indexA, indexB);
                 return true;
             }
             
