@@ -88,8 +88,10 @@ namespace Zene.GUI
         }
         internal void ResetHoverNoEvent()
         {
+            Hover.Properties.scrollBarHover = ScrollBarHover.None;
             Hover = Root;
             Hover.OnMouseEnter();
+            Window.CursorStyle = Hover.Properties.CursorStyle;
         }
 
         private readonly UIView _uiView;
@@ -349,7 +351,7 @@ namespace Zene.GUI
             {
                 element.ViewBoxChange(old);
             }
-
+            
             // Change in layout causes hover to be recalculated
             MouseMove(new MouseEventArgs(Root.Properties.mousePos));
         }
@@ -410,6 +412,8 @@ namespace Zene.GUI
 
         internal static void RecalculateScrollBounds(UIProperties elementProp)
         {
+            if (elementProp.ScrollBar == null) { return; }
+            
             elementProp.scrollViewBox = new Box();
 
             foreach (IElement e in elementProp.Source.Children)

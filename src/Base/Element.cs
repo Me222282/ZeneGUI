@@ -275,11 +275,11 @@ namespace Zene.GUI
                 return;
             }
 
-            if (HasParent && Properties.parent.LayoutManager.ChildDependent)
-            {
-                Properties.handle?.LayoutElement(Properties.parent);
-                return;
-            }
+            // if (HasParent && Properties.parent.LayoutManager.ChildDependent)
+            // {
+            //     Properties.handle?.LayoutElement(Properties.parent);
+            //     return;
+            // }
 
             Properties.handle?.LayoutElement(this);
         }
