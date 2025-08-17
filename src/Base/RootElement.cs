@@ -119,8 +119,10 @@ namespace Zene.GUI
         }
         private void KeyDown(KeyEventArgs e)
         {
+            IElement f = Focus;
+            
             // Shift focus from tab
-            if (Focus.Properties.TabShifting && e[Keys.Tab])
+            if (f.Properties.TabShifting && e[Keys.Tab])
             {
                 if (e[Mods.Shift])
                 {
@@ -131,13 +133,18 @@ namespace Zene.GUI
                 ShiftFocusRight();
                 return;
             }
-
-            IElement f = Focus;
+            // Reset focus with esc
+            if (!f.Properties.OverrideEscape && e[Keys.Escape])
+            {
+                Focus = null;
+                return;
+            }
+            
             f.OnKeyDown(e);
             // Element was removed in event
             if (Focus != f) { return; }
 
-            if (e[Keys.Enter])
+            if (f.Properties.ClickEnter && e[Keys.Enter])
             {
                 f.OnMouseDown(new MouseEventArgs(MouseButton.Left, e.Modifier));
                 f.OnMouseUp(new MouseEventArgs(MouseButton.Left, e.Modifier));

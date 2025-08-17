@@ -100,8 +100,19 @@ namespace Zene.GUI
             get => _selectable && Interactable;
             set => _selectable = value;
         }
-
+        
+        /// <summary>
+        /// Determines whether the default tab functionality should occur when focused.
+        /// </summary>
         public bool TabShifting { get; set; } = true;
+        /// <summary>
+        /// Determines whether the default escape functionality should occur when focused.
+        /// </summary>
+        public bool OverrideEscape { get; set; } = false;
+        /// <summary>
+        /// Determines whether pressing enter should trigger a click event.
+        /// </summary>
+        public bool ClickEnter { get; set; } = true;
 
         private Vector2 _viewPan = 0;
         /// <summary>
