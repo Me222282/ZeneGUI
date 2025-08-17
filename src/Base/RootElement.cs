@@ -66,8 +66,8 @@ namespace Zene.GUI
                 _layoutManager = value;
 
                 _layoutManager.Change += Properties.OnLayoutChange;
-
-                TriggerChange();
+                
+                Window.GraphicsContext.Actions.Push(TriggerChange);
             }
         }
 

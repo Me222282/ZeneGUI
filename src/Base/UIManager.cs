@@ -71,12 +71,9 @@ namespace Zene.GUI
 
                 _focus.OnFocus(false);
                 _focus = value;
-
-                if (!Window.Focused)
-                {
-                    Windowing.Base.GLFW.FocusWindow(Window.Handle);
-                    return;
-                }
+                
+                // Auto checks - as setting to false does nothing
+                Window.Focused = !Window.Focused;
 
                 _focus.OnFocus(true);
             }
@@ -303,14 +300,18 @@ namespace Zene.GUI
             // Change in layout causes hover to be recalculated
             MouseMove(new MouseEventArgs(Root.Properties.mousePos));
         }
-
+        
         public void LayoutElement(IElement element)
         {
             if (element == null)
             {
                 throw new ArgumentNullException(nameof(element));
             }
-
+            
+            Window.GraphicsContext.Actions.Push(() => LayoutElementImpl(element));
+        }
+        private void LayoutElementImpl(IElement element)
+        {
             if (!element.HasParent)
             {
                 TriggerChange();
@@ -326,7 +327,7 @@ namespace Zene.GUI
                 if (parent.LayoutManager.ChildDependent ||
                     parent.LayoutManager.SizeDependent)
                 {
-                    LayoutElement(element.Properties.parent);
+                    LayoutElementImpl(element.Properties.parent);
                     return;
                 }
 
@@ -431,10 +432,9 @@ namespace Zene.GUI
             Window.GraphicsContext.Actions.Push(() =>
             {
                 Framebuffer.Size = (Vector2I)size;
+                Box bounds = CalcElementBounds(Root, new LayoutArgs(Root, size, Elements));
+                Root.Properties.bounds = bounds;
             });
-
-            Box bounds = CalcElementBounds(Root, new LayoutArgs(Root, size, Elements));
-            Root.Properties.bounds = bounds;
         }
 
         internal IElement renderFocus;

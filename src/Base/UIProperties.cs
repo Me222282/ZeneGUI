@@ -146,12 +146,12 @@ namespace Zene.GUI
         internal bool scrollY = false;
         internal ScrollBarHover scrollBarHover;
         internal floatv initScrollPerc;
-        internal Box scrollBounds = new Box();
+        internal Bounds scrollBounds = new Bounds();
         internal Vector2 scrollMoveRange;
         public ScrollInfo GetScrollInfo()
         {
             if (!Source.HasChildren || ScrollBar == null) { return new ScrollInfo(); }
-
+            
             Box vb = viewBounds;
             Box scrollBox = ScrollBox;
 
@@ -163,7 +163,19 @@ namespace Zene.GUI
             {
                 vb.Right -= ScrollBar.Width;
             }
-
+            
+            // needs to be calculated before clamp scroll
+            Box scrollView = scrollBox.Add(vb);
+            scrollBounds = new Bounds(
+                Math.Min(scrollView.Left - vb.Left, 0),
+                Math.Max(scrollView.Right - vb.Right, 0),
+                Math.Max(scrollView.Top - vb.Top, 0),
+                Math.Min(scrollView.Bottom - vb.Bottom, 0));
+            
+            // calling it here may cause future bugs
+            // happens before check for whether scrolling occurs
+            ClampScroll();
+            
             scrollX = scrollBox.Left < vb.Left || scrollBox.Right > vb.Right || _viewPan.X != 0;
             scrollY = scrollBox.Bottom < vb.Bottom || scrollBox.Top > vb.Top || _viewPan.Y != 0;
             if (!(scrollX || scrollY))
@@ -171,18 +183,40 @@ namespace Zene.GUI
                 return new ScrollInfo();
             }
 
-            Box scrollView = scrollBox.Add(vb);
-            scrollBounds = Box.FromBounds(
-                Math.Min(scrollView.Left - vb.Left, 0),
-                Math.Max(scrollView.Right - vb.Right, 0),
-                Math.Max(scrollView.Top - vb.Top, 0),
-                Math.Min(scrollView.Bottom - vb.Bottom, 0));
-
             scrollMoveRange = vb.Size - ((vb.Size * vb.Size) / scrollView.Size);
 
             return new ScrollInfo(scrollX, scrollY, vb.Size, scrollView.Size);
         }
-
+        
+        internal void ClampScroll()
+        {
+            Vector2 newView = ViewPan;
+            Bounds cb = new Bounds(
+                -scrollBounds.Left, -scrollBounds.Right,
+                -scrollBounds.Top, -scrollBounds.Bottom);
+            if (newView.X < cb.Right)
+            {
+                newView.X = cb.Right;
+            }
+            else if (newView.X > cb.Left)
+            {
+                newView.X = cb.Left;
+            }
+            
+            if (newView.Y < cb.Top)
+            {
+                newView.Y = cb.Top;
+            }
+            else if (newView.Y > cb.Bottom)
+            {
+                newView.Y = cb.Bottom;
+            }
+            
+            if (newView != ViewPan)
+            {
+                ViewPan = newView;
+            }
+        }
         internal Vector2 GetScrollPercent()
         {
             return new Vector2(

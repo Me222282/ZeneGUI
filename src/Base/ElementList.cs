@@ -267,7 +267,7 @@ namespace Zene.GUI
                 BaseRemove(item);
                 _source.Properties.handle.LayoutElement(_source);
                 
-                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                if (((Bounds)item.GetRenderBounds()).ShareBound(_source.Properties.scrollBounds))
                 {
                     UIManager.RecalculateScrollBounds(_source.Properties);
                 }
@@ -299,7 +299,7 @@ namespace Zene.GUI
                 BaseRemoveAt(index);
                 _source.Properties.handle.LayoutElement(_source);
                 
-                if (e.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                if (((Bounds)e.GetRenderBounds()).ShareBound(_source.Properties.scrollBounds))
                 {
                     UIManager.RecalculateScrollBounds(_source.Properties);
                 }
@@ -327,7 +327,7 @@ namespace Zene.GUI
                 BaseReplace(item, replacement);
                 _source.Properties.handle.LayoutElement(_source);
                 
-                if (item.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                if (((Bounds)item.GetRenderBounds()).ShareBound(_source.Properties.scrollBounds))
                 {
                     UIManager.RecalculateScrollBounds(_source.Properties);
                 }
@@ -359,7 +359,7 @@ namespace Zene.GUI
                 BaseReplaceAt(index, replacement);
                 _source.Properties.handle.LayoutElement(_source);
                 
-                if (e.GetRenderBounds().ShareBound(_source.Properties.scrollBounds))
+                if (((Bounds)e.GetRenderBounds()).ShareBound(_source.Properties.scrollBounds))
                 {
                     UIManager.RecalculateScrollBounds(_source.Properties);
                 }
