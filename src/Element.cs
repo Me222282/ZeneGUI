@@ -14,10 +14,6 @@ namespace Zene.GUI
         internal Size yOffset;
         internal Length width;
         internal Length height;
-        internal Size minWidth;
-        internal Size minHeight;
-        internal Size maxWidth;
-        internal Size maxHeight;
         
         internal SizeBounds padding;
         internal SizeBounds margin;

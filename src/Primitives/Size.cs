@@ -4,6 +4,7 @@ namespace Zene.GUI
     {
         private enum SizeType : byte
         {
+            None,
             Pixels,
             Char,
             Font,
@@ -31,6 +32,7 @@ namespace Zene.GUI
             };
         }
         
+        public static Size None = new Size(SizeType.None, 0);
         public static Size Zero = Pixels(0);
         public static Size Pixels(floatv value) => new Size(SizeType.Pixels, value);
         public static Size Char(floatv value) => new Size(SizeType.Char, value);
