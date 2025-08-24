@@ -17,10 +17,15 @@ namespace Zene.GUI
         public Size Top { get; set; }
         public Size Bottom { get; set; }
         
-        // public Bounds Calculate()
-        // {
-            
-        // }
+        public Bounds Calculate(UIManager manager, Element context)
+        {
+            return new Bounds(
+                Left.Calculate(manager, context),
+                Right.Calculate(manager, context),
+                Top.Calculate(manager, context),
+                Bottom.Calculate(manager, context)
+            );
+        }
         
         public static SizeBounds Pixels(Vector4 value)
             => new SizeBounds(Size.Pixels(value.X), Size.Pixels(value.Y),

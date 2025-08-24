@@ -1,6 +1,6 @@
 namespace Zene.GUI
 {
-    public enum Position
+    public enum Position : byte
     {
         Normal,
         Relative,

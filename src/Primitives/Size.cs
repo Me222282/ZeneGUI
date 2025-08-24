@@ -2,7 +2,7 @@ namespace Zene.GUI
 {
     public struct Size
     {
-        private enum SizeType
+        private enum SizeType : byte
         {
             Pixels,
             Char,
@@ -19,13 +19,17 @@ namespace Zene.GUI
             _value = v;
         }
         
-        private SizeType _type;
         private floatv _value;
+        private SizeType _type;
         
-        // public floatv Calculate()
-        // {
-            
-        // }
+        public floatv Calculate(UIManager manager, Element context)
+        {
+            return _type switch
+            {
+                SizeType.Pixels => _value,
+                _ => _value,
+            };
+        }
         
         public static Size Zero = Pixels(0);
         public static Size Pixels(floatv value) => new Size(SizeType.Pixels, value);
