@@ -27,7 +27,12 @@ namespace Zene.GUI
         {
             return _type switch
             {
+                SizeType.None => 0,
                 SizeType.Pixels => _value,
+                SizeType.ViewWidth => manager.FrameSize.X * _value,
+                SizeType.ViewHeight => manager.FrameSize.Y * _value,
+                SizeType.ViewSmall => manager.FrameSizeSL.X * _value,
+                SizeType.ViewLarge => manager.FrameSizeSL.Y * _value,
                 _ => _value,
             };
         }

@@ -17,12 +17,17 @@ namespace Zene.GUI
     
     public struct ChildLayout
     {
-        internal Size dirGap;
-        internal Size wrapGap;
-        internal LayoutDirection direction;
-        internal Alignment dirAlign;
-        internal Alignment wrapAlign;
-        internal bool wrapping;
-        internal bool scrolling;
+        public ChildLayout()
+        {
+            
+        }
+        
+        internal Size dirGap = Size.Zero;
+        internal Size wrapGap = Size.Zero;
+        internal LayoutDirection direction = LayoutDirection.LeftToRight;
+        internal Alignment dirAlign = Alignment.NearSide;
+        internal Alignment wrapAlign = Alignment.NearSide;
+        internal bool wrapping = false;
+        internal bool scrolling = false;
     }
 }

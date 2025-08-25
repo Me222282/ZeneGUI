@@ -14,23 +14,23 @@ namespace Zene.GUI
         private Length(LengthType t, Size v, Size v2)
         {
             _type = t;
-            _value = v;
-            _value2 = v2;
+            _min = v;
+            _max = v2;
         }
         private Length(uint port, Size min, Size max)
         {
             _type = LengthType.Portion;
             _port = port;
-            _value = min;
-            _value2 = max;
+            _min = min;
+            _max = max;
         }
         
-        private Size _value;
-        private Size _value2;
+        private Size _min;
+        private Size _max;
         private uint _port;
         private LengthType _type;
         
-        public static Length Fixed(Size size) => new Length(LengthType.Fixed, size, Size.None);
+        public static Length Fixed(Size size) => new Length(LengthType.Fixed, size, size);
         
         public static Length Portion(uint portion) => new Length(portion, Size.None, Size.None);
         public static Length Fill() => Portion(1);
