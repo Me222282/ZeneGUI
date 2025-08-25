@@ -17,13 +17,13 @@ namespace Zene.GUI
         public Size Top { get; set; }
         public Size Bottom { get; set; }
         
-        public Bounds Calculate(UIManager manager, Element context)
+        public Bounds Calculate(UIManager manager)
         {
             return new Bounds(
-                Left.Calculate(manager, context),
-                Right.Calculate(manager, context),
-                Top.Calculate(manager, context),
-                Bottom.Calculate(manager, context)
+                Left.Calculate(manager),
+                Right.Calculate(manager),
+                Top.Calculate(manager),
+                Bottom.Calculate(manager)
             );
         }
         

@@ -30,6 +30,25 @@ namespace Zene.GUI
         private uint _port;
         private LengthType _type;
         
+        public floatv Min(UIManager manager)
+        {
+            if (_min.IsNone())
+            {
+                return 0;
+            }
+            
+            return _min.Calculate(manager);
+        }
+        public floatv Max(UIManager manager)
+        {
+            if (_min.IsNone())
+            {
+                return floatv.PositiveInfinity;
+            }
+            
+            return _min.Calculate(manager);
+        }
+        
         public static Length Fixed(Size size) => new Length(LengthType.Fixed, size, size);
         
         public static Length Portion(uint portion) => new Length(portion, Size.None, Size.None);

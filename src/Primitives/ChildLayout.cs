@@ -27,7 +27,9 @@ namespace Zene.GUI
         internal LayoutDirection direction = LayoutDirection.LeftToRight;
         internal Alignment dirAlign = Alignment.NearSide;
         internal Alignment wrapAlign = Alignment.NearSide;
+        // Something to determine wrap direction e.g. wrapping as int
         internal bool wrapping = false;
         internal bool scrolling = false;
+        internal bool table = false;
     }
 }

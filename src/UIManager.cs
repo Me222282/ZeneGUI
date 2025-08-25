@@ -1,3 +1,4 @@
+using System;
 using Zene.Graphics;
 using Zene.Structs;
 using Zene.Windowing;
@@ -7,11 +8,55 @@ namespace Zene.GUI
     public class UIManager
     {
         public void LayoutAllElements()
-        {   
+        {
+            // Recreate structure with temp structs holding various values
+            
             // Fit parse - with min and max
             // from top down
             // Grow and shrink parse
             
+            
+            FitSizing(Root);
+            PositionChildren(Root);
+        }
+        
+        private void FitSizing(Element e)
+        {
+            floatv along = 0;
+            floatv across = 0;
+            
+            for (int i = 0; i < e.Children.Count; i++)
+            {
+                // ⚠︎ RECURSION ⚠︎
+                Element el = e.Children[i];
+                FitSizing(el);
+                
+                along += el.minSize.X;
+                across = Maths.Max(across, el.minSize.Y);
+            }
+            
+            e.maxSize = (e.width.Max(this), e.height.Max(this));
+            // child min clamped between min and max size
+            e.minSize = (Math.Clamp(along, e.width.Min(this), e.maxSize.X),
+                Math.Clamp(across, e.height.Min(this), e.maxSize.Y));
+            
+            e.bounds.Width = e.minSize.X;
+            e.bounds.Height = e.minSize.Y;
+        }
+        private void PositionChildren(Element e)
+        {
+            floatv currentX = e.bounds.Width * 0.5f;
+            floatv top = e.bounds.Height * 0.5f;
+            
+            for (int i = 0; i < e.Children.Count; i++)
+            {
+                // ⚠︎ RECURSION ⚠︎
+                Element el = e.Children[i];
+                PositionChildren(el);
+                
+                el.bounds.Location = (currentX, top);
+                currentX += el.bounds.Width;
+            }
         }
         
         public UIManager(Window window, Element root)
@@ -91,7 +136,8 @@ namespace Zene.GUI
         {
             // renderFocus = e;
             
-            dm.Projection = Matrix4.CreateOrthographicOffCentre(0, e.bounds.Width, e.bounds.Height, 0, 0, 1);//e.Graphics?.Projection;
+            // dm.Projection = Matrix4.CreateOrthographicOffCentre(0, e.bounds.Width, e.bounds.Height, 0, 0, 1);//e.Graphics?.Projection;
+            dm.Projection = Matrix4.CreateOrthographic(e.bounds.Width, e.bounds.Height, 0, 1);//e.Graphics?.Projection;
             dm.View = Matrix.Identity;
             dm.Model = Matrix.Identity;
             // e.Events.OnUpdate();

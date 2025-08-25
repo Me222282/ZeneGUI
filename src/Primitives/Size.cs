@@ -23,11 +23,11 @@ namespace Zene.GUI
         private floatv _value;
         private SizeType _type;
         
-        public floatv Calculate(UIManager manager, Element context)
+        public floatv Calculate(UIManager manager)
         {
             return _type switch
             {
-                SizeType.None => 0,
+                SizeType.None => floatv.NaN,
                 SizeType.Pixels => _value,
                 SizeType.ViewWidth => manager.FrameSize.X * _value,
                 SizeType.ViewHeight => manager.FrameSize.Y * _value,
@@ -36,6 +36,15 @@ namespace Zene.GUI
                 _ => _value,
             };
         }
+        
+        public bool IsFromPixels() => _type == SizeType.Pixels;
+        public bool IsFromChar() => _type == SizeType.Char;
+        public bool IsFromFont() => _type == SizeType.Font;
+        public bool IsFromVW() => _type == SizeType.ViewWidth;
+        public bool IsFromVH() => _type == SizeType.ViewHeight;
+        public bool IsFromVS() => _type == SizeType.ViewSmall;
+        public bool IsFromVL() => _type == SizeType.ViewLarge;
+        public bool IsNone() => _type == SizeType.None;
         
         public static Size None = new Size(SizeType.None, 0);
         public static Size Zero = Pixels(0);
